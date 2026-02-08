@@ -1,13 +1,21 @@
 import { FinanceState, CashPosition, IncomeStream, Expense, Asset, Liability, Scenario } from '@/types/finance';
 
 export type FinanceAction =
+  | { type: 'ADD_CASH_POSITION'; payload: CashPosition }
   | { type: 'UPDATE_CASH_POSITION'; payload: CashPosition }
+  | { type: 'DELETE_CASH_POSITION'; payload: string }
+  | { type: 'ADD_INCOME_STREAM'; payload: IncomeStream }
   | { type: 'UPDATE_INCOME_STREAM'; payload: IncomeStream }
+  | { type: 'DELETE_INCOME_STREAM'; payload: string }
   | { type: 'ADD_EXPENSE'; payload: Expense }
   | { type: 'UPDATE_EXPENSE'; payload: Expense }
   | { type: 'DELETE_EXPENSE'; payload: string }
+  | { type: 'ADD_ASSET'; payload: Asset }
   | { type: 'UPDATE_ASSET'; payload: Asset }
+  | { type: 'DELETE_ASSET'; payload: string }
+  | { type: 'ADD_LIABILITY'; payload: Liability }
   | { type: 'UPDATE_LIABILITY'; payload: Liability }
+  | { type: 'DELETE_LIABILITY'; payload: string }
   | { type: 'ADD_SCENARIO'; payload: Scenario }
   | { type: 'UPDATE_SCENARIO'; payload: Scenario }
   | { type: 'DELETE_SCENARIO'; payload: string }
@@ -22,6 +30,12 @@ function updateTimestamp(state: FinanceState): FinanceState {
 
 export function financeReducer(state: FinanceState, action: FinanceAction): FinanceState {
   switch (action.type) {
+    case 'ADD_CASH_POSITION':
+      return updateTimestamp({
+        ...state,
+        cashPositions: [...state.cashPositions, action.payload],
+      });
+
     case 'UPDATE_CASH_POSITION':
       return updateTimestamp({
         ...state,
@@ -30,12 +44,30 @@ export function financeReducer(state: FinanceState, action: FinanceAction): Fina
         ),
       });
 
+    case 'DELETE_CASH_POSITION':
+      return updateTimestamp({
+        ...state,
+        cashPositions: state.cashPositions.filter((cp) => cp.id !== action.payload),
+      });
+
+    case 'ADD_INCOME_STREAM':
+      return updateTimestamp({
+        ...state,
+        incomeStreams: [...state.incomeStreams, action.payload],
+      });
+
     case 'UPDATE_INCOME_STREAM':
       return updateTimestamp({
         ...state,
         incomeStreams: state.incomeStreams.map((is) =>
           is.id === action.payload.id ? action.payload : is
         ),
+      });
+
+    case 'DELETE_INCOME_STREAM':
+      return updateTimestamp({
+        ...state,
+        incomeStreams: state.incomeStreams.filter((is) => is.id !== action.payload),
       });
 
     case 'ADD_EXPENSE':
@@ -58,6 +90,12 @@ export function financeReducer(state: FinanceState, action: FinanceAction): Fina
         expenses: state.expenses.filter((e) => e.id !== action.payload),
       });
 
+    case 'ADD_ASSET':
+      return updateTimestamp({
+        ...state,
+        assets: [...state.assets, action.payload],
+      });
+
     case 'UPDATE_ASSET':
       return updateTimestamp({
         ...state,
@@ -66,12 +104,30 @@ export function financeReducer(state: FinanceState, action: FinanceAction): Fina
         ),
       });
 
+    case 'DELETE_ASSET':
+      return updateTimestamp({
+        ...state,
+        assets: state.assets.filter((a) => a.id !== action.payload),
+      });
+
+    case 'ADD_LIABILITY':
+      return updateTimestamp({
+        ...state,
+        liabilities: [...state.liabilities, action.payload],
+      });
+
     case 'UPDATE_LIABILITY':
       return updateTimestamp({
         ...state,
         liabilities: state.liabilities.map((l) =>
           l.id === action.payload.id ? action.payload : l
         ),
+      });
+
+    case 'DELETE_LIABILITY':
+      return updateTimestamp({
+        ...state,
+        liabilities: state.liabilities.filter((l) => l.id !== action.payload),
       });
 
     case 'ADD_SCENARIO':

@@ -1,15 +1,20 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useFinance } from '@/context/FinanceContext';
+import { CashPosition } from '@/types/finance';
 import StatCard from '@/components/StatCard';
 import { computeMonthlySnapshots, getUpcomingLargeExpenses } from '@/lib/calculations';
 import { computeYearlyProjections } from '@/lib/projections';
 import { formatCurrency, formatMonth } from '@/lib/formatters';
 import { expenseCategories } from '@/data/categories';
+import { PencilIcon, TrashIcon, PlusIcon } from '@/components/ui/Icons';
+import SlidePanel from '@/components/ui/SlidePanel';
+import DeleteConfirmation from '@/components/ui/DeleteConfirmation';
+import CashPositionForm from '@/components/forms/CashPositionForm';
 
 export default function DashboardPage() {
-  const { state } = useFinance();
+  const { state, dispatch } = useFinance();
 
   const snapshots = useMemo(() => computeMonthlySnapshots(state, 50), [state]);
   const projections = useMemo(() => computeYearlyProjections(state), [state]);
@@ -18,6 +23,22 @@ export default function DashboardPage() {
   const totalCash = state.cashPositions.reduce((sum, cp) => sum + cp.balance, 0);
   const currentSnapshot = snapshots[0];
   const netWealth = projections[0]?.netWealth ?? 0;
+
+  // CRUD state
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [editingCash, setEditingCash] = useState<CashPosition | undefined>(undefined);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+
+  const openAdd = () => { setEditingCash(undefined); setPanelOpen(true); };
+  const openEdit = (cp: CashPosition) => { setEditingCash(cp); setPanelOpen(true); };
+  const closePanel = () => { setPanelOpen(false); setEditingCash(undefined); };
+
+  const handleDelete = () => {
+    if (deleteTarget) {
+      dispatch({ type: 'DELETE_CASH_POSITION', payload: deleteTarget.id });
+      setDeleteTarget(null);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -58,10 +79,35 @@ export default function DashboardPage() {
 
       {/* Cash Positions */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">Cash Positions</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-slate-900">Cash Positions</h2>
+          <button
+            onClick={openAdd}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            <PlusIcon className="w-4 h-4" />
+            Add
+          </button>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {state.cashPositions.map((cp) => (
-            <div key={cp.id} className="bg-slate-50 rounded-lg p-4">
+            <div key={cp.id} className="group relative bg-slate-50 rounded-lg p-4">
+              <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  onClick={() => openEdit(cp)}
+                  className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
+                  title="Edit"
+                >
+                  <PencilIcon />
+                </button>
+                <button
+                  onClick={() => setDeleteTarget({ id: cp.id, name: cp.name })}
+                  className="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
+                  title="Delete"
+                >
+                  <TrashIcon />
+                </button>
+              </div>
               <p className="text-sm text-slate-500">{cp.name}</p>
               <p className="text-xl font-bold text-slate-900">{formatCurrency(cp.balance)}</p>
               {cp.interestRate > 0 && (
@@ -175,6 +221,23 @@ export default function DashboardPage() {
           </table>
         </div>
       </div>
+
+      {/* Slide Panel for Cash Position Form */}
+      <SlidePanel
+        open={panelOpen}
+        onClose={closePanel}
+        title={editingCash ? 'Edit Cash Position' : 'Add Cash Position'}
+      >
+        <CashPositionForm existing={editingCash} onClose={closePanel} />
+      </SlidePanel>
+
+      {/* Delete Confirmation */}
+      <DeleteConfirmation
+        open={deleteTarget !== null}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+        itemName={deleteTarget?.name ?? ''}
+      />
     </div>
   );
 }

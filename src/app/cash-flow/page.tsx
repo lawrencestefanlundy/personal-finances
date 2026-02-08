@@ -2,12 +2,21 @@
 
 import { useMemo, useState } from 'react';
 import { useFinance } from '@/context/FinanceContext';
+import { CashPosition, IncomeStream, Expense } from '@/types/finance';
 import { computeMonthlySnapshots } from '@/lib/calculations';
 import { formatCurrency, formatMonth } from '@/lib/formatters';
 import { expenseCategories } from '@/data/categories';
 import CashFlowChart from '@/components/charts/CashFlowChart';
 import IncomeExpensePie from '@/components/charts/IncomeExpensePie';
 import EditableCell from '@/components/EditableCell';
+import { PencilIcon, TrashIcon, PlusIcon } from '@/components/ui/Icons';
+import SlidePanel from '@/components/ui/SlidePanel';
+import DeleteConfirmation from '@/components/ui/DeleteConfirmation';
+import CashPositionForm from '@/components/forms/CashPositionForm';
+import IncomeStreamForm from '@/components/forms/IncomeStreamForm';
+import ExpenseForm from '@/components/forms/ExpenseForm';
+
+type PanelType = 'cashPosition' | 'income' | 'expense' | null;
 
 export default function CashFlowPage() {
   const { state, dispatch } = useFinance();
@@ -31,6 +40,26 @@ export default function CashFlowPage() {
     }
     return groups;
   }, [state.expenses]);
+
+  // CRUD state
+  const [panelType, setPanelType] = useState<PanelType>(null);
+  const [editingCash, setEditingCash] = useState<CashPosition | undefined>(undefined);
+  const [editingIncome, setEditingIncome] = useState<IncomeStream | undefined>(undefined);
+  const [editingExpense, setEditingExpense] = useState<Expense | undefined>(undefined);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string; type: 'cashPosition' | 'income' | 'expense' } | null>(null);
+
+  const closePanel = () => { setPanelType(null); setEditingCash(undefined); setEditingIncome(undefined); setEditingExpense(undefined); };
+
+  const handleDelete = () => {
+    if (!deleteTarget) return;
+    const actionMap = {
+      cashPosition: 'DELETE_CASH_POSITION' as const,
+      income: 'DELETE_INCOME_STREAM' as const,
+      expense: 'DELETE_EXPENSE' as const,
+    };
+    dispatch({ type: actionMap[deleteTarget.type], payload: deleteTarget.id });
+    setDeleteTarget(null);
+  };
 
   return (
     <div className="space-y-8">
@@ -83,6 +112,9 @@ export default function CashFlowPage() {
                 <th className="text-left py-2 px-3 font-semibold text-slate-600 min-w-[100px]">
                   Category
                 </th>
+                <th className="text-center py-2 px-3 font-semibold text-slate-600 w-16">
+                  Actions
+                </th>
                 {snapshots.map((s) => (
                   <th key={s.month} className="text-right py-2 px-3 font-semibold text-slate-600 min-w-[90px]">
                     {formatMonth(s.month)}
@@ -93,14 +125,42 @@ export default function CashFlowPage() {
             <tbody>
               {/* Cash Positions Section */}
               <tr className="bg-slate-50">
-                <td colSpan={2 + snapshots.length} className="py-2 px-3 font-bold text-slate-700">
+                <td colSpan={2} className="py-2 px-3 font-bold text-slate-700">
                   Cash Positions
                 </td>
+                <td className="py-2 px-3 text-center">
+                  <button
+                    onClick={() => { setEditingCash(undefined); setPanelType('cashPosition'); }}
+                    className="p-1 rounded hover:bg-slate-200 text-blue-600"
+                    title="Add Cash Position"
+                  >
+                    <PlusIcon />
+                  </button>
+                </td>
+                <td colSpan={snapshots.length}></td>
               </tr>
               {state.cashPositions.map((cp) => (
-                <tr key={cp.id} className="border-b border-slate-50 hover:bg-slate-50">
+                <tr key={cp.id} className="border-b border-slate-50 hover:bg-slate-50 group">
                   <td className="py-2 px-3 text-slate-900 sticky left-0 bg-white">{cp.name}</td>
                   <td className="py-2 px-3 text-slate-400">Cash</td>
+                  <td className="py-2 px-3 text-center">
+                    <div className="flex gap-0.5 justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => { setEditingCash(cp); setPanelType('cashPosition'); }}
+                        className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
+                        title="Edit"
+                      >
+                        <PencilIcon />
+                      </button>
+                      <button
+                        onClick={() => setDeleteTarget({ id: cp.id, name: cp.name, type: 'cashPosition' })}
+                        className="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
+                        title="Delete"
+                      >
+                        <TrashIcon />
+                      </button>
+                    </div>
+                  </td>
                   <td className="py-2 px-3 text-right text-slate-900">
                     <EditableCell
                       value={cp.balance}
@@ -117,6 +177,7 @@ export default function CashFlowPage() {
               <tr className="border-b border-slate-200 bg-slate-50 font-semibold">
                 <td className="py-2 px-3 text-slate-900 sticky left-0 bg-slate-50">Total Cash</td>
                 <td className="py-2 px-3"></td>
+                <td className="py-2 px-3"></td>
                 <td className="py-2 px-3 text-right text-slate-900">
                   {formatCurrency(state.cashPositions.reduce((s, cp) => s + cp.balance, 0))}
                 </td>
@@ -127,14 +188,42 @@ export default function CashFlowPage() {
 
               {/* Earnings Section */}
               <tr className="bg-emerald-50">
-                <td colSpan={2 + snapshots.length} className="py-2 px-3 font-bold text-emerald-700">
+                <td colSpan={2} className="py-2 px-3 font-bold text-emerald-700">
                   Earnings
                 </td>
+                <td className="py-2 px-3 text-center">
+                  <button
+                    onClick={() => { setEditingIncome(undefined); setPanelType('income'); }}
+                    className="p-1 rounded hover:bg-emerald-100 text-emerald-600"
+                    title="Add Income Stream"
+                  >
+                    <PlusIcon />
+                  </button>
+                </td>
+                <td colSpan={snapshots.length}></td>
               </tr>
               {state.incomeStreams.map((stream) => (
-                <tr key={stream.id} className="border-b border-slate-50 hover:bg-slate-50">
+                <tr key={stream.id} className="border-b border-slate-50 hover:bg-slate-50 group">
                   <td className="py-2 px-3 text-slate-900 sticky left-0 bg-white">{stream.name}</td>
                   <td className="py-2 px-3 text-slate-400 capitalize">{stream.frequency}</td>
+                  <td className="py-2 px-3 text-center">
+                    <div className="flex gap-0.5 justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => { setEditingIncome(stream); setPanelType('income'); }}
+                        className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
+                        title="Edit"
+                      >
+                        <PencilIcon />
+                      </button>
+                      <button
+                        onClick={() => setDeleteTarget({ id: stream.id, name: stream.name, type: 'income' })}
+                        className="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
+                        title="Delete"
+                      >
+                        <TrashIcon />
+                      </button>
+                    </div>
+                  </td>
                   {snapshots.map((s) => {
                     const amount = s.incomeBreakdown[stream.id] || 0;
                     return (
@@ -152,6 +241,7 @@ export default function CashFlowPage() {
               <tr className="border-b border-slate-200 bg-emerald-50 font-semibold">
                 <td className="py-2 px-3 text-emerald-800 sticky left-0 bg-emerald-50">Total Income</td>
                 <td className="py-2 px-3"></td>
+                <td className="py-2 px-3"></td>
                 {snapshots.map((s) => (
                   <td key={s.month} className="py-2 px-3 text-right text-emerald-700">
                     {formatCurrency(s.totalIncome)}
@@ -160,17 +250,29 @@ export default function CashFlowPage() {
               </tr>
 
               {/* Expenses by Category */}
-              {Object.entries(expensesByCategory).map(([category, expenses]) => {
+              {Object.entries(expensesByCategory).map(([category, expenses], catIdx) => {
                 const meta = expenseCategories[category as keyof typeof expenseCategories];
                 return (
                   <tbody key={category}>
                     <tr style={{ backgroundColor: meta?.bgColor || '#f9fafb' }}>
-                      <td colSpan={2 + snapshots.length} className="py-2 px-3 font-bold" style={{ color: meta?.color }}>
+                      <td colSpan={2} className="py-2 px-3 font-bold" style={{ color: meta?.color }}>
                         {meta?.label || category}
                       </td>
+                      <td className="py-2 px-3 text-center">
+                        {catIdx === 0 && (
+                          <button
+                            onClick={() => { setEditingExpense(undefined); setPanelType('expense'); }}
+                            className="p-1 rounded hover:bg-red-100 text-red-500"
+                            title="Add Expense"
+                          >
+                            <PlusIcon />
+                          </button>
+                        )}
+                      </td>
+                      <td colSpan={snapshots.length}></td>
                     </tr>
                     {expenses.map((expense) => (
-                      <tr key={expense.id} className="border-b border-slate-50 hover:bg-slate-50">
+                      <tr key={expense.id} className="border-b border-slate-50 hover:bg-slate-50 group">
                         <td className="py-2 px-3 text-slate-900 sticky left-0 bg-white">
                           {expense.name}
                           {expense.provider && (
@@ -178,6 +280,24 @@ export default function CashFlowPage() {
                           )}
                         </td>
                         <td className="py-2 px-3 text-slate-400 capitalize text-xs">{expense.frequency}</td>
+                        <td className="py-2 px-3 text-center">
+                          <div className="flex gap-0.5 justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              onClick={() => { setEditingExpense(expense); setPanelType('expense'); }}
+                              className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
+                              title="Edit"
+                            >
+                              <PencilIcon />
+                            </button>
+                            <button
+                              onClick={() => setDeleteTarget({ id: expense.id, name: expense.name, type: 'expense' })}
+                              className="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
+                              title="Delete"
+                            >
+                              <TrashIcon />
+                            </button>
+                          </div>
+                        </td>
                         {snapshots.map((s) => {
                           const amount = s.expenseBreakdown[expense.id] || 0;
                           return (
@@ -200,6 +320,7 @@ export default function CashFlowPage() {
               <tr className="border-b border-slate-200 bg-red-50 font-semibold">
                 <td className="py-2 px-3 text-red-800 sticky left-0 bg-red-50">Total Expenses</td>
                 <td className="py-2 px-3"></td>
+                <td className="py-2 px-3"></td>
                 {snapshots.map((s) => (
                   <td key={s.month} className="py-2 px-3 text-right text-red-700">
                     {formatCurrency(s.totalExpenses)}
@@ -210,6 +331,7 @@ export default function CashFlowPage() {
               {/* Net Cash Flow */}
               <tr className="border-b border-slate-200 bg-blue-50 font-bold">
                 <td className="py-3 px-3 text-blue-900 sticky left-0 bg-blue-50">Net Cash Flow</td>
+                <td className="py-3 px-3"></td>
                 <td className="py-3 px-3"></td>
                 {snapshots.map((s) => (
                   <td key={s.month} className={`py-3 px-3 text-right ${
@@ -224,6 +346,7 @@ export default function CashFlowPage() {
               <tr className="bg-slate-100 font-bold">
                 <td className="py-3 px-3 text-slate-900 sticky left-0 bg-slate-100">Running Balance</td>
                 <td className="py-3 px-3"></td>
+                <td className="py-3 px-3"></td>
                 {snapshots.map((s) => (
                   <td key={s.month} className={`py-3 px-3 text-right ${
                     s.runningBalance >= 0 ? 'text-slate-900' : 'text-red-700'
@@ -236,6 +359,39 @@ export default function CashFlowPage() {
           </table>
         </div>
       </div>
+
+      {/* Slide Panels */}
+      <SlidePanel
+        open={panelType === 'cashPosition'}
+        onClose={closePanel}
+        title={editingCash ? 'Edit Cash Position' : 'Add Cash Position'}
+      >
+        <CashPositionForm existing={editingCash} onClose={closePanel} />
+      </SlidePanel>
+
+      <SlidePanel
+        open={panelType === 'income'}
+        onClose={closePanel}
+        title={editingIncome ? 'Edit Income Stream' : 'Add Income Stream'}
+      >
+        <IncomeStreamForm existing={editingIncome} onClose={closePanel} />
+      </SlidePanel>
+
+      <SlidePanel
+        open={panelType === 'expense'}
+        onClose={closePanel}
+        title={editingExpense ? 'Edit Expense' : 'Add Expense'}
+      >
+        <ExpenseForm existing={editingExpense} onClose={closePanel} />
+      </SlidePanel>
+
+      {/* Delete Confirmation */}
+      <DeleteConfirmation
+        open={deleteTarget !== null}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+        itemName={deleteTarget?.name ?? ''}
+      />
     </div>
   );
 }
