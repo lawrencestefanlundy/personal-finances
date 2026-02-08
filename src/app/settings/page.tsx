@@ -1,0 +1,174 @@
+'use client';
+
+import { useRef } from 'react';
+import { useFinance } from '@/context/FinanceContext';
+import { exportStateAsJSON, importStateFromJSON, clearState } from '@/lib/storage';
+import { seedData } from '@/data/seedData';
+
+export default function SettingsPage() {
+  const { state, dispatch } = useFinance();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleExport = () => {
+    exportStateAsJSON(state);
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const imported = await importStateFromJSON(file);
+      dispatch({ type: 'IMPORT_DATA', payload: imported });
+      alert('Data imported successfully');
+    } catch (err: unknown) {
+      alert(`Import failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    }
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleReset = () => {
+    if (confirm('Are you sure? This will reset all data to the original spreadsheet values.')) {
+      clearState();
+      dispatch({ type: 'RESET_DATA', payload: seedData });
+    }
+  };
+
+  return (
+    <div className="space-y-8 max-w-2xl">
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
+        <p className="text-sm text-slate-500 mt-1">Manage data, import/export, and preferences</p>
+      </div>
+
+      {/* General Settings */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+        <h2 className="text-lg font-semibold text-slate-900 mb-4">General</h2>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-900">Birth Year</p>
+              <p className="text-xs text-slate-400">Used to calculate age in projections</p>
+            </div>
+            <input
+              type="number"
+              value={state.settings.birthYear}
+              onChange={(e) =>
+                dispatch({
+                  type: 'UPDATE_SETTINGS',
+                  payload: { birthYear: parseInt(e.target.value) || 1986 },
+                })
+              }
+              className="w-24 px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-900">Projection End Year</p>
+              <p className="text-xs text-slate-400">How far to forecast wealth projections</p>
+            </div>
+            <input
+              type="number"
+              value={state.settings.projectionEndYear}
+              onChange={(e) =>
+                dispatch({
+                  type: 'UPDATE_SETTINGS',
+                  payload: { projectionEndYear: parseInt(e.target.value) || 2053 },
+                })
+              }
+              className="w-24 px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-900">Start Month</p>
+              <p className="text-xs text-slate-400">Cash flow forecast start date</p>
+            </div>
+            <input
+              type="month"
+              value={state.settings.startMonth}
+              onChange={(e) =>
+                dispatch({
+                  type: 'UPDATE_SETTINGS',
+                  payload: { startMonth: e.target.value },
+                })
+              }
+              className="px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Data Management */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+        <h2 className="text-lg font-semibold text-slate-900 mb-4">Data Management</h2>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-900">Export Data</p>
+              <p className="text-xs text-slate-400">Download all data as JSON</p>
+            </div>
+            <button
+              onClick={handleExport}
+              className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
+              Export JSON
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-900">Import Data</p>
+              <p className="text-xs text-slate-400">Restore from a previously exported JSON file</p>
+            </div>
+            <div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json"
+                onChange={handleImport}
+                className="hidden"
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="px-4 py-2 text-sm bg-slate-100 text-slate-700 rounded-md hover:bg-slate-200 transition-colors"
+              >
+                Import JSON
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-4 border-t border-slate-200">
+            <div>
+              <p className="text-sm font-medium text-red-600">Reset to Defaults</p>
+              <p className="text-xs text-slate-400">Restore all data to original spreadsheet values</p>
+            </div>
+            <button
+              onClick={handleReset}
+              className="px-4 py-2 text-sm bg-red-50 text-red-600 rounded-md hover:bg-red-100 transition-colors border border-red-200"
+            >
+              Reset Data
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Info */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+        <h2 className="text-lg font-semibold text-slate-900 mb-4">About</h2>
+        <div className="space-y-2 text-sm text-slate-500">
+          <p>Last modified: {new Date(state.lastModified).toLocaleString()}</p>
+          <p>Cash positions: {state.cashPositions.length}</p>
+          <p>Income streams: {state.incomeStreams.length}</p>
+          <p>Expenses: {state.expenses.length}</p>
+          <p>Assets: {state.assets.length}</p>
+          <p>Liabilities: {state.liabilities.length}</p>
+          <p>Data stored in browser localStorage</p>
+        </div>
+      </div>
+    </div>
+  );
+}

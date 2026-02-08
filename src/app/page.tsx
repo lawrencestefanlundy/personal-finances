@@ -1,65 +1,180 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useMemo } from 'react';
+import { useFinance } from '@/context/FinanceContext';
+import StatCard from '@/components/StatCard';
+import { computeMonthlySnapshots, getUpcomingLargeExpenses } from '@/lib/calculations';
+import { computeYearlyProjections } from '@/lib/projections';
+import { formatCurrency, formatMonth } from '@/lib/formatters';
+import { expenseCategories } from '@/data/categories';
+
+export default function DashboardPage() {
+  const { state } = useFinance();
+
+  const snapshots = useMemo(() => computeMonthlySnapshots(state, 50), [state]);
+  const projections = useMemo(() => computeYearlyProjections(state), [state]);
+  const upcomingExpenses = useMemo(() => getUpcomingLargeExpenses(state, 3), [state]);
+
+  const totalCash = state.cashPositions.reduce((sum, cp) => sum + cp.balance, 0);
+  const currentSnapshot = snapshots[0];
+  const netWealth = projections[0]?.netWealth ?? 0;
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
+        <p className="text-sm text-slate-500 mt-1">
+          Overview of your financial position as of {formatMonth(state.settings.startMonth)}
+        </p>
+      </div>
+
+      {/* Stat Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard
+          title="Net Wealth"
+          value={formatCurrency(netWealth)}
+          subtitle="Total assets minus liabilities"
+          color="purple"
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+        <StatCard
+          title="Liquid Cash"
+          value={formatCurrency(totalCash)}
+          subtitle="Cash + savings + ISA + crypto"
+          color="green"
+        />
+        <StatCard
+          title="This Month Net"
+          value={formatCurrency(currentSnapshot?.netCashFlow ?? 0)}
+          subtitle={`Income ${formatCurrency(currentSnapshot?.totalIncome ?? 0)} - Expenses ${formatCurrency(currentSnapshot?.totalExpenses ?? 0)}`}
+          color={(currentSnapshot?.netCashFlow ?? 0) >= 0 ? 'blue' : 'red'}
+        />
+        <StatCard
+          title="Running Balance"
+          value={formatCurrency(currentSnapshot?.runningBalance ?? 0)}
+          subtitle="Projected cash position"
+          color="amber"
+        />
+      </div>
+
+      {/* Cash Positions */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+        <h2 className="text-lg font-semibold text-slate-900 mb-4">Cash Positions</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {state.cashPositions.map((cp) => (
+            <div key={cp.id} className="bg-slate-50 rounded-lg p-4">
+              <p className="text-sm text-slate-500">{cp.name}</p>
+              <p className="text-xl font-bold text-slate-900">{formatCurrency(cp.balance)}</p>
+              {cp.interestRate > 0 && (
+                <p className="text-xs text-slate-400">{(cp.interestRate * 100).toFixed(1)}% interest</p>
+              )}
+            </div>
+          ))}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </div>
+
+      {/* Two-column layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Upcoming Large Expenses */}
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+          <h2 className="text-lg font-semibold text-slate-900 mb-4">Upcoming Large Expenses</h2>
+          {upcomingExpenses.length === 0 ? (
+            <p className="text-sm text-slate-400">No large expenses in the next 3 months</p>
+          ) : (
+            <div className="space-y-3">
+              {upcomingExpenses.map((exp, i) => (
+                <div key={i} className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0">
+                  <div>
+                    <p className="text-sm font-medium text-slate-900">{exp.name}</p>
+                    <p className="text-xs text-slate-400">{formatMonth(exp.month)}</p>
+                  </div>
+                  <p className="text-sm font-semibold text-red-600">{formatCurrency(exp.amount)}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      </main>
+
+        {/* Monthly Expense Breakdown */}
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+          <h2 className="text-lg font-semibold text-slate-900 mb-4">This Month&apos;s Expenses by Category</h2>
+          {currentSnapshot && (
+            <div className="space-y-2">
+              {Object.entries(
+                state.expenses.reduce((acc, expense) => {
+                  const amount = currentSnapshot.expenseBreakdown[expense.id] || 0;
+                  if (amount > 0) {
+                    acc[expense.category] = (acc[expense.category] || 0) + amount;
+                  }
+                  return acc;
+                }, {} as Record<string, number>)
+              )
+                .sort(([, a], [, b]) => b - a)
+                .map(([category, amount]) => {
+                  const meta = expenseCategories[category as keyof typeof expenseCategories];
+                  return (
+                    <div key={category} className="flex items-center justify-between py-1">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: meta?.color || '#6b7280' }}
+                        />
+                        <span className="text-sm text-slate-700">{meta?.label || category}</span>
+                      </div>
+                      <span className="text-sm font-medium text-slate-900">{formatCurrency(amount)}</span>
+                    </div>
+                  );
+                })}
+              <div className="pt-2 border-t border-slate-200 flex justify-between">
+                <span className="text-sm font-semibold text-slate-900">Total</span>
+                <span className="text-sm font-semibold text-slate-900">
+                  {formatCurrency(currentSnapshot.totalExpenses)}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 6-Month Forecast Table */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+        <h2 className="text-lg font-semibold text-slate-900 mb-4">6-Month Cash Flow Forecast</h2>
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b border-slate-200">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-slate-600">Month</th>
+                <th className="text-right py-3 px-4 text-sm font-semibold text-slate-600">Income</th>
+                <th className="text-right py-3 px-4 text-sm font-semibold text-slate-600">Expenses</th>
+                <th className="text-right py-3 px-4 text-sm font-semibold text-slate-600">Net</th>
+                <th className="text-right py-3 px-4 text-sm font-semibold text-slate-600">Balance</th>
+              </tr>
+            </thead>
+            <tbody>
+              {snapshots.slice(0, 6).map((s) => (
+                <tr key={s.month} className="border-b border-slate-100 hover:bg-slate-50">
+                  <td className="py-3 px-4 text-sm text-slate-900">{formatMonth(s.month)}</td>
+                  <td className="py-3 px-4 text-sm text-right text-emerald-600 font-medium">
+                    {formatCurrency(s.totalIncome)}
+                  </td>
+                  <td className="py-3 px-4 text-sm text-right text-red-600 font-medium">
+                    {formatCurrency(s.totalExpenses)}
+                  </td>
+                  <td className={`py-3 px-4 text-sm text-right font-medium ${
+                    s.netCashFlow >= 0 ? 'text-emerald-600' : 'text-red-600'
+                  }`}>
+                    {formatCurrency(s.netCashFlow)}
+                  </td>
+                  <td className={`py-3 px-4 text-sm text-right font-bold ${
+                    s.runningBalance >= 0 ? 'text-slate-900' : 'text-red-600'
+                  }`}>
+                    {formatCurrency(s.runningBalance)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }
