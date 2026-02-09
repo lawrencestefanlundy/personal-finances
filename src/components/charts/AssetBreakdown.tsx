@@ -22,7 +22,9 @@ interface AssetBreakdownProps {
 const ASSET_COLORS = [
   '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444',
   '#ec4899', '#14b8a6', '#f97316', '#6366f1', '#84cc16',
-  '#06b6d4', '#a855f7', '#dc2626', '#0ea5e9',
+  '#06b6d4', '#a855f7', '#dc2626', '#0ea5e9', '#d946ef',
+  '#65a30d', '#0891b2', '#c026d3', '#ea580c', '#4f46e5',
+  '#059669', '#e11d48', '#7c3aed', '#2563eb',
 ];
 
 export default function AssetBreakdown({ projections, assets }: AssetBreakdownProps) {
@@ -40,7 +42,7 @@ export default function AssetBreakdown({ projections, assets }: AssetBreakdownPr
   );
 
   return (
-    <ResponsiveContainer width="100%" height={400}>
+    <ResponsiveContainer width="100%" height={500}>
       <AreaChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
         <XAxis dataKey="year" tick={{ fontSize: 11 }} />

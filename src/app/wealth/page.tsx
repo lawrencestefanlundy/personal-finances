@@ -2,18 +2,15 @@
 
 import { useMemo, useState } from 'react';
 import { useFinance } from '@/context/FinanceContext';
-import { Asset, Liability } from '@/types/finance';
+import { Liability } from '@/types/finance';
 import { computeYearlyProjections } from '@/lib/projections';
 import { formatCurrency, formatPercent } from '@/lib/formatters';
-import { assetCategories } from '@/data/categories';
 import WealthChart from '@/components/charts/WealthChart';
-import AssetBreakdown from '@/components/charts/AssetBreakdown';
 import LiabilityChart from '@/components/charts/LiabilityChart';
 import StatCard from '@/components/StatCard';
 import { PencilIcon, TrashIcon, PlusIcon } from '@/components/ui/Icons';
 import SlidePanel from '@/components/ui/SlidePanel';
 import DeleteConfirmation from '@/components/ui/DeleteConfirmation';
-import AssetForm from '@/components/forms/AssetForm';
 import LiabilityForm from '@/components/forms/LiabilityForm';
 import ProviderLogo from '@/components/ui/ProviderLogo';
 
@@ -24,11 +21,8 @@ const LIABILITY_TYPE_LABELS: Record<string, string> = {
   other: 'Other',
 };
 
-type PanelType = 'asset' | 'liability' | null;
-
 export default function WealthPage() {
   const { state, dispatch } = useFinance();
-  const [showEditor, setShowEditor] = useState(false);
 
   const projections = useMemo(() => computeYearlyProjections(state), [state]);
 
@@ -37,40 +31,26 @@ export default function WealthPage() {
   const retirementYear = projections.find((p) => p.age === 65);
 
   // CRUD state
-  const [panelType, setPanelType] = useState<PanelType>(null);
-  const [editingAsset, setEditingAsset] = useState<Asset | undefined>(undefined);
+  const [panelOpen, setPanelOpen] = useState(false);
   const [editingLiability, setEditingLiability] = useState<Liability | undefined>(undefined);
-  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string; type: 'asset' | 'liability' } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
-  const closePanel = () => { setPanelType(null); setEditingAsset(undefined); setEditingLiability(undefined); };
+  const closePanel = () => { setPanelOpen(false); setEditingLiability(undefined); };
 
   const handleDelete = () => {
-    if (!deleteTarget) return;
-    const actionMap = {
-      asset: 'DELETE_ASSET' as const,
-      liability: 'DELETE_LIABILITY' as const,
-    };
-    dispatch({ type: actionMap[deleteTarget.type], payload: deleteTarget.id });
-    setDeleteTarget(null);
+    if (deleteTarget) {
+      dispatch({ type: 'DELETE_LIABILITY', payload: deleteTarget.id });
+      setDeleteTarget(null);
+    }
   };
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Wealth Projection</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Long-term asset growth and net wealth forecast ({projections[0]?.year}–{projections[projections.length - 1]?.year})
-          </p>
-        </div>
-        <button
-          onClick={() => setShowEditor(!showEditor)}
-          className={`px-4 py-2 text-sm rounded-md transition-colors ${
-            showEditor ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-          }`}
-        >
-          {showEditor ? 'Hide' : 'Edit'} Growth Rates
-        </button>
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900">Wealth Projection</h1>
+        <p className="text-sm text-slate-500 mt-1">
+          Long-term net wealth forecast and liabilities ({projections[0]?.year}–{projections[projections.length - 1]?.year})
+        </p>
       </div>
 
       {/* Key Metrics */}
@@ -101,147 +81,16 @@ export default function WealthPage() {
         />
       </div>
 
-      {/* Growth Rate Editor */}
-      {showEditor && (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Growth Rates</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {state.assets.map((asset) => (
-              <div key={asset.id} className="flex items-center justify-between bg-slate-50 rounded-lg p-3">
-                <div>
-                  <p className="text-sm font-medium text-slate-900">{asset.name}</p>
-                  <p className="text-xs text-slate-400">{formatCurrency(asset.currentValue)}</p>
-                </div>
-                <div className="flex items-center gap-1">
-                  <input
-                    type="number"
-                    step="0.5"
-                    value={(asset.annualGrowthRate * 100).toFixed(1)}
-                    onChange={(e) => {
-                      const rate = parseFloat(e.target.value) / 100;
-                      if (!isNaN(rate)) {
-                        dispatch({
-                          type: 'UPDATE_ASSET',
-                          payload: { ...asset, annualGrowthRate: rate },
-                        });
-                      }
-                    }}
-                    className="w-16 px-2 py-1 text-right text-sm border border-slate-300 rounded bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <span className="text-sm text-slate-500">%</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Net Wealth Chart */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
         <h2 className="text-lg font-semibold text-slate-900 mb-4">Net Wealth Over Time</h2>
         <WealthChart projections={projections} />
       </div>
 
-      {/* Asset Breakdown + Liabilities Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Asset Breakdown</h2>
-          <AssetBreakdown projections={projections} assets={state.assets} />
-        </div>
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Liability Paydown</h2>
-          <LiabilityChart projections={projections} liabilities={state.liabilities} />
-        </div>
-      </div>
-
-      {/* Assets Table */}
+      {/* Liability Paydown Chart */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-slate-900">Assets</h2>
-          <button
-            onClick={() => { setEditingAsset(undefined); setPanelType('asset'); }}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-          >
-            <PlusIcon className="w-4 h-4" />
-            Add Asset
-          </button>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-200">
-                <th className="text-left py-2 px-3 font-semibold text-slate-600">Name</th>
-                <th className="text-left py-2 px-3 font-semibold text-slate-600">Category</th>
-                <th className="text-right py-2 px-3 font-semibold text-slate-600">Value</th>
-                <th className="text-right py-2 px-3 font-semibold text-slate-600">Growth</th>
-                <th className="text-center py-2 px-3 font-semibold text-slate-600">Liquid</th>
-                <th className="text-center py-2 px-3 font-semibold text-slate-600">Unlock</th>
-                <th className="text-center py-2 px-3 font-semibold text-slate-600 w-20">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {state.assets.map((asset) => (
-                <tr key={asset.id} className="border-b border-slate-50 hover:bg-slate-50 group">
-                  <td className="py-2 px-3 font-medium text-slate-900">
-                    <div className="flex items-center gap-2">
-                      <ProviderLogo provider={asset.provider} size={18} />
-                      <span>{asset.name}</span>
-                    </div>
-                  </td>
-                  <td className="py-2 px-3">
-                    <span
-                      className="inline-block px-2 py-0.5 rounded-full text-xs font-medium"
-                      style={{
-                        backgroundColor: assetCategories[asset.category]?.bgColor,
-                        color: assetCategories[asset.category]?.color,
-                      }}
-                    >
-                      {assetCategories[asset.category]?.label ?? asset.category}
-                    </span>
-                  </td>
-                  <td className="py-2 px-3 text-right text-slate-900">{formatCurrency(asset.currentValue)}</td>
-                  <td className="py-2 px-3 text-right text-slate-600">{formatPercent(asset.annualGrowthRate)}</td>
-                  <td className="py-2 px-3 text-center">
-                    {asset.isLiquid ? (
-                      <span className="text-emerald-600 text-xs font-medium">Yes</span>
-                    ) : (
-                      <span className="text-slate-400 text-xs">No</span>
-                    )}
-                  </td>
-                  <td className="py-2 px-3 text-center text-xs text-slate-500">
-                    {asset.unlockYear ?? '-'}
-                  </td>
-                  <td className="py-2 px-3 text-center">
-                    <div className="flex gap-0.5 justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => { setEditingAsset(asset); setPanelType('asset'); }}
-                        className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
-                        title="Edit"
-                      >
-                        <PencilIcon />
-                      </button>
-                      <button
-                        onClick={() => setDeleteTarget({ id: asset.id, name: asset.name, type: 'asset' })}
-                        className="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
-                        title="Delete"
-                      >
-                        <TrashIcon />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              <tr className="bg-slate-50 font-semibold">
-                <td className="py-2 px-3 text-slate-900">Total</td>
-                <td className="py-2 px-3"></td>
-                <td className="py-2 px-3 text-right text-slate-900">
-                  {formatCurrency(state.assets.reduce((sum, a) => sum + a.currentValue, 0))}
-                </td>
-                <td colSpan={4} className="py-2 px-3"></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <h2 className="text-lg font-semibold text-slate-900 mb-4">Liability Paydown</h2>
+        <LiabilityChart projections={projections} liabilities={state.liabilities} />
       </div>
 
       {/* Liabilities Table */}
@@ -249,7 +98,7 @@ export default function WealthPage() {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-slate-900">Liabilities</h2>
           <button
-            onClick={() => { setEditingLiability(undefined); setPanelType('liability'); }}
+            onClick={() => { setEditingLiability(undefined); setPanelOpen(true); }}
             className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
           >
             <PlusIcon className="w-4 h-4" />
@@ -286,14 +135,14 @@ export default function WealthPage() {
                   <td className="py-2 px-3 text-center">
                     <div className="flex gap-0.5 justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
-                        onClick={() => { setEditingLiability(liability); setPanelType('liability'); }}
+                        onClick={() => { setEditingLiability(liability); setPanelOpen(true); }}
                         className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
                         title="Edit"
                       >
                         <PencilIcon />
                       </button>
                       <button
-                        onClick={() => setDeleteTarget({ id: liability.id, name: liability.name, type: 'liability' })}
+                        onClick={() => setDeleteTarget({ id: liability.id, name: liability.name })}
                         className="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
                         title="Delete"
                       >
@@ -347,17 +196,9 @@ export default function WealthPage() {
         </div>
       </div>
 
-      {/* Slide Panels */}
+      {/* Slide Panel for Liability Form */}
       <SlidePanel
-        open={panelType === 'asset'}
-        onClose={closePanel}
-        title={editingAsset ? 'Edit Asset' : 'Add Asset'}
-      >
-        <AssetForm existing={editingAsset} onClose={closePanel} />
-      </SlidePanel>
-
-      <SlidePanel
-        open={panelType === 'liability'}
+        open={panelOpen}
         onClose={closePanel}
         title={editingLiability ? 'Edit Liability' : 'Add Liability'}
       >

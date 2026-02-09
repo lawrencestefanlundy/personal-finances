@@ -12,27 +12,65 @@ import {
   Legend,
 } from 'recharts';
 import { MonthlySnapshot } from '@/types/finance';
-import { formatMonthShort, formatCurrency } from '@/lib/formatters';
+import { formatCurrency } from '@/lib/formatters';
 
 interface CashFlowChartProps {
   snapshots: MonthlySnapshot[];
 }
 
-export default function CashFlowChart({ snapshots }: CashFlowChartProps) {
-  const data = snapshots.map((s) => ({
-    month: formatMonthShort(s.month),
-    fullMonth: s.month,
-    income: s.totalIncome,
-    expenses: -s.totalExpenses,
-    balance: s.runningBalance,
-    net: s.netCashFlow,
+function getQuarterLabel(month: string): string {
+  const [yearStr, monthStr] = month.split('-');
+  const monthNum = parseInt(monthStr);
+  const quarter = Math.ceil(monthNum / 3);
+  return `Q${quarter} ${yearStr}`;
+}
+
+interface QuarterlyData {
+  quarter: string;
+  income: number;
+  expenses: number;
+  balance: number;
+  net: number;
+}
+
+function aggregateToQuarterly(snapshots: MonthlySnapshot[]): QuarterlyData[] {
+  const quarterMap = new Map<string, { income: number; expenses: number; balance: number; net: number }>();
+
+  for (const s of snapshots) {
+    const label = getQuarterLabel(s.month);
+    const existing = quarterMap.get(label);
+    if (existing) {
+      existing.income += s.totalIncome;
+      existing.expenses += s.totalExpenses;
+      existing.net += s.netCashFlow;
+      existing.balance = s.runningBalance; // take last month's balance in the quarter
+    } else {
+      quarterMap.set(label, {
+        income: s.totalIncome,
+        expenses: s.totalExpenses,
+        net: s.netCashFlow,
+        balance: s.runningBalance,
+      });
+    }
+  }
+
+  return Array.from(quarterMap.entries()).map(([quarter, data]) => ({
+    quarter,
+    income: data.income,
+    expenses: -data.expenses,
+    balance: data.balance,
+    net: data.net,
   }));
+}
+
+export default function CashFlowChart({ snapshots }: CashFlowChartProps) {
+  const data = aggregateToQuarterly(snapshots);
 
   return (
     <ResponsiveContainer width="100%" height={400}>
       <ComposedChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-        <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+        <XAxis dataKey="quarter" tick={{ fontSize: 11 }} />
         <YAxis
           yAxisId="bars"
           tick={{ fontSize: 11 }}

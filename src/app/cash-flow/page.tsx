@@ -42,6 +42,12 @@ export default function CashFlowPage() {
     return groups;
   }, [state.expenses]);
 
+  // Collapsible section state — all collapsed by default
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const toggleSection = (key: string) => {
+    setExpanded((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
   // CRUD state
   const [panelType, setPanelType] = useState<PanelType>(null);
   const [editingCash, setEditingCash] = useState<CashPosition | undefined>(undefined);
@@ -62,12 +68,34 @@ export default function CashFlowPage() {
     setDeleteTarget(null);
   };
 
+  // Compute category subtotals for each snapshot month
+  const categorySubtotals = useMemo(() => {
+    const result: Record<string, Record<string, number>> = {};
+    for (const [category, expenses] of Object.entries(expensesByCategory)) {
+      result[category] = {};
+      for (const s of snapshots) {
+        let total = 0;
+        for (const expense of expenses) {
+          total += s.expenseBreakdown[expense.id] || 0;
+        }
+        result[category][s.month] = total;
+      }
+    }
+    return result;
+  }, [expensesByCategory, snapshots]);
+
+  const chevron = (isExpanded: boolean) => (
+    <svg className={`w-3.5 h-3.5 transition-transform ${isExpanded ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+    </svg>
+  );
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Cash Flow</h1>
-          <p className="text-sm text-slate-500 mt-1">Monthly income, expenses, and running balance</p>
+          <p className="text-sm text-slate-500 mt-1">Quarterly income, expenses, and running balance</p>
         </div>
         <div className="flex gap-2">
           {[6, 12, 24, 50].map((n) => (
@@ -100,21 +128,15 @@ export default function CashFlowPage() {
         </div>
       </div>
 
-      {/* Full Monthly Table */}
+      {/* Collapsible Monthly Forecast */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
         <h2 className="text-lg font-semibold text-slate-900 mb-4">Monthly Forecast</h2>
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead>
               <tr className="border-b border-slate-200">
-                <th className="text-left py-2 px-3 font-semibold text-slate-600 sticky left-0 bg-white min-w-[180px]">
+                <th className="text-left py-2 px-3 font-semibold text-slate-600 sticky left-0 bg-white min-w-[200px]">
                   Item
-                </th>
-                <th className="text-left py-2 px-3 font-semibold text-slate-600 min-w-[100px]">
-                  Category
-                </th>
-                <th className="text-center py-2 px-3 font-semibold text-slate-600 w-16">
-                  Actions
                 </th>
                 {snapshots.map((s) => (
                   <th key={s.month} className="text-right py-2 px-3 font-semibold text-slate-600 min-w-[90px]">
@@ -124,47 +146,53 @@ export default function CashFlowPage() {
               </tr>
             </thead>
             <tbody>
-              {/* Cash Positions Section */}
-              <tr className="bg-slate-50">
-                <td colSpan={2} className="py-2 px-3 font-bold text-slate-700">
-                  Cash Positions
+              {/* === Cash Positions Section === */}
+              <tr
+                className="bg-slate-50 cursor-pointer hover:bg-slate-100"
+                onClick={() => toggleSection('cash')}
+              >
+                <td className="py-2 px-3 font-bold text-slate-700 sticky left-0 bg-slate-50">
+                  <div className="flex items-center gap-2">
+                    {chevron(!!expanded['cash'])}
+                    <span>Cash Positions</span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setEditingCash(undefined); setPanelType('cashPosition'); }}
+                      className="p-0.5 rounded hover:bg-slate-200 text-blue-600 ml-auto"
+                      title="Add Cash Position"
+                    >
+                      <PlusIcon />
+                    </button>
+                  </div>
                 </td>
-                <td className="py-2 px-3 text-center">
-                  <button
-                    onClick={() => { setEditingCash(undefined); setPanelType('cashPosition'); }}
-                    className="p-1 rounded hover:bg-slate-200 text-blue-600"
-                    title="Add Cash Position"
-                  >
-                    <PlusIcon />
-                  </button>
+                <td className="py-2 px-3 text-right font-semibold text-slate-700">
+                  {formatCurrency(state.cashPositions.reduce((s, cp) => s + cp.balance, 0))}
                 </td>
-                <td colSpan={snapshots.length}></td>
+                {snapshots.slice(1).map((s) => (
+                  <td key={s.month} className="py-2 px-3 text-right text-slate-300">-</td>
+                ))}
               </tr>
-              {state.cashPositions.map((cp) => (
+              {expanded['cash'] && state.cashPositions.map((cp) => (
                 <tr key={cp.id} className="border-b border-slate-50 hover:bg-slate-50 group">
-                  <td className="py-2 px-3 text-slate-900 sticky left-0 bg-white">
+                  <td className="py-2 px-3 text-slate-900 sticky left-0 bg-white pl-8">
                     <div className="flex items-center gap-2">
                       <ProviderLogo provider={cp.provider} size={18} />
                       <span>{cp.name}</span>
-                    </div>
-                  </td>
-                  <td className="py-2 px-3 text-slate-400">Cash</td>
-                  <td className="py-2 px-3 text-center">
-                    <div className="flex gap-0.5 justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => { setEditingCash(cp); setPanelType('cashPosition'); }}
-                        className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
-                        title="Edit"
-                      >
-                        <PencilIcon />
-                      </button>
-                      <button
-                        onClick={() => setDeleteTarget({ id: cp.id, name: cp.name, type: 'cashPosition' })}
-                        className="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
-                        title="Delete"
-                      >
-                        <TrashIcon />
-                      </button>
+                      <div className="flex gap-0.5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => { setEditingCash(cp); setPanelType('cashPosition'); }}
+                          className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
+                          title="Edit"
+                        >
+                          <PencilIcon />
+                        </button>
+                        <button
+                          onClick={() => setDeleteTarget({ id: cp.id, name: cp.name, type: 'cashPosition' })}
+                          className="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
+                          title="Delete"
+                        >
+                          <TrashIcon />
+                        </button>
+                      </div>
                     </div>
                   </td>
                   <td className="py-2 px-3 text-right text-slate-900">
@@ -180,59 +208,53 @@ export default function CashFlowPage() {
                   ))}
                 </tr>
               ))}
-              <tr className="border-b border-slate-200 bg-slate-50 font-semibold">
-                <td className="py-2 px-3 text-slate-900 sticky left-0 bg-slate-50">Total Cash</td>
-                <td className="py-2 px-3"></td>
-                <td className="py-2 px-3"></td>
-                <td className="py-2 px-3 text-right text-slate-900">
-                  {formatCurrency(state.cashPositions.reduce((s, cp) => s + cp.balance, 0))}
+
+              {/* === Earnings Section === */}
+              <tr
+                className="bg-emerald-50 cursor-pointer hover:bg-emerald-100"
+                onClick={() => toggleSection('earnings')}
+              >
+                <td className="py-2 px-3 font-bold text-emerald-700 sticky left-0 bg-emerald-50">
+                  <div className="flex items-center gap-2">
+                    {chevron(!!expanded['earnings'])}
+                    <span>Earnings</span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setEditingIncome(undefined); setPanelType('income'); }}
+                      className="p-0.5 rounded hover:bg-emerald-100 text-emerald-600 ml-auto"
+                      title="Add Income Stream"
+                    >
+                      <PlusIcon />
+                    </button>
+                  </div>
                 </td>
-                {snapshots.slice(1).map((s) => (
-                  <td key={s.month} className="py-2 px-3 text-right text-slate-300">-</td>
+                {snapshots.map((s) => (
+                  <td key={s.month} className="py-2 px-3 text-right font-semibold text-emerald-700">
+                    {s.totalIncome > 0 ? formatCurrency(s.totalIncome) : <span className="text-slate-200">-</span>}
+                  </td>
                 ))}
               </tr>
-
-              {/* Earnings Section */}
-              <tr className="bg-emerald-50">
-                <td colSpan={2} className="py-2 px-3 font-bold text-emerald-700">
-                  Earnings
-                </td>
-                <td className="py-2 px-3 text-center">
-                  <button
-                    onClick={() => { setEditingIncome(undefined); setPanelType('income'); }}
-                    className="p-1 rounded hover:bg-emerald-100 text-emerald-600"
-                    title="Add Income Stream"
-                  >
-                    <PlusIcon />
-                  </button>
-                </td>
-                <td colSpan={snapshots.length}></td>
-              </tr>
-              {state.incomeStreams.map((stream) => (
+              {expanded['earnings'] && state.incomeStreams.map((stream) => (
                 <tr key={stream.id} className="border-b border-slate-50 hover:bg-slate-50 group">
-                  <td className="py-2 px-3 text-slate-900 sticky left-0 bg-white">
+                  <td className="py-2 px-3 text-slate-900 sticky left-0 bg-white pl-8">
                     <div className="flex items-center gap-2">
                       <ProviderLogo provider={stream.provider} size={18} />
                       <span>{stream.name}</span>
-                    </div>
-                  </td>
-                  <td className="py-2 px-3 text-slate-400 capitalize">{stream.frequency}</td>
-                  <td className="py-2 px-3 text-center">
-                    <div className="flex gap-0.5 justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => { setEditingIncome(stream); setPanelType('income'); }}
-                        className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
-                        title="Edit"
-                      >
-                        <PencilIcon />
-                      </button>
-                      <button
-                        onClick={() => setDeleteTarget({ id: stream.id, name: stream.name, type: 'income' })}
-                        className="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
-                        title="Delete"
-                      >
-                        <TrashIcon />
-                      </button>
+                      <div className="flex gap-0.5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => { setEditingIncome(stream); setPanelType('income'); }}
+                          className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
+                          title="Edit"
+                        >
+                          <PencilIcon />
+                        </button>
+                        <button
+                          onClick={() => setDeleteTarget({ id: stream.id, name: stream.name, type: 'income' })}
+                          className="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
+                          title="Delete"
+                        >
+                          <TrashIcon />
+                        </button>
+                      </div>
                     </div>
                   </td>
                   {snapshots.map((s) => {
@@ -249,42 +271,49 @@ export default function CashFlowPage() {
                   })}
                 </tr>
               ))}
-              <tr className="border-b border-slate-200 bg-emerald-50 font-semibold">
-                <td className="py-2 px-3 text-emerald-800 sticky left-0 bg-emerald-50">Total Income</td>
-                <td className="py-2 px-3"></td>
-                <td className="py-2 px-3"></td>
-                {snapshots.map((s) => (
-                  <td key={s.month} className="py-2 px-3 text-right text-emerald-700">
-                    {formatCurrency(s.totalIncome)}
-                  </td>
-                ))}
-              </tr>
 
-              {/* Expenses by Category */}
+              {/* === Expense Categories === */}
               {Object.entries(expensesByCategory).map(([category, expenses], catIdx) => {
                 const meta = expenseCategories[category as keyof typeof expenseCategories];
+                const sectionKey = `expense-${category}`;
+                const isExpanded = expanded[sectionKey];
+
                 return (
                   <tbody key={category}>
-                    <tr style={{ backgroundColor: meta?.bgColor || '#f9fafb' }}>
-                      <td colSpan={2} className="py-2 px-3 font-bold" style={{ color: meta?.color }}>
-                        {meta?.label || category}
+                    {/* Category header with subtotals */}
+                    <tr
+                      style={{ backgroundColor: meta?.bgColor || '#f9fafb' }}
+                      className="cursor-pointer"
+                      onClick={() => toggleSection(sectionKey)}
+                    >
+                      <td className="py-2 px-3 font-bold sticky left-0" style={{ color: meta?.color, backgroundColor: meta?.bgColor || '#f9fafb' }}>
+                        <div className="flex items-center gap-2">
+                          {chevron(!!isExpanded)}
+                          <span>{meta?.label || category}</span>
+                          {catIdx === 0 && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setEditingExpense(undefined); setPanelType('expense'); }}
+                              className="p-0.5 rounded hover:bg-red-100 text-red-500 ml-auto"
+                              title="Add Expense"
+                            >
+                              <PlusIcon />
+                            </button>
+                          )}
+                        </div>
                       </td>
-                      <td className="py-2 px-3 text-center">
-                        {catIdx === 0 && (
-                          <button
-                            onClick={() => { setEditingExpense(undefined); setPanelType('expense'); }}
-                            className="p-1 rounded hover:bg-red-100 text-red-500"
-                            title="Add Expense"
-                          >
-                            <PlusIcon />
-                          </button>
-                        )}
-                      </td>
-                      <td colSpan={snapshots.length}></td>
+                      {snapshots.map((s) => {
+                        const subtotal = categorySubtotals[category]?.[s.month] || 0;
+                        return (
+                          <td key={s.month} className="py-2 px-3 text-right font-medium" style={{ color: meta?.color }}>
+                            {subtotal > 0 ? formatCurrency(subtotal) : <span className="text-slate-200">-</span>}
+                          </td>
+                        );
+                      })}
                     </tr>
-                    {expenses.map((expense) => (
+                    {/* Individual expenses (shown when expanded) */}
+                    {isExpanded && expenses.map((expense) => (
                       <tr key={expense.id} className="border-b border-slate-50 hover:bg-slate-50 group">
-                        <td className="py-2 px-3 text-slate-900 sticky left-0 bg-white">
+                        <td className="py-2 px-3 text-slate-900 sticky left-0 bg-white pl-8">
                           <div className="flex items-center gap-2">
                             <ProviderLogo provider={expense.provider} size={18} />
                             <span>
@@ -293,25 +322,22 @@ export default function CashFlowPage() {
                                 <span className="text-slate-400 text-xs ml-1">({expense.provider})</span>
                               )}
                             </span>
-                          </div>
-                        </td>
-                        <td className="py-2 px-3 text-slate-400 capitalize text-xs">{expense.frequency}</td>
-                        <td className="py-2 px-3 text-center">
-                          <div className="flex gap-0.5 justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button
-                              onClick={() => { setEditingExpense(expense); setPanelType('expense'); }}
-                              className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
-                              title="Edit"
-                            >
-                              <PencilIcon />
-                            </button>
-                            <button
-                              onClick={() => setDeleteTarget({ id: expense.id, name: expense.name, type: 'expense' })}
-                              className="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
-                              title="Delete"
-                            >
-                              <TrashIcon />
-                            </button>
+                            <div className="flex gap-0.5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button
+                                onClick={() => { setEditingExpense(expense); setPanelType('expense'); }}
+                                className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
+                                title="Edit"
+                              >
+                                <PencilIcon />
+                              </button>
+                              <button
+                                onClick={() => setDeleteTarget({ id: expense.id, name: expense.name, type: 'expense' })}
+                                className="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
+                                title="Delete"
+                              >
+                                <TrashIcon />
+                              </button>
+                            </div>
                           </div>
                         </td>
                         {snapshots.map((s) => {
@@ -335,8 +361,6 @@ export default function CashFlowPage() {
               {/* Total Expenses */}
               <tr className="border-b border-slate-200 bg-red-50 font-semibold">
                 <td className="py-2 px-3 text-red-800 sticky left-0 bg-red-50">Total Expenses</td>
-                <td className="py-2 px-3"></td>
-                <td className="py-2 px-3"></td>
                 {snapshots.map((s) => (
                   <td key={s.month} className="py-2 px-3 text-right text-red-700">
                     {formatCurrency(s.totalExpenses)}
@@ -347,8 +371,6 @@ export default function CashFlowPage() {
               {/* Net Cash Flow */}
               <tr className="border-b border-slate-200 bg-blue-50 font-bold">
                 <td className="py-3 px-3 text-blue-900 sticky left-0 bg-blue-50">Net Cash Flow</td>
-                <td className="py-3 px-3"></td>
-                <td className="py-3 px-3"></td>
                 {snapshots.map((s) => (
                   <td key={s.month} className={`py-3 px-3 text-right ${
                     s.netCashFlow >= 0 ? 'text-emerald-700' : 'text-red-700'
@@ -361,8 +383,6 @@ export default function CashFlowPage() {
               {/* Running Balance */}
               <tr className="bg-slate-100 font-bold">
                 <td className="py-3 px-3 text-slate-900 sticky left-0 bg-slate-100">Running Balance</td>
-                <td className="py-3 px-3"></td>
-                <td className="py-3 px-3"></td>
                 {snapshots.map((s) => (
                   <td key={s.month} className={`py-3 px-3 text-right ${
                     s.runningBalance >= 0 ? 'text-slate-900' : 'text-red-700'

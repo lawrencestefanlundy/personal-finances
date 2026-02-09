@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { CashPosition } from '@/types/finance';
 import StatCard from '@/components/StatCard';
-import { computeMonthlySnapshots, getUpcomingLargeExpenses } from '@/lib/calculations';
+import { computeMonthlySnapshots } from '@/lib/calculations';
 import { computeYearlyProjections } from '@/lib/projections';
 import { formatCurrency, formatMonth } from '@/lib/formatters';
 import { expenseCategories } from '@/data/categories';
@@ -20,9 +20,10 @@ export default function DashboardPage() {
 
   const snapshots = useMemo(() => computeMonthlySnapshots(state, 50), [state]);
   const projections = useMemo(() => computeYearlyProjections(state), [state]);
-  const upcomingExpenses = useMemo(() => getUpcomingLargeExpenses(state, 3), [state]);
 
-  const totalCash = state.cashPositions.reduce((sum, cp) => sum + cp.balance, 0);
+  const liquidCash = state.cashPositions
+    .filter((cp) => cp.category === 'cash' || cp.category === 'savings' || cp.category === 'crypto')
+    .reduce((sum, cp) => sum + cp.balance, 0);
   const currentSnapshot = snapshots[0];
   const netWealth = projections[0]?.netWealth ?? 0;
 
@@ -52,7 +53,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <StatCard
           title="Net Wealth"
           value={formatCurrency(netWealth)}
@@ -61,21 +62,9 @@ export default function DashboardPage() {
         />
         <StatCard
           title="Liquid Cash"
-          value={formatCurrency(totalCash)}
-          subtitle="Cash + savings + ISA + crypto"
+          value={formatCurrency(liquidCash)}
+          subtitle="Cash + savings + crypto"
           color="green"
-        />
-        <StatCard
-          title="This Month Net"
-          value={formatCurrency(currentSnapshot?.netCashFlow ?? 0)}
-          subtitle={`Income ${formatCurrency(currentSnapshot?.totalIncome ?? 0)} - Expenses ${formatCurrency(currentSnapshot?.totalExpenses ?? 0)}`}
-          color={(currentSnapshot?.netCashFlow ?? 0) >= 0 ? 'blue' : 'red'}
-        />
-        <StatCard
-          title="Running Balance"
-          value={formatCurrency(currentSnapshot?.runningBalance ?? 0)}
-          subtitle="Projected cash position"
-          color="amber"
         />
       </div>
 
@@ -127,31 +116,9 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* Two-column layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Upcoming Large Expenses */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Upcoming Large Expenses</h2>
-          {upcomingExpenses.length === 0 ? (
-            <p className="text-sm text-slate-400">No large expenses in the next 3 months</p>
-          ) : (
-            <div className="space-y-3">
-              {upcomingExpenses.map((exp, i) => (
-                <div key={i} className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0">
-                  <div>
-                    <p className="text-sm font-medium text-slate-900">{exp.name}</p>
-                    <p className="text-xs text-slate-400">{formatMonth(exp.month)}</p>
-                  </div>
-                  <p className="text-sm font-semibold text-red-600">{formatCurrency(exp.amount)}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Monthly Expense Breakdown */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">This Month&apos;s Expenses by Category</h2>
+      {/* Monthly Expense Breakdown */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+        <h2 className="text-lg font-semibold text-slate-900 mb-4">This Month&apos;s Expenses by Category</h2>
           {currentSnapshot && (
             <div className="space-y-2">
               {Object.entries(
@@ -187,7 +154,6 @@ export default function DashboardPage() {
               </div>
             </div>
           )}
-        </div>
       </div>
 
       {/* 6-Month Forecast Table */}
