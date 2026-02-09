@@ -15,6 +15,7 @@ import DeleteConfirmation from '@/components/ui/DeleteConfirmation';
 import CashPositionForm from '@/components/forms/CashPositionForm';
 import IncomeStreamForm from '@/components/forms/IncomeStreamForm';
 import ExpenseForm from '@/components/forms/ExpenseForm';
+import ProviderLogo from '@/components/ui/ProviderLogo';
 
 type PanelType = 'cashPosition' | 'income' | 'expense' | null;
 
@@ -141,7 +142,12 @@ export default function CashFlowPage() {
               </tr>
               {state.cashPositions.map((cp) => (
                 <tr key={cp.id} className="border-b border-slate-50 hover:bg-slate-50 group">
-                  <td className="py-2 px-3 text-slate-900 sticky left-0 bg-white">{cp.name}</td>
+                  <td className="py-2 px-3 text-slate-900 sticky left-0 bg-white">
+                    <div className="flex items-center gap-2">
+                      <ProviderLogo provider={cp.provider} size={18} />
+                      <span>{cp.name}</span>
+                    </div>
+                  </td>
                   <td className="py-2 px-3 text-slate-400">Cash</td>
                   <td className="py-2 px-3 text-center">
                     <div className="flex gap-0.5 justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -204,7 +210,12 @@ export default function CashFlowPage() {
               </tr>
               {state.incomeStreams.map((stream) => (
                 <tr key={stream.id} className="border-b border-slate-50 hover:bg-slate-50 group">
-                  <td className="py-2 px-3 text-slate-900 sticky left-0 bg-white">{stream.name}</td>
+                  <td className="py-2 px-3 text-slate-900 sticky left-0 bg-white">
+                    <div className="flex items-center gap-2">
+                      <ProviderLogo provider={stream.provider} size={18} />
+                      <span>{stream.name}</span>
+                    </div>
+                  </td>
                   <td className="py-2 px-3 text-slate-400 capitalize">{stream.frequency}</td>
                   <td className="py-2 px-3 text-center">
                     <div className="flex gap-0.5 justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -274,10 +285,15 @@ export default function CashFlowPage() {
                     {expenses.map((expense) => (
                       <tr key={expense.id} className="border-b border-slate-50 hover:bg-slate-50 group">
                         <td className="py-2 px-3 text-slate-900 sticky left-0 bg-white">
-                          {expense.name}
-                          {expense.provider && (
-                            <span className="text-slate-400 text-xs ml-1">({expense.provider})</span>
-                          )}
+                          <div className="flex items-center gap-2">
+                            <ProviderLogo provider={expense.provider} size={18} />
+                            <span>
+                              {expense.name}
+                              {expense.provider && (
+                                <span className="text-slate-400 text-xs ml-1">({expense.provider})</span>
+                              )}
+                            </span>
+                          </div>
                         </td>
                         <td className="py-2 px-3 text-slate-400 capitalize text-xs">{expense.frequency}</td>
                         <td className="py-2 px-3 text-center">

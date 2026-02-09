@@ -1,4 +1,4 @@
-import { FinanceState, CashPosition, IncomeStream, Expense, Asset, Liability, Scenario } from '@/types/finance';
+import { FinanceState, CashPosition, IncomeStream, Expense, Asset, Liability, Scenario, Transaction } from '@/types/finance';
 
 export type FinanceAction =
   | { type: 'ADD_CASH_POSITION'; payload: CashPosition }
@@ -16,6 +16,9 @@ export type FinanceAction =
   | { type: 'ADD_LIABILITY'; payload: Liability }
   | { type: 'UPDATE_LIABILITY'; payload: Liability }
   | { type: 'DELETE_LIABILITY'; payload: string }
+  | { type: 'ADD_TRANSACTIONS'; payload: Transaction[] }
+  | { type: 'DELETE_TRANSACTION'; payload: string }
+  | { type: 'CLEAR_TRANSACTIONS' }
   | { type: 'ADD_SCENARIO'; payload: Scenario }
   | { type: 'UPDATE_SCENARIO'; payload: Scenario }
   | { type: 'DELETE_SCENARIO'; payload: string }
@@ -128,6 +131,32 @@ export function financeReducer(state: FinanceState, action: FinanceAction): Fina
       return updateTimestamp({
         ...state,
         liabilities: state.liabilities.filter((l) => l.id !== action.payload),
+      });
+
+    case 'ADD_TRANSACTIONS': {
+      // Merge new transactions, deduplicating by emailId where present
+      const existingEmailIds = new Set(
+        state.transactions.filter((t) => t.emailId).map((t) => t.emailId)
+      );
+      const newTransactions = action.payload.filter(
+        (t) => !t.emailId || !existingEmailIds.has(t.emailId)
+      );
+      return updateTimestamp({
+        ...state,
+        transactions: [...state.transactions, ...newTransactions],
+      });
+    }
+
+    case 'DELETE_TRANSACTION':
+      return updateTimestamp({
+        ...state,
+        transactions: state.transactions.filter((t) => t.id !== action.payload),
+      });
+
+    case 'CLEAR_TRANSACTIONS':
+      return updateTimestamp({
+        ...state,
+        transactions: [],
       });
 
     case 'ADD_SCENARIO':

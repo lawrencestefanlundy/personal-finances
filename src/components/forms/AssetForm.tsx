@@ -16,6 +16,7 @@ export default function AssetForm({ existing, onClose }: AssetFormProps) {
   const { dispatch } = useFinance();
 
   const [name, setName] = useState(existing?.name ?? '');
+  const [provider, setProvider] = useState(existing?.provider ?? '');
   const [currentValue, setCurrentValue] = useState(existing?.currentValue?.toString() ?? '');
   const [annualGrowthRate, setAnnualGrowthRate] = useState(
     existing ? (existing.annualGrowthRate * 100).toString() : ''
@@ -55,6 +56,7 @@ export default function AssetForm({ existing, onClose }: AssetFormProps) {
       ...(unlockYear ? { unlockYear: Number(unlockYear) } : {}),
       ...(endYear ? { endYear: Number(endYear) } : {}),
       ...(notes.trim() ? { notes: notes.trim() } : {}),
+      ...(provider.trim() ? { provider: provider.trim() } : {}),
     };
 
     if (existing) {
@@ -73,6 +75,16 @@ export default function AssetForm({ existing, onClose }: AssetFormProps) {
           value={name}
           onChange={(e) => { setName(e.target.value); setErrors((prev) => ({ ...prev, name: '' })); }}
           placeholder="e.g. Lunar Fund I"
+          className={inputClass}
+        />
+      </FormField>
+
+      <FormField label="Provider">
+        <input
+          type="text"
+          value={provider}
+          onChange={(e) => setProvider(e.target.value)}
+          placeholder="e.g. Vanguard, Coinbase"
           className={inputClass}
         />
       </FormField>

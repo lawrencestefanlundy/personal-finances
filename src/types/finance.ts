@@ -6,6 +6,7 @@ export interface CashPosition {
   interestRate: number;
   isLiquid: boolean;
   category: 'cash' | 'savings' | 'isa' | 'crypto';
+  provider?: string;
 }
 
 // === INCOME STREAMS ===
@@ -19,6 +20,7 @@ export interface IncomeStream {
   paymentMonths?: number[]; // which months payment falls (1-12)
   owner: 'lawrence' | 'stephanie' | 'joint';
   taxable: boolean;
+  provider?: string;
 }
 
 // === EXPENSES ===
@@ -76,6 +78,7 @@ export interface Asset {
   unlockYear?: number; // year when growth starts
   endYear?: number; // year when asset is liquidated
   notes?: string;
+  provider?: string;
 }
 
 // === LIABILITIES ===
@@ -87,6 +90,19 @@ export interface Liability {
   monthlyPayment: number;
   type: 'mortgage' | 'student_loan' | 'credit_card' | 'other';
   endYear?: number;
+  provider?: string;
+}
+
+// === TRANSACTIONS ===
+export interface Transaction {
+  id: string;
+  date: string; // ISO date string
+  description: string;
+  amount: number; // negative = debit, positive = credit
+  category?: string;
+  source: 'monzo' | 'manual';
+  linkedEntityId?: string; // link to related cash position / expense / income
+  emailId?: string; // for deduplication on reimport
 }
 
 // === SCENARIOS ===
@@ -133,6 +149,7 @@ export interface FinanceState {
   expenses: Expense[];
   assets: Asset[];
   liabilities: Liability[];
+  transactions: Transaction[];
   scenarios: Scenario[];
   activeScenarioId: string | null;
   settings: {

@@ -12,6 +12,8 @@ import { PencilIcon, TrashIcon, PlusIcon } from '@/components/ui/Icons';
 import SlidePanel from '@/components/ui/SlidePanel';
 import DeleteConfirmation from '@/components/ui/DeleteConfirmation';
 import CashPositionForm from '@/components/forms/CashPositionForm';
+import ProviderLogo from '@/components/ui/ProviderLogo';
+import TransactionList from '@/components/TransactionList';
 
 export default function DashboardPage() {
   const { state, dispatch } = useFinance();
@@ -108,7 +110,10 @@ export default function DashboardPage() {
                   <TrashIcon />
                 </button>
               </div>
-              <p className="text-sm text-slate-500">{cp.name}</p>
+              <div className="flex items-center gap-2">
+                <ProviderLogo provider={cp.provider} size={20} />
+                <p className="text-sm text-slate-500">{cp.name}</p>
+              </div>
               <p className="text-xl font-bold text-slate-900">{formatCurrency(cp.balance)}</p>
               {cp.interestRate > 0 && (
                 <p className="text-xs text-slate-400">{(cp.interestRate * 100).toFixed(1)}% interest</p>
@@ -116,6 +121,10 @@ export default function DashboardPage() {
             </div>
           ))}
         </div>
+        {/* Inline transaction list */}
+        {state.transactions.length > 0 && (
+          <TransactionList transactions={state.transactions} />
+        )}
       </div>
 
       {/* Two-column layout */}

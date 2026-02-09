@@ -1,13 +1,16 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useFinance } from '@/context/FinanceContext';
+import { Transaction } from '@/types/finance';
 import { exportStateAsJSON, importStateFromJSON, clearState } from '@/lib/storage';
 import { seedData } from '@/data/seedData';
 
 export default function SettingsPage() {
   const { state, dispatch } = useFinance();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const txFileInputRef = useRef<HTMLInputElement>(null);
+  const [txImportStatus, setTxImportStatus] = useState<string | null>(null);
 
   const handleExport = () => {
     exportStateAsJSON(state);
@@ -27,6 +30,35 @@ export default function SettingsPage() {
 
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+
+  const handleTransactionImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      const transactions: Transaction[] = Array.isArray(data) ? data : data.transactions;
+      if (!Array.isArray(transactions)) {
+        throw new Error('Expected an array of transactions');
+      }
+      dispatch({ type: 'ADD_TRANSACTIONS', payload: transactions });
+      setTxImportStatus(`Imported ${transactions.length} transactions (duplicates skipped)`);
+    } catch (err: unknown) {
+      setTxImportStatus(`Import failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    }
+
+    if (txFileInputRef.current) {
+      txFileInputRef.current.value = '';
+    }
+  };
+
+  const handleClearTransactions = () => {
+    if (confirm('Are you sure? This will remove all imported transactions.')) {
+      dispatch({ type: 'CLEAR_TRANSACTIONS' });
+      setTxImportStatus(null);
     }
   };
 
@@ -156,6 +188,68 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      {/* Transaction Import */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+        <h2 className="text-lg font-semibold text-slate-900 mb-4">Transaction Import</h2>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-900">Import Transactions</p>
+              <p className="text-xs text-slate-400">
+                Import a JSON file from the Monzo email parser script
+              </p>
+            </div>
+            <div>
+              <input
+                ref={txFileInputRef}
+                type="file"
+                accept=".json"
+                onChange={handleTransactionImport}
+                className="hidden"
+              />
+              <button
+                onClick={() => txFileInputRef.current?.click()}
+                className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              >
+                Import Transactions
+              </button>
+            </div>
+          </div>
+
+          {txImportStatus && (
+            <p className={`text-xs ${txImportStatus.startsWith('Import failed') ? 'text-red-500' : 'text-emerald-600'}`}>
+              {txImportStatus}
+            </p>
+          )}
+
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-900">
+                Stored Transactions: {state.transactions.length}
+              </p>
+              <p className="text-xs text-slate-400">
+                {state.transactions.length > 0
+                  ? `Latest: ${new Date(
+                      [...state.transactions].sort(
+                        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+                      )[0]?.date
+                    ).toLocaleDateString('en-GB')}`
+                  : 'No transactions imported yet'
+                }
+              </p>
+            </div>
+            {state.transactions.length > 0 && (
+              <button
+                onClick={handleClearTransactions}
+                className="px-4 py-2 text-sm bg-red-50 text-red-600 rounded-md hover:bg-red-100 transition-colors border border-red-200"
+              >
+                Clear All
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Info */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
         <h2 className="text-lg font-semibold text-slate-900 mb-4">About</h2>
@@ -166,6 +260,7 @@ export default function SettingsPage() {
           <p>Expenses: {state.expenses.length}</p>
           <p>Assets: {state.assets.length}</p>
           <p>Liabilities: {state.liabilities.length}</p>
+          <p>Transactions: {state.transactions.length}</p>
           <p>Data stored in browser localStorage</p>
         </div>
       </div>

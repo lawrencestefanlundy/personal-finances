@@ -15,6 +15,7 @@ import SlidePanel from '@/components/ui/SlidePanel';
 import DeleteConfirmation from '@/components/ui/DeleteConfirmation';
 import AssetForm from '@/components/forms/AssetForm';
 import LiabilityForm from '@/components/forms/LiabilityForm';
+import ProviderLogo from '@/components/ui/ProviderLogo';
 
 const LIABILITY_TYPE_LABELS: Record<string, string> = {
   mortgage: 'Mortgage',
@@ -181,7 +182,12 @@ export default function WealthPage() {
             <tbody>
               {state.assets.map((asset) => (
                 <tr key={asset.id} className="border-b border-slate-50 hover:bg-slate-50 group">
-                  <td className="py-2 px-3 font-medium text-slate-900">{asset.name}</td>
+                  <td className="py-2 px-3 font-medium text-slate-900">
+                    <div className="flex items-center gap-2">
+                      <ProviderLogo provider={asset.provider} size={18} />
+                      <span>{asset.name}</span>
+                    </div>
+                  </td>
                   <td className="py-2 px-3">
                     <span
                       className="inline-block px-2 py-0.5 rounded-full text-xs font-medium"
@@ -265,7 +271,12 @@ export default function WealthPage() {
             <tbody>
               {state.liabilities.map((liability) => (
                 <tr key={liability.id} className="border-b border-slate-50 hover:bg-slate-50 group">
-                  <td className="py-2 px-3 font-medium text-slate-900">{liability.name}</td>
+                  <td className="py-2 px-3 font-medium text-slate-900">
+                    <div className="flex items-center gap-2">
+                      <ProviderLogo provider={liability.provider} size={18} />
+                      <span>{liability.name}</span>
+                    </div>
+                  </td>
                   <td className="py-2 px-3 text-slate-600 text-xs">
                     {LIABILITY_TYPE_LABELS[liability.type] ?? liability.type}
                   </td>

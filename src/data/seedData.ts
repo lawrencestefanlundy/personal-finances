@@ -2,10 +2,10 @@ import { FinanceState } from '@/types/finance';
 
 export const seedData: FinanceState = {
   cashPositions: [
-    { id: 'cash-bank', name: 'Bank Account', balance: 639, interestRate: 0, isLiquid: true, category: 'cash' },
-    { id: 'cash-instant', name: 'Instant Savings', balance: 42818, interestRate: 0.035, isLiquid: true, category: 'savings' },
-    { id: 'cash-isa', name: 'LLB ISA', balance: 20917, interestRate: 0.06, isLiquid: true, category: 'isa' },
-    { id: 'cash-crypto', name: 'Crypto', balance: 6508, interestRate: 0, isLiquid: true, category: 'crypto' },
+    { id: 'cash-bank', name: 'Bank Account', balance: 639, interestRate: 0, isLiquid: true, category: 'cash', provider: 'Monzo' },
+    { id: 'cash-instant', name: 'Instant Savings', balance: 42818, interestRate: 0.035, isLiquid: true, category: 'savings', provider: 'Chase' },
+    { id: 'cash-isa', name: 'LLB ISA', balance: 20917, interestRate: 0.06, isLiquid: true, category: 'isa', provider: 'Lloyds Bank' },
+    { id: 'cash-crypto', name: 'Crypto', balance: 6508, interestRate: 0, isLiquid: true, category: 'crypto', provider: 'Coinbase' },
   ],
 
   incomeStreams: [
@@ -17,6 +17,7 @@ export const seedData: FinanceState = {
       paymentMonths: [3, 6, 9, 12],
       owner: 'lawrence',
       taxable: true,
+      provider: 'State of the Future',
     },
     {
       id: 'inc-lawrence-dividends',
@@ -26,6 +27,7 @@ export const seedData: FinanceState = {
       paymentMonths: [3, 6, 9, 12],
       owner: 'lawrence',
       taxable: true,
+      provider: 'State of the Future',
     },
     {
       id: 'inc-stephanie-dividends',
@@ -35,6 +37,7 @@ export const seedData: FinanceState = {
       paymentMonths: [3, 6, 9, 12],
       owner: 'stephanie',
       taxable: true,
+      provider: 'State of the Future',
     },
     {
       id: 'inc-stephanie-salary',
@@ -43,6 +46,7 @@ export const seedData: FinanceState = {
       frequency: 'monthly',
       owner: 'stephanie',
       taxable: true,
+      provider: 'Insig AI',
     },
   ],
 
@@ -105,27 +109,29 @@ export const seedData: FinanceState = {
   ],
 
   assets: [
-    { id: 'asset-instant', name: 'Instant Savings', currentValue: 43000, annualGrowthRate: 0.035, category: 'savings', isLiquid: true },
-    { id: 'asset-isa', name: 'ISA', currentValue: 20984, annualGrowthRate: 0.06, category: 'isa', isLiquid: true },
-    { id: 'asset-crypto', name: 'Crypto', currentValue: 8119, annualGrowthRate: 0, category: 'crypto', isLiquid: true },
-    { id: 'asset-lunar1', name: 'Lunar I', currentValue: 417271, annualGrowthRate: 0.06, category: 'fund', isLiquid: false, unlockYear: 2030 },
-    { id: 'asset-lunar2', name: 'Lunar II', currentValue: 284196, annualGrowthRate: 0.06, category: 'fund', isLiquid: false, unlockYear: 2034 },
-    { id: 'asset-cloudberry1', name: 'Cloudberry I', currentValue: 1514316, annualGrowthRate: 0.06, category: 'fund', isLiquid: false, unlockYear: 2035, notes: 'Appears in 2035' },
-    { id: 'asset-insigai', name: 'Insig.ai', currentValue: 0, annualGrowthRate: 0, category: 'angel', isLiquid: false, notes: 'Written off' },
-    { id: 'asset-car', name: 'Polo', currentValue: 7000, annualGrowthRate: -0.03, category: 'vehicle', isLiquid: false },
+    { id: 'asset-instant', name: 'Instant Savings', currentValue: 43000, annualGrowthRate: 0.035, category: 'savings', isLiquid: true, provider: 'Chase' },
+    { id: 'asset-isa', name: 'ISA', currentValue: 20984, annualGrowthRate: 0.06, category: 'isa', isLiquid: true, provider: 'Lloyds Bank' },
+    { id: 'asset-crypto', name: 'Crypto', currentValue: 8119, annualGrowthRate: 0, category: 'crypto', isLiquid: true, provider: 'Coinbase' },
+    { id: 'asset-lunar1', name: 'Lunar I', currentValue: 417271, annualGrowthRate: 0.06, category: 'fund', isLiquid: false, unlockYear: 2030, provider: 'Lunar Ventures' },
+    { id: 'asset-lunar2', name: 'Lunar II', currentValue: 284196, annualGrowthRate: 0.06, category: 'fund', isLiquid: false, unlockYear: 2034, provider: 'Lunar Ventures' },
+    { id: 'asset-cloudberry1', name: 'Cloudberry I', currentValue: 1514316, annualGrowthRate: 0.06, category: 'fund', isLiquid: false, unlockYear: 2035, notes: 'Appears in 2035', provider: 'Cloudberry' },
+    { id: 'asset-insigai', name: 'Insig AI (Options)', currentValue: 0, annualGrowthRate: 0, category: 'angel', isLiquid: false, notes: '1.5M options at 50p exercise. Vesting: 1M Apr 2026, 500K Apr 2027. Currently out of the money (~28p share price Nov 2025)', provider: 'Insig AI' },
+    { id: 'asset-car', name: 'Polo', currentValue: 7000, annualGrowthRate: -0.03, category: 'vehicle', isLiquid: false, provider: 'Volkswagen' },
     { id: 'asset-house', name: 'House', currentValue: 1419840, annualGrowthRate: 0.02, category: 'property', isLiquid: false },
     { id: 'asset-angel', name: 'Angel Investments', currentValue: 68000, annualGrowthRate: 0, category: 'angel', isLiquid: false },
-    { id: 'asset-sb-pension', name: 'SB Pension', currentValue: 15000, annualGrowthRate: 0.06, category: 'pension', isLiquid: false },
-    { id: 'asset-llb-pension', name: 'LLB Pension', currentValue: 20117, annualGrowthRate: 0.06, category: 'pension', isLiquid: false },
-    { id: 'asset-kit-isa', name: 'Kit ISA', currentValue: 13027, annualGrowthRate: 0.06, category: 'children_isa', isLiquid: false, endYear: 2039 },
-    { id: 'asset-finn-isa', name: 'Finn ISA', currentValue: 13027, annualGrowthRate: 0.06, category: 'children_isa', isLiquid: false, endYear: 2037 },
+    { id: 'asset-sb-pension', name: 'SB Pension', currentValue: 15000, annualGrowthRate: 0.06, category: 'pension', isLiquid: false, provider: 'Vanguard' },
+    { id: 'asset-llb-pension', name: 'LLB Pension', currentValue: 20117, annualGrowthRate: 0.06, category: 'pension', isLiquid: false, provider: 'Vanguard' },
+    { id: 'asset-kit-isa', name: 'Kit ISA', currentValue: 13027, annualGrowthRate: 0.06, category: 'children_isa', isLiquid: false, endYear: 2039, provider: 'Vanguard' },
+    { id: 'asset-finn-isa', name: 'Finn ISA', currentValue: 13027, annualGrowthRate: 0.06, category: 'children_isa', isLiquid: false, endYear: 2037, provider: 'Vanguard' },
   ],
 
   liabilities: [
-    { id: 'liab-mortgage', name: 'Mortgage', currentBalance: 156870, interestRate: 0.0559, monthlyPayment: 911, type: 'mortgage' },
-    { id: 'liab-sl-plan2', name: 'Steph Student Loan (Plan 2)', currentBalance: 26610, interestRate: 0.0625, monthlyPayment: 0, type: 'student_loan', endYear: 2040 },
-    { id: 'liab-sl-postgrad', name: 'Steph Student Loan (Postgrad)', currentBalance: 18503, interestRate: 0.075, monthlyPayment: 0, type: 'student_loan', endYear: 2040 },
+    { id: 'liab-mortgage', name: 'Mortgage', currentBalance: 156870, interestRate: 0.0559, monthlyPayment: 911, type: 'mortgage', provider: 'Aldermore' },
+    { id: 'liab-sl-plan2', name: 'Steph Student Loan (Plan 2)', currentBalance: 26610, interestRate: 0.0625, monthlyPayment: 0, type: 'student_loan', endYear: 2040, provider: 'SLC' },
+    { id: 'liab-sl-postgrad', name: 'Steph Student Loan (Postgrad)', currentBalance: 18503, interestRate: 0.075, monthlyPayment: 0, type: 'student_loan', endYear: 2040, provider: 'SLC' },
   ],
+
+  transactions: [],
 
   scenarios: [],
   activeScenarioId: null,

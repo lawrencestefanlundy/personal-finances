@@ -22,6 +22,7 @@ export default function CashPositionForm({ existing, onClose }: CashPositionForm
   const { dispatch } = useFinance();
 
   const [name, setName] = useState(existing?.name ?? '');
+  const [provider, setProvider] = useState(existing?.provider ?? '');
   const [balance, setBalance] = useState(existing?.balance?.toString() ?? '');
   const [interestRate, setInterestRate] = useState(
     existing ? (existing.interestRate * 100).toString() : ''
@@ -53,6 +54,7 @@ export default function CashPositionForm({ existing, onClose }: CashPositionForm
       interestRate: interestRate ? Number(interestRate) / 100 : 0,
       category,
       isLiquid,
+      ...(provider.trim() ? { provider: provider.trim() } : {}),
     };
 
     if (existing) {
@@ -71,6 +73,16 @@ export default function CashPositionForm({ existing, onClose }: CashPositionForm
           value={name}
           onChange={(e) => { setName(e.target.value); setErrors((prev) => ({ ...prev, name: '' })); }}
           placeholder="e.g. Bank Account"
+          className={inputClass}
+        />
+      </FormField>
+
+      <FormField label="Provider">
+        <input
+          type="text"
+          value={provider}
+          onChange={(e) => setProvider(e.target.value)}
+          placeholder="e.g. Monzo, Chase"
           className={inputClass}
         />
       </FormField>

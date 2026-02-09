@@ -28,6 +28,7 @@ export default function IncomeStreamForm({ existing, onClose }: IncomeStreamForm
   const { dispatch } = useFinance();
 
   const [name, setName] = useState(existing?.name ?? '');
+  const [provider, setProvider] = useState(existing?.provider ?? '');
   const [amount, setAmount] = useState(existing?.amount?.toString() ?? '');
   const [frequency, setFrequency] = useState<IncomeFrequency>(existing?.frequency ?? 'monthly');
   const [owner, setOwner] = useState<IncomeStream['owner']>(existing?.owner ?? 'lawrence');
@@ -61,6 +62,7 @@ export default function IncomeStreamForm({ existing, onClose }: IncomeStreamForm
       owner,
       taxable,
       ...(showPaymentMonths && paymentMonths.length > 0 ? { paymentMonths } : {}),
+      ...(provider.trim() ? { provider: provider.trim() } : {}),
     };
 
     if (existing) {
@@ -79,6 +81,16 @@ export default function IncomeStreamForm({ existing, onClose }: IncomeStreamForm
           value={name}
           onChange={(e) => { setName(e.target.value); setErrors((prev) => ({ ...prev, name: '' })); }}
           placeholder="e.g. Salary"
+          className={inputClass}
+        />
+      </FormField>
+
+      <FormField label="Provider / Employer">
+        <input
+          type="text"
+          value={provider}
+          onChange={(e) => setProvider(e.target.value)}
+          placeholder="e.g. State of the Future"
           className={inputClass}
         />
       </FormField>

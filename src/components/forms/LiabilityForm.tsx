@@ -22,6 +22,7 @@ export default function LiabilityForm({ existing, onClose }: LiabilityFormProps)
   const { dispatch } = useFinance();
 
   const [name, setName] = useState(existing?.name ?? '');
+  const [provider, setProvider] = useState(existing?.provider ?? '');
   const [currentBalance, setCurrentBalance] = useState(existing?.currentBalance?.toString() ?? '');
   const [interestRate, setInterestRate] = useState(
     existing ? (existing.interestRate * 100).toString() : ''
@@ -57,6 +58,7 @@ export default function LiabilityForm({ existing, onClose }: LiabilityFormProps)
       monthlyPayment: monthlyPayment ? Number(monthlyPayment) : 0,
       type,
       ...(endYear ? { endYear: Number(endYear) } : {}),
+      ...(provider.trim() ? { provider: provider.trim() } : {}),
     };
 
     if (existing) {
@@ -75,6 +77,16 @@ export default function LiabilityForm({ existing, onClose }: LiabilityFormProps)
           value={name}
           onChange={(e) => { setName(e.target.value); setErrors((prev) => ({ ...prev, name: '' })); }}
           placeholder="e.g. Mortgage"
+          className={inputClass}
+        />
+      </FormField>
+
+      <FormField label="Provider / Lender">
+        <input
+          type="text"
+          value={provider}
+          onChange={(e) => setProvider(e.target.value)}
+          placeholder="e.g. Aldermore, SLC"
           className={inputClass}
         />
       </FormField>
