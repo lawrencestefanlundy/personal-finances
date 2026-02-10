@@ -7,8 +7,6 @@ const navItems = [
   { href: '/', label: 'Overview' },
   { href: '/cash-flow', label: 'Cash Flow' },
   { href: '/net-worth', label: 'Net Worth' },
-  { href: '/investments', label: 'Investments' },
-  { href: '/scenarios', label: 'Scenarios' },
   { href: '/settings', label: 'Settings' },
 ];
 

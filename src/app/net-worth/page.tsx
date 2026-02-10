@@ -1,12 +1,12 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import Link from 'next/link';
 import { useFinance } from '@/context/FinanceContext';
 import { Asset, Liability } from '@/types/finance';
 import { computeYearlyProjections } from '@/lib/projections';
 import { formatCurrency, formatPercent } from '@/lib/formatters';
 import { assetCategories } from '@/data/categories';
+import { formatCostBasis, formatMoic, instrumentLabels, statusStyles } from '@/lib/investmentFormatters';
 import WealthChart from '@/components/charts/WealthChart';
 import LiabilityChart from '@/components/charts/LiabilityChart';
 import StatCard from '@/components/StatCard';
@@ -38,21 +38,25 @@ export default function NetWorthPage() {
   const liquidAssets = state.assets.filter((a) => a.isLiquid).reduce((sum, a) => sum + a.currentValue, 0);
   const illiquidAssets = totalAssets - liquidAssets;
 
-  // Group non-angel assets by category
+  // Group non-angel, non-fund assets by category
   const assetsByCategory = useMemo(() => {
     const groups: Record<string, Asset[]> = {};
     for (const asset of state.assets) {
-      if (asset.category === 'angel') continue;
+      if (asset.category === 'angel' || asset.category === 'fund') continue;
       if (!groups[asset.category]) groups[asset.category] = [];
       groups[asset.category].push(asset);
     }
     return groups;
   }, [state.assets]);
 
-  // Angel summary
+  // Investment assets
   const angelAssets = state.assets.filter((a) => a.category === 'angel');
+  const fundAssets = state.assets.filter((a) => a.category === 'fund');
   const angelTotal = angelAssets.reduce((sum, a) => sum + a.currentValue, 0);
-  const angelCount = angelAssets.length;
+  const angelCostTotal = angelAssets.reduce((sum, a) => sum + (a.costBasis ?? 0), 0);
+  const activeCount = angelAssets.filter((a) => a.status === 'active' || !a.status).length;
+  const exitedCount = angelAssets.filter((a) => a.status === 'exited').length;
+  const writtenOffCount = angelAssets.filter((a) => a.status === 'written_off').length;
 
   // Group liabilities by type
   const liabilitiesByType = useMemo(() => {
@@ -80,7 +84,6 @@ export default function NetWorthPage() {
     if (final && (!result.length || result[result.length - 1].year !== final.year)) {
       result.push(final);
     }
-    // Deduplicate by year
     const seen = new Set<number>();
     return result.filter((p) => {
       if (seen.has(p.year)) return false;
@@ -119,7 +122,7 @@ export default function NetWorthPage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Net Worth</h1>
           <p className="text-sm text-slate-500 mt-1">
-            Balance sheet and long-term projections ({projections[0]?.year}–{projections[projections.length - 1]?.year})
+            Balance sheet, investments, and long-term projections ({projections[0]?.year}–{projections[projections.length - 1]?.year})
           </p>
         </div>
       </div>
@@ -146,7 +149,7 @@ export default function NetWorthPage() {
         />
         <StatCard
           title="Liquid / Illiquid"
-          value={`${Math.round((liquidAssets / totalAssets) * 100)}% / ${Math.round((illiquidAssets / totalAssets) * 100)}%`}
+          value={totalAssets > 0 ? `${Math.round((liquidAssets / totalAssets) * 100)}% / ${Math.round((illiquidAssets / totalAssets) * 100)}%` : '—'}
           subtitle={`${formatCurrency(liquidAssets)} accessible`}
           color="blue"
         />
@@ -171,7 +174,6 @@ export default function NetWorthPage() {
           </button>
         </div>
 
-        {/* Assets by category */}
         <div className="space-y-1">
           <div className="flex items-center justify-between py-2 px-3 bg-emerald-50 rounded-t-lg">
             <span className="font-bold text-emerald-800">Assets</span>
@@ -237,21 +239,73 @@ export default function NetWorthPage() {
             );
           })}
 
-          {/* Angel investments summary line */}
-          <div className="flex items-center justify-between py-2 px-3 hover:bg-slate-50">
-            <div className="flex items-center gap-2 pl-5">
-              <span
-                className="inline-block px-2 py-0.5 rounded-full text-xs font-medium"
-                style={{ backgroundColor: assetCategories.angel?.bgColor, color: assetCategories.angel?.color }}
-              >
-                Angel
+          {/* Fund carry summary line */}
+          {fundAssets.length > 0 && (
+            <div
+              className="flex items-center justify-between py-2 px-3 cursor-pointer hover:bg-slate-50"
+              onClick={() => toggleSection('funds')}
+            >
+              <div className="flex items-center gap-2">
+                {chevron(!!expanded['funds'])}
+                <span
+                  className="inline-block px-2 py-0.5 rounded-full text-xs font-medium"
+                  style={{ backgroundColor: assetCategories.fund?.bgColor, color: assetCategories.fund?.color }}
+                >
+                  Fund Carry
+                </span>
+                <span className="text-sm text-slate-500">({fundAssets.length})</span>
+              </div>
+              <span className="text-sm font-semibold text-slate-900">
+                {formatCurrency(fundAssets.reduce((sum, a) => sum + a.currentValue, 0))}
               </span>
-              <Link href="/investments" className="text-sm text-blue-600 hover:text-blue-800 hover:underline">
-                {angelCount} investments →
-              </Link>
             </div>
-            <span className="text-sm font-semibold text-slate-900">{formatCurrency(angelTotal)}</span>
-          </div>
+          )}
+          {expanded['funds'] && fundAssets.map((fund) => (
+            <div key={fund.id} className="flex items-center justify-between py-1.5 px-3 pl-10 hover:bg-slate-50 group">
+              <div className="flex items-center gap-2">
+                <ProviderLogo provider={fund.provider} size={16} />
+                <span className="text-sm text-slate-700">{fund.name}</span>
+                <span className="text-xs text-slate-400">{formatPercent(fund.annualGrowthRate)}</span>
+                {fund.unlockYear && (
+                  <span className="text-xs text-slate-400">unlock {fund.unlockYear}</span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-slate-900">{formatCurrency(fund.currentValue)}</span>
+                <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => { setEditingAsset(fund); setPanelType('asset'); }}
+                    className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
+                    title="Edit"
+                  >
+                    <PencilIcon />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {/* Angel investments summary line */}
+          {angelAssets.length > 0 && (
+            <div
+              className="flex items-center justify-between py-2 px-3 cursor-pointer hover:bg-slate-50"
+              onClick={() => toggleSection('angels')}
+            >
+              <div className="flex items-center gap-2">
+                {chevron(!!expanded['angels'])}
+                <span
+                  className="inline-block px-2 py-0.5 rounded-full text-xs font-medium"
+                  style={{ backgroundColor: assetCategories.angel?.bgColor, color: assetCategories.angel?.color }}
+                >
+                  Angel
+                </span>
+                <span className="text-sm text-slate-500">
+                  ({angelAssets.length}) · {activeCount} active · {exitedCount} exited · {writtenOffCount} written off
+                </span>
+              </div>
+              <span className="text-sm font-semibold text-slate-900">{formatCurrency(angelTotal)}</span>
+            </div>
+          )}
 
           {/* Liabilities section */}
           <div className="flex items-center justify-between py-2 px-3 bg-red-50 mt-4 rounded-t-lg">
@@ -328,6 +382,168 @@ export default function NetWorthPage() {
           </div>
         </div>
       </div>
+
+      {/* Fund Carry Positions */}
+      {fundAssets.length > 0 && (
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+          <h2 className="text-lg font-semibold text-slate-900 mb-4">Fund Carry Positions</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {fundAssets.map((fund) => (
+              <div key={fund.id} className="group relative bg-slate-50 rounded-lg p-5">
+                <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => { setEditingAsset(fund); setPanelType('asset'); }}
+                    className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
+                    title="Edit"
+                  >
+                    <PencilIcon />
+                  </button>
+                </div>
+                <div className="flex items-center gap-2 mb-2">
+                  <ProviderLogo provider={fund.provider} size={20} />
+                  <h3 className="font-semibold text-slate-900">{fund.name}</h3>
+                </div>
+                <p className="text-2xl font-bold text-purple-700 mb-1">{formatCurrency(fund.currentValue)}</p>
+                <div className="flex gap-3 text-xs text-slate-500 mb-2">
+                  <span>{formatPercent(fund.annualGrowthRate)} growth</span>
+                  {fund.unlockYear && <span>Unlock {fund.unlockYear}</span>}
+                </div>
+                {fund.notes && (
+                  <p className="text-xs text-slate-500 leading-relaxed border-t border-slate-200 pt-2 mt-2">
+                    {fund.notes}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Angel Investments Table */}
+      {angelAssets.length > 0 && (
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">Angel Investments</h2>
+              <p className="text-sm text-slate-500 mt-0.5">
+                {formatCurrency(angelCostTotal)} deployed · {angelCostTotal > 0 ? `${(angelTotal / angelCostTotal).toFixed(2)}x` : '—'} portfolio MOIC
+              </p>
+            </div>
+            <button
+              onClick={() => { setEditingAsset(undefined); setPanelType('asset'); }}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
+              <PlusIcon className="w-4 h-4" />
+              Add Investment
+            </button>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-200">
+                  <th className="text-left py-2 px-3 font-semibold text-slate-600">Name</th>
+                  <th className="text-left py-2 px-3 font-semibold text-slate-600">Instrument</th>
+                  <th className="text-right py-2 px-3 font-semibold text-slate-600">Cost Basis</th>
+                  <th className="text-right py-2 px-3 font-semibold text-slate-600">Current Value</th>
+                  <th className="text-right py-2 px-3 font-semibold text-slate-600">MOIC</th>
+                  <th className="text-center py-2 px-3 font-semibold text-slate-600">Tax</th>
+                  <th className="text-center py-2 px-3 font-semibold text-slate-600">Status</th>
+                  <th className="text-center py-2 px-3 font-semibold text-slate-600 w-20">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {angelAssets.map((asset) => (
+                  <tr key={asset.id} className="border-b border-slate-50 hover:bg-slate-50 group">
+                    <td className="py-2 px-3 font-medium text-slate-900">
+                      <div className="flex items-center gap-2">
+                        <ProviderLogo provider={asset.provider} size={18} />
+                        <div>
+                          <span>{asset.name}</span>
+                          {asset.platform && (
+                            <span className="ml-1.5 text-xs text-slate-400">via {asset.platform}</span>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-2 px-3">
+                      {asset.instrument ? (
+                        <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
+                          {instrumentLabels[asset.instrument] ?? asset.instrument}
+                        </span>
+                      ) : '—'}
+                    </td>
+                    <td className="py-2 px-3 text-right text-slate-600">
+                      {formatCostBasis(asset.costBasis, asset.costCurrency)}
+                    </td>
+                    <td className="py-2 px-3 text-right text-slate-900">{formatCurrency(asset.currentValue)}</td>
+                    <td className="py-2 px-3 text-right">
+                      <span className={
+                        asset.costBasis && asset.costBasis > 0 && asset.currentValue / asset.costBasis >= 1
+                          ? 'text-emerald-600 font-medium'
+                          : 'text-red-500 font-medium'
+                      }>
+                        {formatMoic(asset.currentValue, asset.costBasis)}
+                      </span>
+                    </td>
+                    <td className="py-2 px-3 text-center">
+                      {asset.taxScheme ? (
+                        <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-violet-50 text-violet-700">
+                          {asset.taxScheme}
+                        </span>
+                      ) : (
+                        <span className="text-slate-300 text-xs">—</span>
+                      )}
+                    </td>
+                    <td className="py-2 px-3 text-center">
+                      {asset.status ? (
+                        <span
+                          className="inline-block px-2 py-0.5 rounded-full text-xs font-medium capitalize"
+                          style={{
+                            backgroundColor: statusStyles[asset.status]?.bg ?? '#f1f5f9',
+                            color: statusStyles[asset.status]?.text ?? '#475569',
+                          }}
+                        >
+                          {asset.status === 'written_off' ? 'Written Off' : asset.status}
+                        </span>
+                      ) : '—'}
+                    </td>
+                    <td className="py-2 px-3 text-center">
+                      <div className="flex gap-0.5 justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => { setEditingAsset(asset); setPanelType('asset'); }}
+                          className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
+                          title="Edit"
+                        >
+                          <PencilIcon />
+                        </button>
+                        <button
+                          onClick={() => setDeleteTarget({ id: asset.id, name: asset.name, type: 'asset' })}
+                          className="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
+                          title="Delete"
+                        >
+                          <TrashIcon />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                <tr className="bg-slate-50 font-semibold">
+                  <td className="py-2 px-3 text-slate-900">Total</td>
+                  <td className="py-2 px-3"></td>
+                  <td className="py-2 px-3 text-right text-slate-600">{formatCostBasis(angelCostTotal, 'GBP')}</td>
+                  <td className="py-2 px-3 text-right text-slate-900">{formatCurrency(angelTotal)}</td>
+                  <td className="py-2 px-3 text-right font-medium">
+                    <span className={angelCostTotal > 0 && angelTotal / angelCostTotal >= 1 ? 'text-emerald-600' : 'text-red-500'}>
+                      {angelCostTotal > 0 ? `${(angelTotal / angelCostTotal).toFixed(2)}x` : '—'}
+                    </span>
+                  </td>
+                  <td colSpan={3} className="py-2 px-3"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Liability Paydown Chart */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
