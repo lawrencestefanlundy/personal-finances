@@ -14,6 +14,33 @@ import DeleteConfirmation from '@/components/ui/DeleteConfirmation';
 import AssetForm from '@/components/forms/AssetForm';
 import ProviderLogo from '@/components/ui/ProviderLogo';
 
+const currencySymbols: Record<string, string> = { GBP: '£', USD: '$', EUR: '€', CHF: 'CHF ' };
+
+function formatCostBasis(amount: number | undefined, currency: string | undefined): string {
+  if (!amount) return '—';
+  const sym = currencySymbols[currency ?? 'GBP'] ?? '£';
+  return `${sym}${amount.toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+}
+
+function formatMoic(currentValue: number, costBasis: number | undefined): string {
+  if (!costBasis || costBasis === 0) return '—';
+  const moic = currentValue / costBasis;
+  return `${moic.toFixed(2)}x`;
+}
+
+const instrumentLabels: Record<string, string> = {
+  equity: 'Equity',
+  safe: 'SAFE',
+  options: 'Options',
+  advance_subscription: 'ASA',
+};
+
+const statusStyles: Record<string, { bg: string; text: string }> = {
+  active: { bg: '#ecfdf5', text: '#059669' },
+  exited: { bg: '#fef2f2', text: '#dc2626' },
+  written_off: { bg: '#fef2f2', text: '#dc2626' },
+};
+
 export default function AssetsPage() {
   const { state, dispatch } = useFinance();
   const [showEditor, setShowEditor] = useState(false);
@@ -23,9 +50,10 @@ export default function AssetsPage() {
   const totalAssets = state.assets.reduce((sum, a) => sum + a.currentValue, 0);
   const liquidAssets = state.assets.filter((a) => a.isLiquid).reduce((sum, a) => sum + a.currentValue, 0);
   const illiquidAssets = totalAssets - liquidAssets;
-  const angelTotal = state.assets
-    .filter((a) => a.category === 'angel')
-    .reduce((sum, a) => sum + a.currentValue, 0);
+  const angelAssets = state.assets.filter((a) => a.category === 'angel');
+  const nonAngelAssets = state.assets.filter((a) => a.category !== 'angel');
+  const angelTotal = angelAssets.reduce((sum, a) => sum + a.currentValue, 0);
+  const angelCostTotal = angelAssets.reduce((sum, a) => sum + (a.costBasis ?? 0), 0);
 
   // CRUD state
   const [panelOpen, setPanelOpen] = useState(false);
@@ -131,10 +159,10 @@ export default function AssetsPage() {
         <AssetBreakdown projections={projections} assets={state.assets} />
       </div>
 
-      {/* Assets Table */}
+      {/* Non-Angel Assets Table */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-slate-900">All Assets</h2>
+          <h2 className="text-lg font-semibold text-slate-900">Assets</h2>
           <button
             onClick={openAdd}
             className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
@@ -157,7 +185,7 @@ export default function AssetsPage() {
               </tr>
             </thead>
             <tbody>
-              {state.assets.map((asset) => (
+              {nonAngelAssets.map((asset) => (
                 <tr key={asset.id} className="border-b border-slate-50 hover:bg-slate-50 group">
                   <td className="py-2 px-3 font-medium text-slate-900">
                     <div className="flex items-center gap-2">
@@ -209,12 +237,131 @@ export default function AssetsPage() {
                 </tr>
               ))}
               <tr className="bg-slate-50 font-semibold">
-                <td className="py-2 px-3 text-slate-900">Total</td>
+                <td className="py-2 px-3 text-slate-900">Subtotal</td>
                 <td className="py-2 px-3"></td>
                 <td className="py-2 px-3 text-right text-slate-900">
-                  {formatCurrency(totalAssets)}
+                  {formatCurrency(totalAssets - angelTotal)}
                 </td>
                 <td colSpan={4} className="py-2 px-3"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Angel Investments Table */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-slate-900">Angel Investments</h2>
+          <button
+            onClick={() => { setEditingAsset(undefined); setPanelOpen(true); }}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            <PlusIcon className="w-4 h-4" />
+            Add Investment
+          </button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead>
+              <tr className="border-b border-slate-200">
+                <th className="text-left py-2 px-3 font-semibold text-slate-600">Name</th>
+                <th className="text-left py-2 px-3 font-semibold text-slate-600">Instrument</th>
+                <th className="text-right py-2 px-3 font-semibold text-slate-600">Cost Basis</th>
+                <th className="text-right py-2 px-3 font-semibold text-slate-600">Current Value</th>
+                <th className="text-right py-2 px-3 font-semibold text-slate-600">MOIC</th>
+                <th className="text-center py-2 px-3 font-semibold text-slate-600">Tax</th>
+                <th className="text-center py-2 px-3 font-semibold text-slate-600">Status</th>
+                <th className="text-center py-2 px-3 font-semibold text-slate-600 w-20">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {angelAssets.map((asset) => (
+                <tr key={asset.id} className="border-b border-slate-50 hover:bg-slate-50 group">
+                  <td className="py-2 px-3 font-medium text-slate-900">
+                    <div className="flex items-center gap-2">
+                      <ProviderLogo provider={asset.provider} size={18} />
+                      <div>
+                        <span>{asset.name}</span>
+                        {asset.platform && (
+                          <span className="ml-1.5 text-xs text-slate-400">via {asset.platform}</span>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-2 px-3">
+                    {asset.instrument ? (
+                      <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
+                        {instrumentLabels[asset.instrument] ?? asset.instrument}
+                      </span>
+                    ) : '—'}
+                  </td>
+                  <td className="py-2 px-3 text-right text-slate-600">
+                    {formatCostBasis(asset.costBasis, asset.costCurrency)}
+                  </td>
+                  <td className="py-2 px-3 text-right text-slate-900">{formatCurrency(asset.currentValue)}</td>
+                  <td className="py-2 px-3 text-right">
+                    <span className={
+                      asset.costBasis && asset.costBasis > 0 && asset.currentValue / asset.costBasis >= 1
+                        ? 'text-emerald-600 font-medium'
+                        : 'text-red-500 font-medium'
+                    }>
+                      {formatMoic(asset.currentValue, asset.costBasis)}
+                    </span>
+                  </td>
+                  <td className="py-2 px-3 text-center">
+                    {asset.taxScheme ? (
+                      <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-violet-50 text-violet-700">
+                        {asset.taxScheme}
+                      </span>
+                    ) : (
+                      <span className="text-slate-300 text-xs">—</span>
+                    )}
+                  </td>
+                  <td className="py-2 px-3 text-center">
+                    {asset.status ? (
+                      <span
+                        className="inline-block px-2 py-0.5 rounded-full text-xs font-medium capitalize"
+                        style={{
+                          backgroundColor: statusStyles[asset.status]?.bg ?? '#f1f5f9',
+                          color: statusStyles[asset.status]?.text ?? '#475569',
+                        }}
+                      >
+                        {asset.status === 'written_off' ? 'Written Off' : asset.status}
+                      </span>
+                    ) : '—'}
+                  </td>
+                  <td className="py-2 px-3 text-center">
+                    <div className="flex gap-0.5 justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => openEdit(asset)}
+                        className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
+                        title="Edit"
+                      >
+                        <PencilIcon />
+                      </button>
+                      <button
+                        onClick={() => setDeleteTarget({ id: asset.id, name: asset.name })}
+                        className="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
+                        title="Delete"
+                      >
+                        <TrashIcon />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              <tr className="bg-slate-50 font-semibold">
+                <td className="py-2 px-3 text-slate-900">Total</td>
+                <td className="py-2 px-3"></td>
+                <td className="py-2 px-3 text-right text-slate-600">{formatCostBasis(angelCostTotal, 'GBP')}</td>
+                <td className="py-2 px-3 text-right text-slate-900">{formatCurrency(angelTotal)}</td>
+                <td className="py-2 px-3 text-right font-medium">
+                  <span className={angelCostTotal > 0 && angelTotal / angelCostTotal >= 1 ? 'text-emerald-600' : 'text-red-500'}>
+                    {angelCostTotal > 0 ? `${(angelTotal / angelCostTotal).toFixed(2)}x` : '—'}
+                  </span>
+                </td>
+                <td colSpan={3} className="py-2 px-3"></td>
               </tr>
             </tbody>
           </table>

@@ -79,6 +79,14 @@ export interface Asset {
   endYear?: number; // year when asset is liquidated
   notes?: string;
   provider?: string;
+  // Investment-specific fields (angel category)
+  costBasis?: number;
+  costCurrency?: string; // GBP, USD, EUR, CHF
+  instrument?: string; // safe, equity, options, advance_subscription
+  investmentDate?: string; // ISO date
+  status?: 'active' | 'exited' | 'written_off';
+  taxScheme?: 'SEIS' | 'EIS';
+  platform?: string; // odin, direct, feedforward
 }
 
 // === LIABILITIES ===
