@@ -128,3 +128,56 @@ export function getUpcomingLargeExpenses(
 
   return upcoming.sort((a, b) => a.month.localeCompare(b.month));
 }
+
+export function computeAverageMonthlyBurn(snapshots: MonthlySnapshot[]): number {
+  if (snapshots.length === 0) return 0;
+  const total = snapshots.reduce((sum, s) => sum + s.totalExpenses, 0);
+  return total / snapshots.length;
+}
+
+export function computeMonthsOfRunway(liquidCash: number, snapshots: MonthlySnapshot[]): number {
+  if (snapshots.length === 0) return 0;
+  const avgNetBurn = snapshots.reduce((sum, s) => sum + s.netCashFlow, 0) / snapshots.length;
+  if (avgNetBurn >= 0) return Infinity;
+  return Math.abs(liquidCash / avgNetBurn);
+}
+
+export interface QuarterlySummary {
+  quarter: string;
+  totalIncome: number;
+  totalExpenses: number;
+  netCashFlow: number;
+  endBalance: number;
+}
+
+function getQuarterLabel(month: string): string {
+  const [yearStr, monthStr] = month.split('-');
+  const monthNum = parseInt(monthStr);
+  const quarter = Math.ceil(monthNum / 3);
+  return `Q${quarter} ${yearStr}`;
+}
+
+export function aggregateToQuarters(snapshots: MonthlySnapshot[]): QuarterlySummary[] {
+  const quarterMap = new Map<string, QuarterlySummary>();
+
+  for (const s of snapshots) {
+    const label = getQuarterLabel(s.month);
+    const existing = quarterMap.get(label);
+    if (existing) {
+      existing.totalIncome += s.totalIncome;
+      existing.totalExpenses += s.totalExpenses;
+      existing.netCashFlow += s.netCashFlow;
+      existing.endBalance = s.runningBalance;
+    } else {
+      quarterMap.set(label, {
+        quarter: label,
+        totalIncome: s.totalIncome,
+        totalExpenses: s.totalExpenses,
+        netCashFlow: s.netCashFlow,
+        endBalance: s.runningBalance,
+      });
+    }
+  }
+
+  return Array.from(quarterMap.values());
+}

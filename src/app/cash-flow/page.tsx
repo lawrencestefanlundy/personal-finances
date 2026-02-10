@@ -3,10 +3,10 @@
 import { useMemo, useState } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { CashPosition, IncomeStream, Expense } from '@/types/finance';
-import { computeMonthlySnapshots } from '@/lib/calculations';
+import { computeMonthlySnapshots, aggregateToQuarters } from '@/lib/calculations';
 import { formatCurrency, formatMonth } from '@/lib/formatters';
 import { expenseCategories } from '@/data/categories';
-import CashFlowChart from '@/components/charts/CashFlowChart';
+import RunningBalanceChart from '@/components/charts/RunningBalanceChart';
 import IncomeExpensePie from '@/components/charts/IncomeExpensePie';
 import EditableCell from '@/components/EditableCell';
 import { PencilIcon, TrashIcon, PlusIcon } from '@/components/ui/Icons';
@@ -28,6 +28,11 @@ export default function CashFlowPage() {
     [state, showMonths]
   );
 
+  const quarters = useMemo(
+    () => aggregateToQuarters(computeMonthlySnapshots(state, 24)),
+    [state]
+  );
+
   const selectedSnapshot = snapshots[0];
 
   // Group expenses by category
@@ -42,8 +47,11 @@ export default function CashFlowPage() {
     return groups;
   }, [state.expenses]);
 
-  // Collapsible section state — all collapsed by default
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  // Collapsible section state — cash and earnings expanded by default
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({
+    cash: true,
+    earnings: true,
+  });
   const toggleSection = (key: string) => {
     setExpanded((prev) => ({ ...prev, [key]: !prev[key] }));
   };
@@ -95,10 +103,10 @@ export default function CashFlowPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Cash Flow</h1>
-          <p className="text-sm text-slate-500 mt-1">Quarterly income, expenses, and running balance</p>
+          <p className="text-sm text-slate-500 mt-1">Running balance, quarterly summary, and detailed forecast</p>
         </div>
         <div className="flex gap-2">
-          {[6, 12, 24, 50].map((n) => (
+          {[6, 12, 24].map((n) => (
             <button
               key={n}
               onClick={() => setShowMonths(n)}
@@ -117,14 +125,55 @@ export default function CashFlowPage() {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Income vs Expenses</h2>
-          <CashFlowChart snapshots={snapshots} />
+          <h2 className="text-lg font-semibold text-slate-900 mb-4">Running Cash Balance</h2>
+          <RunningBalanceChart snapshots={snapshots} />
         </div>
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
           <h2 className="text-lg font-semibold text-slate-900 mb-4">Expense Breakdown</h2>
           {selectedSnapshot && (
             <IncomeExpensePie snapshot={selectedSnapshot} expenses={state.expenses} />
           )}
+        </div>
+      </div>
+
+      {/* Quarterly Cash Flow Summary */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+        <h2 className="text-lg font-semibold text-slate-900 mb-4">Quarterly Cash Flow</h2>
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead>
+              <tr className="border-b border-slate-200">
+                <th className="text-left py-2 px-3 font-semibold text-slate-600">Quarter</th>
+                <th className="text-right py-2 px-3 font-semibold text-slate-600">Income</th>
+                <th className="text-right py-2 px-3 font-semibold text-slate-600">Expenses</th>
+                <th className="text-right py-2 px-3 font-semibold text-slate-600">Net</th>
+                <th className="text-right py-2 px-3 font-semibold text-slate-600">End Balance</th>
+              </tr>
+            </thead>
+            <tbody>
+              {quarters.slice(0, 8).map((q) => (
+                <tr key={q.quarter} className="border-b border-slate-50 hover:bg-slate-50">
+                  <td className="py-2 px-3 font-medium text-slate-900">{q.quarter}</td>
+                  <td className="py-2 px-3 text-right text-emerald-600 font-medium">
+                    {formatCurrency(q.totalIncome)}
+                  </td>
+                  <td className="py-2 px-3 text-right text-red-600 font-medium">
+                    {formatCurrency(q.totalExpenses)}
+                  </td>
+                  <td className={`py-2 px-3 text-right font-medium ${
+                    q.netCashFlow >= 0 ? 'text-emerald-600' : 'text-red-600'
+                  }`}>
+                    {formatCurrency(q.netCashFlow)}
+                  </td>
+                  <td className={`py-2 px-3 text-right font-bold ${
+                    q.endBalance < 10000 ? 'text-red-700' : 'text-slate-900'
+                  }`}>
+                    {formatCurrency(q.endBalance)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 

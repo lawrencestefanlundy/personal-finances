@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { CashPosition } from '@/types/finance';
 import StatCard from '@/components/StatCard';
-import { computeMonthlySnapshots } from '@/lib/calculations';
+import { computeMonthlySnapshots, computeAverageMonthlyBurn, computeMonthsOfRunway } from '@/lib/calculations';
 import { computeYearlyProjections } from '@/lib/projections';
 import { formatCurrency, formatMonth } from '@/lib/formatters';
 import { expenseCategories } from '@/data/categories';
@@ -15,17 +15,19 @@ import CashPositionForm from '@/components/forms/CashPositionForm';
 import ProviderLogo from '@/components/ui/ProviderLogo';
 import TransactionList from '@/components/TransactionList';
 
-export default function DashboardPage() {
+export default function OverviewPage() {
   const { state, dispatch } = useFinance();
 
-  const snapshots = useMemo(() => computeMonthlySnapshots(state, 50), [state]);
+  const snapshots = useMemo(() => computeMonthlySnapshots(state, 12), [state]);
   const projections = useMemo(() => computeYearlyProjections(state), [state]);
 
   const liquidCash = state.cashPositions
     .filter((cp) => cp.category === 'cash' || cp.category === 'savings' || cp.category === 'crypto')
     .reduce((sum, cp) => sum + cp.balance, 0);
-  const currentSnapshot = snapshots[0];
   const netWealth = projections[0]?.netWealth ?? 0;
+  const avgBurn = useMemo(() => computeAverageMonthlyBurn(snapshots), [snapshots]);
+  const runway = useMemo(() => computeMonthsOfRunway(liquidCash, snapshots), [liquidCash, snapshots]);
+  const currentSnapshot = snapshots[0];
 
   // CRUD state
   const [panelOpen, setPanelOpen] = useState(false);
@@ -46,14 +48,14 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
+        <h1 className="text-2xl font-bold text-slate-900">Overview</h1>
         <p className="text-sm text-slate-500 mt-1">
-          Overview of your financial position as of {formatMonth(state.settings.startMonth)}
+          Financial snapshot as of {formatMonth(state.settings.startMonth)}
         </p>
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Net Wealth"
           value={formatCurrency(netWealth)}
@@ -65,6 +67,18 @@ export default function DashboardPage() {
           value={formatCurrency(liquidCash)}
           subtitle="Cash + savings + crypto"
           color="green"
+        />
+        <StatCard
+          title="Avg Monthly Expenses"
+          value={formatCurrency(avgBurn)}
+          subtitle="12-month average"
+          color="amber"
+        />
+        <StatCard
+          title="Months of Runway"
+          value={runway === Infinity ? '∞' : `${Math.round(runway)}`}
+          subtitle={runway === Infinity ? 'Net positive cash flow' : 'At current burn rate'}
+          color="blue"
         />
       </div>
 
@@ -110,55 +124,14 @@ export default function DashboardPage() {
             </div>
           ))}
         </div>
-        {/* Inline transaction list */}
         {state.transactions.length > 0 && (
           <TransactionList transactions={state.transactions} />
         )}
       </div>
 
-      {/* Monthly Expense Breakdown */}
+      {/* Next 3 Months */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">This Month&apos;s Expenses by Category</h2>
-          {currentSnapshot && (
-            <div className="space-y-2">
-              {Object.entries(
-                state.expenses.reduce((acc, expense) => {
-                  const amount = currentSnapshot.expenseBreakdown[expense.id] || 0;
-                  if (amount > 0) {
-                    acc[expense.category] = (acc[expense.category] || 0) + amount;
-                  }
-                  return acc;
-                }, {} as Record<string, number>)
-              )
-                .sort(([, a], [, b]) => b - a)
-                .map(([category, amount]) => {
-                  const meta = expenseCategories[category as keyof typeof expenseCategories];
-                  return (
-                    <div key={category} className="flex items-center justify-between py-1">
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: meta?.color || '#6b7280' }}
-                        />
-                        <span className="text-sm text-slate-700">{meta?.label || category}</span>
-                      </div>
-                      <span className="text-sm font-medium text-slate-900">{formatCurrency(amount)}</span>
-                    </div>
-                  );
-                })}
-              <div className="pt-2 border-t border-slate-200 flex justify-between">
-                <span className="text-sm font-semibold text-slate-900">Total</span>
-                <span className="text-sm font-semibold text-slate-900">
-                  {formatCurrency(currentSnapshot.totalExpenses)}
-                </span>
-              </div>
-            </div>
-          )}
-      </div>
-
-      {/* 6-Month Forecast Table */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">6-Month Cash Flow Forecast</h2>
+        <h2 className="text-lg font-semibold text-slate-900 mb-4">Next 3 Months</h2>
         <div className="overflow-x-auto">
           <table className="min-w-full">
             <thead>
@@ -171,30 +144,83 @@ export default function DashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {snapshots.slice(0, 6).map((s) => (
-                <tr key={s.month} className="border-b border-slate-100 hover:bg-slate-50">
-                  <td className="py-3 px-4 text-sm text-slate-900">{formatMonth(s.month)}</td>
-                  <td className="py-3 px-4 text-sm text-right text-emerald-600 font-medium">
-                    {formatCurrency(s.totalIncome)}
-                  </td>
-                  <td className="py-3 px-4 text-sm text-right text-red-600 font-medium">
-                    {formatCurrency(s.totalExpenses)}
-                  </td>
-                  <td className={`py-3 px-4 text-sm text-right font-medium ${
-                    s.netCashFlow >= 0 ? 'text-emerald-600' : 'text-red-600'
-                  }`}>
-                    {formatCurrency(s.netCashFlow)}
-                  </td>
-                  <td className={`py-3 px-4 text-sm text-right font-bold ${
-                    s.runningBalance >= 0 ? 'text-slate-900' : 'text-red-600'
-                  }`}>
-                    {formatCurrency(s.runningBalance)}
-                  </td>
-                </tr>
-              ))}
+              {snapshots.slice(0, 3).map((s) => {
+                const isLow = s.runningBalance < 10000;
+                return (
+                  <tr
+                    key={s.month}
+                    className={`border-b border-slate-100 ${
+                      isLow ? 'bg-red-50' : 'hover:bg-slate-50'
+                    }`}
+                  >
+                    <td className="py-3 px-4 text-sm text-slate-900 font-medium">
+                      {formatMonth(s.month)}
+                      {isLow && (
+                        <span className="ml-2 text-xs text-red-600 font-medium">Low balance</span>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 text-sm text-right text-emerald-600 font-medium">
+                      {formatCurrency(s.totalIncome)}
+                    </td>
+                    <td className="py-3 px-4 text-sm text-right text-red-600 font-medium">
+                      {formatCurrency(s.totalExpenses)}
+                    </td>
+                    <td className={`py-3 px-4 text-sm text-right font-medium ${
+                      s.netCashFlow >= 0 ? 'text-emerald-600' : 'text-red-600'
+                    }`}>
+                      {formatCurrency(s.netCashFlow)}
+                    </td>
+                    <td className={`py-3 px-4 text-sm text-right font-bold ${
+                      isLow ? 'text-red-700' : 'text-slate-900'
+                    }`}>
+                      {formatCurrency(s.runningBalance)}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Monthly Expense Breakdown */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+        <h2 className="text-lg font-semibold text-slate-900 mb-4">This Month&apos;s Expenses by Category</h2>
+        {currentSnapshot && (
+          <div className="space-y-2">
+            {Object.entries(
+              state.expenses.reduce((acc, expense) => {
+                const amount = currentSnapshot.expenseBreakdown[expense.id] || 0;
+                if (amount > 0) {
+                  acc[expense.category] = (acc[expense.category] || 0) + amount;
+                }
+                return acc;
+              }, {} as Record<string, number>)
+            )
+              .sort(([, a], [, b]) => b - a)
+              .map(([category, amount]) => {
+                const meta = expenseCategories[category as keyof typeof expenseCategories];
+                return (
+                  <div key={category} className="flex items-center justify-between py-1">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: meta?.color || '#6b7280' }}
+                      />
+                      <span className="text-sm text-slate-700">{meta?.label || category}</span>
+                    </div>
+                    <span className="text-sm font-medium text-slate-900">{formatCurrency(amount)}</span>
+                  </div>
+                );
+              })}
+            <div className="pt-2 border-t border-slate-200 flex justify-between">
+              <span className="text-sm font-semibold text-slate-900">Total</span>
+              <span className="text-sm font-semibold text-slate-900">
+                {formatCurrency(currentSnapshot.totalExpenses)}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Slide Panel for Cash Position Form */}
