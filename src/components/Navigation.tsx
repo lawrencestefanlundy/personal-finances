@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation';
 
 const navItems = [
   { href: '/', label: 'Overview' },
-  { href: '/cash-flow', label: 'Cash Flow' },
   { href: '/net-worth', label: 'Net Worth' },
   { href: '/settings', label: 'Settings' },
 ];

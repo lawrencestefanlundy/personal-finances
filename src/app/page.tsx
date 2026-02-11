@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { CashPosition, IncomeStream, Expense } from '@/types/finance';
 import { computeMonthlySnapshots } from '@/lib/calculations';
@@ -15,7 +15,6 @@ import CashPositionForm from '@/components/forms/CashPositionForm';
 import IncomeStreamForm from '@/components/forms/IncomeStreamForm';
 import ExpenseForm from '@/components/forms/ExpenseForm';
 import ProviderLogo from '@/components/ui/ProviderLogo';
-import TransactionList from '@/components/TransactionList';
 
 type PanelType = 'cashPosition' | 'income' | 'expense' | null;
 
@@ -84,6 +83,12 @@ export default function OverviewPage() {
     setExpanded((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
+  // Hover state for cards
+  const [showNetWealthBreakdown, setShowNetWealthBreakdown] = useState(false);
+  const [showLiquidCashBreakdown, setShowLiquidCashBreakdown] = useState(false);
+  const netWealthTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const liquidCashTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
+
   // CRUD state
   const [panelType, setPanelType] = useState<PanelType>(null);
   const [editingCash, setEditingCash] = useState<CashPosition | undefined>(undefined);
@@ -121,81 +126,92 @@ export default function OverviewPage() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Net Wealth Card */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+        {/* Net Wealth Card — hover to show breakdown */}
+        <div
+          className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 relative"
+          onMouseEnter={() => {
+            clearTimeout(netWealthTimeout.current);
+            setShowNetWealthBreakdown(true);
+          }}
+          onMouseLeave={() => {
+            netWealthTimeout.current = setTimeout(() => setShowNetWealthBreakdown(false), 200);
+          }}
+        >
           <p className="text-sm font-medium text-slate-500">Net Wealth</p>
           <p className="text-3xl font-bold text-purple-600 mt-1">{formatCurrency(netWealth)}</p>
-          <div className="mt-4 space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-emerald-600 font-medium">Total Assets</span>
-              <span className="font-semibold text-slate-900">{formatCurrency(totalAssets)}</span>
-            </div>
-            {assetTotalsByCategory.map((cat) => (
-              <div key={cat.label} className="flex items-center justify-between text-sm pl-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color }} />
-                  <span className="text-slate-500">{cat.label}</span>
-                </div>
-                <span className="text-slate-700">{formatCurrency(cat.total)}</span>
-              </div>
-            ))}
-            <div className="flex items-center justify-between text-sm pt-2 border-t border-slate-100">
-              <span className="text-red-600 font-medium">Total Liabilities</span>
-              <span className="font-semibold text-red-600">−{formatCurrency(totalLiabilities)}</span>
-            </div>
+          <div className="flex items-center gap-4 mt-2 text-sm">
+            <span className="text-emerald-600">Assets {formatCurrency(totalAssets)}</span>
+            <span className="text-red-500">Liabilities −{formatCurrency(totalLiabilities)}</span>
           </div>
+          {showNetWealthBreakdown && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl border border-slate-200 shadow-lg p-4 z-20">
+              <div className="space-y-1.5">
+                {assetTotalsByCategory.map((cat) => (
+                  <div key={cat.label} className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color }} />
+                      <span className="text-slate-600">{cat.label}</span>
+                    </div>
+                    <span className="text-slate-800 font-medium">{formatCurrency(cat.total)}</span>
+                  </div>
+                ))}
+                <div className="flex items-center justify-between text-sm pt-1.5 border-t border-slate-100">
+                  <span className="text-red-600 font-medium">Liabilities</span>
+                  <span className="font-medium text-red-600">−{formatCurrency(totalLiabilities)}</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Liquid Cash Card */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-500">Liquid Cash</p>
-              <p className="text-3xl font-bold text-emerald-600 mt-1">{formatCurrency(liquidCash)}</p>
-            </div>
-            <button
-              onClick={() => { setEditingCash(undefined); setPanelType('cashPosition'); }}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-            >
-              <PlusIcon className="w-3 h-3" />
-              Add
-            </button>
-          </div>
-          <div className="mt-4 space-y-2">
-            {state.cashPositions.map((cp) => (
-              <div key={cp.id} className="flex items-center justify-between text-sm group">
-                <div className="flex items-center gap-2">
-                  <ProviderLogo provider={cp.provider} size={16} />
-                  <span className="text-slate-600">{cp.name}</span>
-                  {cp.interestRate > 0 && (
-                    <span className="text-xs text-slate-400">{(cp.interestRate * 100).toFixed(1)}%</span>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-slate-900">{formatCurrency(cp.balance)}</span>
-                  <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => { setEditingCash(cp); setPanelType('cashPosition'); }}
-                      className="p-0.5 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
-                      title="Edit"
-                    >
-                      <PencilIcon />
-                    </button>
-                    <button
-                      onClick={() => setDeleteTarget({ id: cp.id, name: cp.name, type: 'cashPosition' })}
-                      className="p-0.5 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
-                      title="Delete"
-                    >
-                      <TrashIcon />
-                    </button>
+        {/* Liquid Cash Card — hover to show positions */}
+        <div
+          className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 relative"
+          onMouseEnter={() => {
+            clearTimeout(liquidCashTimeout.current);
+            setShowLiquidCashBreakdown(true);
+          }}
+          onMouseLeave={() => {
+            liquidCashTimeout.current = setTimeout(() => setShowLiquidCashBreakdown(false), 200);
+          }}
+        >
+          <p className="text-sm font-medium text-slate-500">Liquid Cash</p>
+          <p className="text-3xl font-bold text-emerald-600 mt-1">{formatCurrency(liquidCash)}</p>
+          <p className="text-sm text-slate-400 mt-2">{state.cashPositions.length} accounts</p>
+          {showLiquidCashBreakdown && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl border border-slate-200 shadow-lg p-4 z-20">
+              <div className="space-y-2">
+                {state.cashPositions.map((cp) => (
+                  <div key={cp.id} className="flex items-center justify-between text-sm group">
+                    <div className="flex items-center gap-2">
+                      <ProviderLogo provider={cp.provider} size={16} />
+                      <span className="text-slate-600">{cp.name}</span>
+                      {cp.interestRate > 0 && (
+                        <span className="text-xs text-slate-400">{(cp.interestRate * 100).toFixed(1)}%</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-slate-900">{formatCurrency(cp.balance)}</span>
+                      <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => { setEditingCash(cp); setPanelType('cashPosition'); }}
+                          className="p-0.5 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
+                          title="Edit"
+                        >
+                          <PencilIcon />
+                        </button>
+                        <button
+                          onClick={() => setDeleteTarget({ id: cp.id, name: cp.name, type: 'cashPosition' })}
+                          className="p-0.5 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
+                          title="Delete"
+                        >
+                          <TrashIcon />
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-          {state.transactions.length > 0 && (
-            <div className="mt-4 pt-4 border-t border-slate-100">
-              <TransactionList transactions={state.transactions} />
             </div>
           )}
         </div>
@@ -222,14 +238,16 @@ export default function OverviewPage() {
           </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
+          <table className="min-w-full text-sm border-collapse">
             <thead>
-              <tr className="border-b border-slate-200">
-                <th className="text-left py-2 px-3 font-semibold text-slate-600 sticky left-0 bg-white min-w-[200px] z-10">
+              <tr className="border-b-2 border-slate-300">
+                <th className="text-left py-3 px-3 font-semibold text-slate-600 sticky left-0 bg-white min-w-[220px] z-10">
                   Item
                 </th>
-                {snapshots.map((s) => (
-                  <th key={s.month} className="text-right py-2 px-3 font-semibold text-slate-600 min-w-[100px]">
+                {snapshots.map((s, i) => (
+                  <th key={s.month} className={`text-right py-3 px-3 font-semibold min-w-[100px] ${
+                    i === 0 ? 'text-slate-900 bg-blue-50' : 'text-slate-500'
+                  }`}>
                     {formatMonth(s.month)}
                   </th>
                 ))}
@@ -241,7 +259,7 @@ export default function OverviewPage() {
                 className="bg-slate-50 cursor-pointer hover:bg-slate-100"
                 onClick={() => toggleSection('cash')}
               >
-                <td className="py-2 px-3 font-bold text-slate-700 sticky left-0 bg-slate-50 z-10">
+                <td className="py-2.5 px-3 font-bold text-slate-700 sticky left-0 bg-slate-50 z-10">
                   <div className="flex items-center gap-2">
                     {chevron(!!expanded['cash'])}
                     <span>Cash Positions</span>
@@ -254,11 +272,11 @@ export default function OverviewPage() {
                     </button>
                   </div>
                 </td>
-                <td className="py-2 px-3 text-right font-semibold text-slate-700">
+                <td className={`py-2.5 px-3 text-right font-semibold text-slate-700 ${snapshots.length > 0 ? 'bg-blue-50/50' : ''}`}>
                   {formatCurrency(state.cashPositions.reduce((s, cp) => s + cp.balance, 0))}
                 </td>
                 {snapshots.slice(1).map((s) => (
-                  <td key={s.month} className="py-2 px-3 text-right text-slate-300">-</td>
+                  <td key={s.month} className="py-2.5 px-3 text-right text-slate-300">-</td>
                 ))}
               </tr>
               {expanded['cash'] && state.cashPositions.map((cp) => (
@@ -285,7 +303,7 @@ export default function OverviewPage() {
                       </div>
                     </div>
                   </td>
-                  <td className="py-2 px-3 text-right text-slate-900">
+                  <td className={`py-2 px-3 text-right text-slate-900 ${snapshots.length > 0 ? 'bg-blue-50/30' : ''}`}>
                     <EditableCell
                       value={cp.balance}
                       onSave={(value) =>
@@ -304,7 +322,7 @@ export default function OverviewPage() {
                 className="bg-emerald-50 cursor-pointer hover:bg-emerald-100"
                 onClick={() => toggleSection('earnings')}
               >
-                <td className="py-2 px-3 font-bold text-emerald-700 sticky left-0 bg-emerald-50 z-10">
+                <td className="py-2.5 px-3 font-bold text-emerald-700 sticky left-0 bg-emerald-50 z-10">
                   <div className="flex items-center gap-2">
                     {chevron(!!expanded['earnings'])}
                     <span>Earnings</span>
@@ -317,8 +335,8 @@ export default function OverviewPage() {
                     </button>
                   </div>
                 </td>
-                {snapshots.map((s) => (
-                  <td key={s.month} className="py-2 px-3 text-right font-semibold text-emerald-700">
+                {snapshots.map((s, i) => (
+                  <td key={s.month} className={`py-2.5 px-3 text-right font-semibold text-emerald-700 ${i === 0 ? 'bg-blue-50/50' : ''}`}>
                     {s.totalIncome > 0 ? formatCurrency(s.totalIncome) : <span className="text-slate-200">-</span>}
                   </td>
                 ))}
@@ -329,6 +347,7 @@ export default function OverviewPage() {
                     <div className="flex items-center gap-2">
                       <ProviderLogo provider={stream.provider} size={18} />
                       <span>{stream.name}</span>
+                      <span className="text-xs text-slate-400 capitalize">{stream.frequency}</span>
                       <div className="flex gap-0.5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={() => { setEditingIncome(stream); setPanelType('income'); }}
@@ -347,10 +366,10 @@ export default function OverviewPage() {
                       </div>
                     </div>
                   </td>
-                  {snapshots.map((s) => {
+                  {snapshots.map((s, i) => {
                     const amount = s.incomeBreakdown[stream.id] || 0;
                     return (
-                      <td key={s.month} className="py-2 px-3 text-right">
+                      <td key={s.month} className={`py-2 px-3 text-right ${i === 0 ? 'bg-blue-50/30' : ''}`}>
                         {amount > 0 ? (
                           <span className="text-emerald-600">{formatCurrency(amount)}</span>
                         ) : (
@@ -362,118 +381,117 @@ export default function OverviewPage() {
                 </tr>
               ))}
 
-              {/* === Expense Categories === */}
+              {/* === Expense Categories — NO nested tbody === */}
               {Object.entries(expensesByCategory).map(([category, expenses], catIdx) => {
                 const meta = expenseCategories[category as keyof typeof expenseCategories];
                 const sectionKey = `expense-${category}`;
                 const isExpanded = expanded[sectionKey];
 
-                return (
-                  <tbody key={category}>
-                    <tr
-                      style={{ backgroundColor: meta?.bgColor || '#f9fafb' }}
-                      className="cursor-pointer"
-                      onClick={() => toggleSection(sectionKey)}
-                    >
-                      <td className="py-2 px-3 font-bold sticky left-0 z-10" style={{ color: meta?.color, backgroundColor: meta?.bgColor || '#f9fafb' }}>
+                return [
+                  <tr
+                    key={`header-${category}`}
+                    className="cursor-pointer hover:opacity-90"
+                    style={{ backgroundColor: meta?.bgColor || '#f9fafb' }}
+                    onClick={() => toggleSection(sectionKey)}
+                  >
+                    <td className="py-2.5 px-3 font-bold sticky left-0 z-10" style={{ color: meta?.color, backgroundColor: meta?.bgColor || '#f9fafb' }}>
+                      <div className="flex items-center gap-2">
+                        {chevron(!!isExpanded)}
+                        <span>{meta?.label || category}</span>
+                        {catIdx === 0 && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setEditingExpense(undefined); setPanelType('expense'); }}
+                            className="p-0.5 rounded hover:bg-red-100 text-red-500 ml-auto"
+                            title="Add Expense"
+                          >
+                            <PlusIcon />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                    {snapshots.map((s, i) => {
+                      const subtotal = categorySubtotals[category]?.[s.month] || 0;
+                      return (
+                        <td key={s.month} className={`py-2.5 px-3 text-right font-medium ${i === 0 ? 'bg-blue-50/20' : ''}`} style={{ color: meta?.color }}>
+                          {subtotal > 0 ? formatCurrency(subtotal) : <span className="text-slate-200">-</span>}
+                        </td>
+                      );
+                    })}
+                  </tr>,
+                  ...(isExpanded ? expenses.map((expense) => (
+                    <tr key={expense.id} className="border-b border-slate-50 hover:bg-slate-50 group">
+                      <td className="py-2 px-3 text-slate-900 sticky left-0 bg-white pl-8 z-10">
                         <div className="flex items-center gap-2">
-                          {chevron(!!isExpanded)}
-                          <span>{meta?.label || category}</span>
-                          {catIdx === 0 && (
+                          <ProviderLogo provider={expense.provider} size={18} />
+                          <span>
+                            {expense.name}
+                            {expense.provider && (
+                              <span className="text-slate-400 text-xs ml-1">({expense.provider})</span>
+                            )}
+                          </span>
+                          <div className="flex gap-0.5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
                             <button
-                              onClick={(e) => { e.stopPropagation(); setEditingExpense(undefined); setPanelType('expense'); }}
-                              className="p-0.5 rounded hover:bg-red-100 text-red-500 ml-auto"
-                              title="Add Expense"
+                              onClick={() => { setEditingExpense(expense); setPanelType('expense'); }}
+                              className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
+                              title="Edit"
                             >
-                              <PlusIcon />
+                              <PencilIcon />
                             </button>
-                          )}
+                            <button
+                              onClick={() => setDeleteTarget({ id: expense.id, name: expense.name, type: 'expense' })}
+                              className="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
+                              title="Delete"
+                            >
+                              <TrashIcon />
+                            </button>
+                          </div>
                         </div>
                       </td>
-                      {snapshots.map((s) => {
-                        const subtotal = categorySubtotals[category]?.[s.month] || 0;
+                      {snapshots.map((s, i) => {
+                        const amount = s.expenseBreakdown[expense.id] || 0;
                         return (
-                          <td key={s.month} className="py-2 px-3 text-right font-medium" style={{ color: meta?.color }}>
-                            {subtotal > 0 ? formatCurrency(subtotal) : <span className="text-slate-200">-</span>}
+                          <td key={s.month} className={`py-2 px-3 text-right ${i === 0 ? 'bg-blue-50/20' : ''}`}>
+                            {amount > 0 ? (
+                              <span className="text-red-600">{formatCurrency(amount)}</span>
+                            ) : (
+                              <span className="text-slate-200">-</span>
+                            )}
                           </td>
                         );
                       })}
                     </tr>
-                    {isExpanded && expenses.map((expense) => (
-                      <tr key={expense.id} className="border-b border-slate-50 hover:bg-slate-50 group">
-                        <td className="py-2 px-3 text-slate-900 sticky left-0 bg-white pl-8 z-10">
-                          <div className="flex items-center gap-2">
-                            <ProviderLogo provider={expense.provider} size={18} />
-                            <span>
-                              {expense.name}
-                              {expense.provider && (
-                                <span className="text-slate-400 text-xs ml-1">({expense.provider})</span>
-                              )}
-                            </span>
-                            <div className="flex gap-0.5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button
-                                onClick={() => { setEditingExpense(expense); setPanelType('expense'); }}
-                                className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
-                                title="Edit"
-                              >
-                                <PencilIcon />
-                              </button>
-                              <button
-                                onClick={() => setDeleteTarget({ id: expense.id, name: expense.name, type: 'expense' })}
-                                className="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
-                                title="Delete"
-                              >
-                                <TrashIcon />
-                              </button>
-                            </div>
-                          </div>
-                        </td>
-                        {snapshots.map((s) => {
-                          const amount = s.expenseBreakdown[expense.id] || 0;
-                          return (
-                            <td key={s.month} className="py-2 px-3 text-right">
-                              {amount > 0 ? (
-                                <span className="text-red-600">{formatCurrency(amount)}</span>
-                              ) : (
-                                <span className="text-slate-200">-</span>
-                              )}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
-                  </tbody>
-                );
-              })}
+                  )) : []),
+                ];
+              }).flat()}
 
               {/* Total Expenses */}
-              <tr className="border-b border-slate-200 bg-red-50 font-semibold">
-                <td className="py-2 px-3 text-red-800 sticky left-0 bg-red-50 z-10">Total Expenses</td>
-                {snapshots.map((s) => (
-                  <td key={s.month} className="py-2 px-3 text-right text-red-700">
+              <tr className="border-t-2 border-slate-300 bg-red-50 font-semibold">
+                <td className="py-2.5 px-3 text-red-800 sticky left-0 bg-red-50 z-10">Total Expenses</td>
+                {snapshots.map((s, i) => (
+                  <td key={s.month} className={`py-2.5 px-3 text-right text-red-700 ${i === 0 ? 'bg-red-100/50' : ''}`}>
                     {formatCurrency(s.totalExpenses)}
                   </td>
                 ))}
               </tr>
 
               {/* Net Cash Flow */}
-              <tr className="border-b border-slate-200 bg-blue-50 font-bold">
+              <tr className="bg-blue-50 font-bold border-t border-slate-200">
                 <td className="py-3 px-3 text-blue-900 sticky left-0 bg-blue-50 z-10">Net Cash Flow</td>
-                {snapshots.map((s) => (
-                  <td key={s.month} className={`py-3 px-3 text-right ${
+                {snapshots.map((s, i) => (
+                  <td key={s.month} className={`py-3 px-3 text-right font-bold ${
                     s.netCashFlow >= 0 ? 'text-emerald-700' : 'text-red-700'
-                  }`}>
+                  } ${i === 0 ? 'bg-blue-100/50' : ''}`}>
                     {formatCurrency(s.netCashFlow)}
                   </td>
                 ))}
               </tr>
 
               {/* Running Balance */}
-              <tr className="bg-slate-100 font-bold">
-                <td className="py-3 px-3 text-slate-900 sticky left-0 bg-slate-100 z-10">Running Balance</td>
+              <tr className="bg-slate-800 font-bold">
+                <td className="py-3 px-3 text-white sticky left-0 bg-slate-800 z-10">Running Balance</td>
                 {snapshots.map((s) => (
-                  <td key={s.month} className={`py-3 px-3 text-right ${
-                    s.runningBalance < 10000 ? 'text-red-700' : 'text-slate-900'
+                  <td key={s.month} className={`py-3 px-3 text-right font-bold ${
+                    s.runningBalance < 10000 ? 'text-red-400' : s.runningBalance < 20000 ? 'text-amber-300' : 'text-emerald-300'
                   }`}>
                     {formatCurrency(s.runningBalance)}
                   </td>

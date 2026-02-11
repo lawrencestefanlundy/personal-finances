@@ -446,7 +446,8 @@ export default function NetWorthPage() {
                   <th className="text-right py-2 px-3 font-semibold text-slate-600">Cost Basis</th>
                   <th className="text-right py-2 px-3 font-semibold text-slate-600">Current Value</th>
                   <th className="text-right py-2 px-3 font-semibold text-slate-600">MOIC</th>
-                  <th className="text-center py-2 px-3 font-semibold text-slate-600">Tax</th>
+                  <th className="text-center py-2 px-3 font-semibold text-slate-600">Tax Relief</th>
+                  <th className="text-center py-2 px-3 font-semibold text-slate-600">Date</th>
                   <th className="text-center py-2 px-3 font-semibold text-slate-600">Status</th>
                   <th className="text-center py-2 px-3 font-semibold text-slate-600 w-20">Actions</th>
                 </tr>
@@ -487,12 +488,19 @@ export default function NetWorthPage() {
                     </td>
                     <td className="py-2 px-3 text-center">
                       {asset.taxScheme ? (
-                        <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-violet-50 text-violet-700">
+                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
+                          asset.taxScheme === 'SEIS' ? 'bg-emerald-50 text-emerald-700' : 'bg-violet-50 text-violet-700'
+                        }`}>
                           {asset.taxScheme}
                         </span>
                       ) : (
                         <span className="text-slate-300 text-xs">—</span>
                       )}
+                    </td>
+                    <td className="py-2 px-3 text-center text-xs text-slate-500">
+                      {asset.investmentDate ? (
+                        new Date(asset.investmentDate).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
+                      ) : '—'}
                     </td>
                     <td className="py-2 px-3 text-center">
                       {asset.status ? (
@@ -537,7 +545,7 @@ export default function NetWorthPage() {
                       {angelCostTotal > 0 ? `${(angelTotal / angelCostTotal).toFixed(2)}x` : '—'}
                     </span>
                   </td>
-                  <td colSpan={3} className="py-2 px-3"></td>
+                  <td colSpan={4} className="py-2 px-3"></td>
                 </tr>
               </tbody>
             </table>
