@@ -246,7 +246,7 @@ export default function OverviewPage() {
                 </th>
                 {snapshots.map((s, i) => (
                   <th key={s.month} className={`text-right py-3 px-3 font-semibold min-w-[100px] ${
-                    i === 0 ? 'text-slate-900 bg-blue-50' : 'text-slate-500'
+                    i === 0 ? 'text-slate-900' : 'text-slate-500'
                   }`}>
                     {formatMonth(s.month)}
                   </th>
@@ -272,7 +272,7 @@ export default function OverviewPage() {
                     </button>
                   </div>
                 </td>
-                <td className={`py-2.5 px-3 text-right font-semibold text-slate-700 ${snapshots.length > 0 ? 'bg-blue-50/50' : ''}`}>
+                <td className="py-2.5 px-3 text-right font-semibold text-slate-700">
                   {formatCurrency(state.cashPositions.reduce((s, cp) => s + cp.balance, 0))}
                 </td>
                 {snapshots.slice(1).map((s) => (
@@ -303,7 +303,7 @@ export default function OverviewPage() {
                       </div>
                     </div>
                   </td>
-                  <td className={`py-2 px-3 text-right text-slate-900 ${snapshots.length > 0 ? 'bg-blue-50/30' : ''}`}>
+                  <td className="py-2 px-3 text-right text-slate-900">
                     <EditableCell
                       value={cp.balance}
                       onSave={(value) =>
@@ -319,25 +319,25 @@ export default function OverviewPage() {
 
               {/* === Earnings Section === */}
               <tr
-                className="bg-emerald-50 cursor-pointer hover:bg-emerald-100"
+                className="bg-slate-50 cursor-pointer hover:bg-slate-100"
                 onClick={() => toggleSection('earnings')}
               >
-                <td className="py-2.5 px-3 font-bold text-emerald-700 sticky left-0 bg-emerald-50 z-10">
+                <td className="py-2.5 px-3 font-bold text-slate-700 sticky left-0 bg-slate-50 z-10">
                   <div className="flex items-center gap-2">
                     {chevron(!!expanded['earnings'])}
                     <span>Earnings</span>
                     <button
                       onClick={(e) => { e.stopPropagation(); setEditingIncome(undefined); setPanelType('income'); }}
-                      className="p-0.5 rounded hover:bg-emerald-100 text-emerald-600 ml-auto"
+                      className="p-0.5 rounded hover:bg-slate-200 text-slate-500 ml-auto"
                       title="Add Income Stream"
                     >
                       <PlusIcon />
                     </button>
                   </div>
                 </td>
-                {snapshots.map((s, i) => (
-                  <td key={s.month} className={`py-2.5 px-3 text-right font-semibold text-emerald-700 ${i === 0 ? 'bg-blue-50/50' : ''}`}>
-                    {s.totalIncome > 0 ? formatCurrency(s.totalIncome) : <span className="text-slate-200">-</span>}
+                {snapshots.map((s) => (
+                  <td key={s.month} className="py-2.5 px-3 text-right font-semibold text-slate-700">
+                    {s.totalIncome > 0 ? formatCurrency(s.totalIncome) : <span className="text-slate-300">-</span>}
                   </td>
                 ))}
               </tr>
@@ -366,15 +366,11 @@ export default function OverviewPage() {
                       </div>
                     </div>
                   </td>
-                  {snapshots.map((s, i) => {
+                  {snapshots.map((s) => {
                     const amount = s.incomeBreakdown[stream.id] || 0;
                     return (
-                      <td key={s.month} className={`py-2 px-3 text-right ${i === 0 ? 'bg-blue-50/30' : ''}`}>
-                        {amount > 0 ? (
-                          <span className="text-emerald-600">{formatCurrency(amount)}</span>
-                        ) : (
-                          <span className="text-slate-200">-</span>
-                        )}
+                      <td key={s.month} className="py-2 px-3 text-right text-slate-700">
+                        {amount > 0 ? formatCurrency(amount) : <span className="text-slate-300">-</span>}
                       </td>
                     );
                   })}
@@ -390,18 +386,17 @@ export default function OverviewPage() {
                 return [
                   <tr
                     key={`header-${category}`}
-                    className="cursor-pointer hover:opacity-90"
-                    style={{ backgroundColor: meta?.bgColor || '#f9fafb' }}
+                    className="bg-slate-50 cursor-pointer hover:bg-slate-100"
                     onClick={() => toggleSection(sectionKey)}
                   >
-                    <td className="py-2.5 px-3 font-bold sticky left-0 z-10" style={{ color: meta?.color, backgroundColor: meta?.bgColor || '#f9fafb' }}>
+                    <td className="py-2.5 px-3 font-bold text-slate-700 sticky left-0 bg-slate-50 z-10">
                       <div className="flex items-center gap-2">
                         {chevron(!!isExpanded)}
                         <span>{meta?.label || category}</span>
                         {catIdx === 0 && (
                           <button
                             onClick={(e) => { e.stopPropagation(); setEditingExpense(undefined); setPanelType('expense'); }}
-                            className="p-0.5 rounded hover:bg-red-100 text-red-500 ml-auto"
+                            className="p-0.5 rounded hover:bg-slate-200 text-slate-500 ml-auto"
                             title="Add Expense"
                           >
                             <PlusIcon />
@@ -409,11 +404,11 @@ export default function OverviewPage() {
                         )}
                       </div>
                     </td>
-                    {snapshots.map((s, i) => {
+                    {snapshots.map((s) => {
                       const subtotal = categorySubtotals[category]?.[s.month] || 0;
                       return (
-                        <td key={s.month} className={`py-2.5 px-3 text-right font-medium ${i === 0 ? 'bg-blue-50/20' : ''}`} style={{ color: meta?.color }}>
-                          {subtotal > 0 ? formatCurrency(subtotal) : <span className="text-slate-200">-</span>}
+                        <td key={s.month} className="py-2.5 px-3 text-right font-medium text-slate-700">
+                          {subtotal > 0 ? formatCurrency(subtotal) : <span className="text-slate-300">-</span>}
                         </td>
                       );
                     })}
@@ -447,15 +442,11 @@ export default function OverviewPage() {
                           </div>
                         </div>
                       </td>
-                      {snapshots.map((s, i) => {
+                      {snapshots.map((s) => {
                         const amount = s.expenseBreakdown[expense.id] || 0;
                         return (
-                          <td key={s.month} className={`py-2 px-3 text-right ${i === 0 ? 'bg-blue-50/20' : ''}`}>
-                            {amount > 0 ? (
-                              <span className="text-red-600">{formatCurrency(amount)}</span>
-                            ) : (
-                              <span className="text-slate-200">-</span>
-                            )}
+                          <td key={s.month} className="py-2 px-3 text-right text-slate-700">
+                            {amount > 0 ? formatCurrency(amount) : <span className="text-slate-300">-</span>}
                           </td>
                         );
                       })}
@@ -465,34 +456,30 @@ export default function OverviewPage() {
               }).flat()}
 
               {/* Total Expenses */}
-              <tr className="border-t-2 border-slate-300 bg-red-50 font-semibold">
-                <td className="py-2.5 px-3 text-red-800 sticky left-0 bg-red-50 z-10">Total Expenses</td>
-                {snapshots.map((s, i) => (
-                  <td key={s.month} className={`py-2.5 px-3 text-right text-red-700 ${i === 0 ? 'bg-red-100/50' : ''}`}>
+              <tr className="border-t-2 border-slate-300 bg-slate-50 font-semibold">
+                <td className="py-2.5 px-3 text-slate-800 sticky left-0 bg-slate-50 z-10">Total Expenses</td>
+                {snapshots.map((s) => (
+                  <td key={s.month} className="py-2.5 px-3 text-right text-slate-800">
                     {formatCurrency(s.totalExpenses)}
                   </td>
                 ))}
               </tr>
 
               {/* Net Cash Flow */}
-              <tr className="bg-blue-50 font-bold border-t border-slate-200">
-                <td className="py-3 px-3 text-blue-900 sticky left-0 bg-blue-50 z-10">Net Cash Flow</td>
-                {snapshots.map((s, i) => (
-                  <td key={s.month} className={`py-3 px-3 text-right font-bold ${
-                    s.netCashFlow >= 0 ? 'text-emerald-700' : 'text-red-700'
-                  } ${i === 0 ? 'bg-blue-100/50' : ''}`}>
+              <tr className="bg-slate-100 font-bold border-t border-slate-300">
+                <td className="py-3 px-3 text-slate-900 sticky left-0 bg-slate-100 z-10">Net Cash Flow</td>
+                {snapshots.map((s) => (
+                  <td key={s.month} className="py-3 px-3 text-right font-bold text-slate-900">
                     {formatCurrency(s.netCashFlow)}
                   </td>
                 ))}
               </tr>
 
               {/* Running Balance */}
-              <tr className="bg-slate-800 font-bold">
-                <td className="py-3 px-3 text-white sticky left-0 bg-slate-800 z-10">Running Balance</td>
+              <tr className="bg-slate-200 font-bold">
+                <td className="py-3 px-3 text-slate-900 sticky left-0 bg-slate-200 z-10">Running Balance</td>
                 {snapshots.map((s) => (
-                  <td key={s.month} className={`py-3 px-3 text-right font-bold ${
-                    s.runningBalance < 10000 ? 'text-red-400' : s.runningBalance < 20000 ? 'text-amber-300' : 'text-emerald-300'
-                  }`}>
+                  <td key={s.month} className="py-3 px-3 text-right font-bold text-slate-900">
                     {formatCurrency(s.runningBalance)}
                   </td>
                 ))}
