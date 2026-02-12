@@ -26,6 +26,14 @@ export default function AssetForm({ existing, onClose }: AssetFormProps) {
   const [unlockYear, setUnlockYear] = useState(existing?.unlockYear?.toString() ?? '');
   const [endYear, setEndYear] = useState(existing?.endYear?.toString() ?? '');
   const [notes, setNotes] = useState(existing?.notes ?? '');
+  // Investment-specific fields
+  const [costBasis, setCostBasis] = useState(existing?.costBasis?.toString() ?? '');
+  const [costCurrency, setCostCurrency] = useState(existing?.costCurrency ?? 'GBP');
+  const [instrument, setInstrument] = useState(existing?.instrument ?? '');
+  const [investmentDate, setInvestmentDate] = useState(existing?.investmentDate ?? '');
+  const [status, setStatus] = useState(existing?.status ?? 'active');
+  const [taxScheme, setTaxScheme] = useState(existing?.taxScheme ?? '');
+  const [platform, setPlatform] = useState(existing?.platform ?? '');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const inputClass = 'w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500';
@@ -57,6 +65,14 @@ export default function AssetForm({ existing, onClose }: AssetFormProps) {
       ...(endYear ? { endYear: Number(endYear) } : {}),
       ...(notes.trim() ? { notes: notes.trim() } : {}),
       ...(provider.trim() ? { provider: provider.trim() } : {}),
+      ...(category === 'angel' ? {
+        ...(costBasis ? { costBasis: Number(costBasis), costCurrency } : {}),
+        ...(instrument ? { instrument } : {}),
+        ...(investmentDate ? { investmentDate } : {}),
+        status: status as 'active' | 'exited' | 'written_off',
+        ...(taxScheme ? { taxScheme: taxScheme as 'SEIS' | 'EIS' } : {}),
+        ...(platform.trim() ? { platform: platform.trim() } : {}),
+      } : {}),
     };
 
     if (existing) {
@@ -134,6 +150,81 @@ export default function AssetForm({ existing, onClose }: AssetFormProps) {
         />
         <label htmlFor="assetLiquid" className="text-sm text-slate-700">Liquid asset</label>
       </div>
+
+      {/* Investment-specific fields — shown only for angel category */}
+      {category === 'angel' && (
+        <>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="col-span-2">
+              <FormField label="Cost Basis">
+                <input
+                  type="number"
+                  step="0.01"
+                  value={costBasis}
+                  onChange={(e) => setCostBasis(e.target.value)}
+                  placeholder="Original investment"
+                  className={inputClass}
+                />
+              </FormField>
+            </div>
+            <FormField label="Currency">
+              <select value={costCurrency} onChange={(e) => setCostCurrency(e.target.value)} className={selectClass}>
+                <option value="GBP">GBP</option>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="CHF">CHF</option>
+              </select>
+            </FormField>
+          </div>
+
+          <FormField label="Instrument">
+            <select value={instrument} onChange={(e) => setInstrument(e.target.value)} className={selectClass}>
+              <option value="">Select...</option>
+              <option value="equity">Equity</option>
+              <option value="safe">SAFE</option>
+              <option value="options">Options</option>
+              <option value="advance_subscription">Advance Subscription</option>
+            </select>
+          </FormField>
+
+          <div className="grid grid-cols-2 gap-3">
+            <FormField label="Investment Date">
+              <input
+                type="date"
+                value={investmentDate}
+                onChange={(e) => setInvestmentDate(e.target.value)}
+                className={inputClass}
+              />
+            </FormField>
+            <FormField label="Status">
+              <select value={status} onChange={(e) => setStatus(e.target.value as 'active' | 'exited' | 'written_off')} className={selectClass}>
+                <option value="active">Active</option>
+                <option value="exited">Exited</option>
+                <option value="written_off">Written Off</option>
+              </select>
+            </FormField>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <FormField label="Tax Scheme">
+              <select value={taxScheme} onChange={(e) => setTaxScheme(e.target.value)} className={selectClass}>
+                <option value="">None</option>
+                <option value="SEIS">SEIS</option>
+                <option value="EIS">EIS</option>
+              </select>
+            </FormField>
+            <FormField label="Platform">
+              <input
+                type="text"
+                value={platform}
+                onChange={(e) => setPlatform(e.target.value)}
+                placeholder="e.g. odin, direct"
+                className={inputClass}
+              />
+            </FormField>
+          </div>
+        </>
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         <FormField label="Unlock Year" error={errors.unlockYear}>

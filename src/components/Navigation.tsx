@@ -4,11 +4,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const navItems = [
-  { href: '/', label: 'Dashboard' },
-  { href: '/cash-flow', label: 'Cash Flow' },
-  { href: '/assets', label: 'Assets' },
-  { href: '/wealth', label: 'Wealth' },
-  { href: '/scenarios', label: 'Scenarios' },
+  { href: '/', label: 'Overview' },
+  { href: '/net-worth', label: 'Net Worth' },
   { href: '/settings', label: 'Settings' },
 ];
 
@@ -20,7 +17,7 @@ export default function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center h-16">
           <Link href="/" className="text-xl font-bold text-white mr-8">
-            Finance Dashboard
+            Personal Finances
           </Link>
           <nav className="flex space-x-1">
             {navItems.map((item) => {

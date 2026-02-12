@@ -5,12 +5,14 @@ import { useFinance } from '@/context/FinanceContext';
 import { Transaction } from '@/types/finance';
 import { exportStateAsJSON, importStateFromJSON, clearState } from '@/lib/storage';
 import { seedData } from '@/data/seedData';
+import { formatCurrency } from '@/lib/formatters';
 
 export default function SettingsPage() {
   const { state, dispatch } = useFinance();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const txFileInputRef = useRef<HTMLInputElement>(null);
   const [txImportStatus, setTxImportStatus] = useState<string | null>(null);
+  const [showGrowthRates, setShowGrowthRates] = useState(false);
 
   const handleExport = () => {
     exportStateAsJSON(state);
@@ -70,7 +72,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="space-y-8 max-w-2xl">
+    <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
         <p className="text-sm text-slate-500 mt-1">Manage data, import/export, and preferences</p>
@@ -132,6 +134,54 @@ export default function SettingsPage() {
             />
           </div>
         </div>
+      </div>
+
+      {/* Growth Rates */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">Growth Rates</h2>
+            <p className="text-xs text-slate-400">Annual growth assumptions used in projections</p>
+          </div>
+          <button
+            onClick={() => setShowGrowthRates(!showGrowthRates)}
+            className={`px-4 py-2 text-sm rounded-md transition-colors ${
+              showGrowthRates ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            {showGrowthRates ? 'Hide' : 'Show'}
+          </button>
+        </div>
+        {showGrowthRates && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {state.assets.map((asset) => (
+              <div key={asset.id} className="flex items-center justify-between bg-slate-50 rounded-lg p-3">
+                <div>
+                  <p className="text-sm font-medium text-slate-900">{asset.name}</p>
+                  <p className="text-xs text-slate-400">{formatCurrency(asset.currentValue)}</p>
+                </div>
+                <div className="flex items-center gap-1">
+                  <input
+                    type="number"
+                    step="0.5"
+                    value={(asset.annualGrowthRate * 100).toFixed(1)}
+                    onChange={(e) => {
+                      const rate = parseFloat(e.target.value) / 100;
+                      if (!isNaN(rate)) {
+                        dispatch({
+                          type: 'UPDATE_ASSET',
+                          payload: { ...asset, annualGrowthRate: rate },
+                        });
+                      }
+                    }}
+                    className="w-16 px-2 py-1 text-right text-sm border border-slate-300 rounded bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-slate-500">%</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Data Management */}
