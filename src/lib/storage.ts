@@ -51,7 +51,13 @@ export function importStateFromJSON(file: File): Promise<FinanceState> {
     reader.onload = (e) => {
       try {
         const state = JSON.parse(e.target?.result as string) as FinanceState;
-        if (!state.cashPositions || !state.incomeStreams || !state.expenses || !state.assets || !state.liabilities) {
+        if (
+          !state.cashPositions ||
+          !state.incomeStreams ||
+          !state.expenses ||
+          !state.assets ||
+          !state.liabilities
+        ) {
           reject(new Error('Invalid finance data file'));
           return;
         }

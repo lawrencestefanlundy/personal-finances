@@ -25,13 +25,14 @@ export default function CashPositionForm({ existing, onClose }: CashPositionForm
   const [provider, setProvider] = useState(existing?.provider ?? '');
   const [balance, setBalance] = useState(existing?.balance?.toString() ?? '');
   const [interestRate, setInterestRate] = useState(
-    existing ? (existing.interestRate * 100).toString() : ''
+    existing ? (existing.interestRate * 100).toString() : '',
   );
   const [category, setCategory] = useState<CashPosition['category']>(existing?.category ?? 'cash');
   const [isLiquid, setIsLiquid] = useState(existing?.isLiquid ?? true);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const inputClass = 'w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500';
+  const inputClass =
+    'w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500';
   const selectClass = inputClass;
 
   const validate = (): boolean => {
@@ -71,7 +72,10 @@ export default function CashPositionForm({ existing, onClose }: CashPositionForm
         <input
           type="text"
           value={name}
-          onChange={(e) => { setName(e.target.value); setErrors((prev) => ({ ...prev, name: '' })); }}
+          onChange={(e) => {
+            setName(e.target.value);
+            setErrors((prev) => ({ ...prev, name: '' }));
+          }}
           placeholder="e.g. Bank Account"
           className={inputClass}
         />
@@ -94,7 +98,10 @@ export default function CashPositionForm({ existing, onClose }: CashPositionForm
             type="number"
             step="0.01"
             value={balance}
-            onChange={(e) => { setBalance(e.target.value); setErrors((prev) => ({ ...prev, balance: '' })); }}
+            onChange={(e) => {
+              setBalance(e.target.value);
+              setErrors((prev) => ({ ...prev, balance: '' }));
+            }}
             className={`${inputClass} pl-7`}
           />
         </div>
@@ -106,18 +113,29 @@ export default function CashPositionForm({ existing, onClose }: CashPositionForm
             type="number"
             step="0.01"
             value={interestRate}
-            onChange={(e) => { setInterestRate(e.target.value); setErrors((prev) => ({ ...prev, interestRate: '' })); }}
+            onChange={(e) => {
+              setInterestRate(e.target.value);
+              setErrors((prev) => ({ ...prev, interestRate: '' }));
+            }}
             placeholder="0"
             className={`${inputClass} pr-7`}
           />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500">%</span>
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500">
+            %
+          </span>
         </div>
       </FormField>
 
       <FormField label="Category" required>
-        <select value={category} onChange={(e) => setCategory(e.target.value as CashPosition['category'])} className={selectClass}>
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value as CashPosition['category'])}
+          className={selectClass}
+        >
           {CATEGORIES.map((c) => (
-            <option key={c.value} value={c.value}>{c.label}</option>
+            <option key={c.value} value={c.value}>
+              {c.label}
+            </option>
           ))}
         </select>
       </FormField>
@@ -130,7 +148,9 @@ export default function CashPositionForm({ existing, onClose }: CashPositionForm
           onChange={(e) => setIsLiquid(e.target.checked)}
           className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
         />
-        <label htmlFor="isLiquid" className="text-sm text-slate-700">Liquid (easily accessible)</label>
+        <label htmlFor="isLiquid" className="text-sm text-slate-700">
+          Liquid (easily accessible)
+        </label>
       </div>
 
       <div className="flex gap-3 pt-4 border-t border-slate-200">

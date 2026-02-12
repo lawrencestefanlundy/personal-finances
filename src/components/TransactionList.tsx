@@ -16,7 +16,7 @@ export default function TransactionList({ transactions, limit = 20 }: Transactio
 
   // Sort newest first
   const sorted = [...transactions].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
   );
   const shown = expanded ? sorted : sorted.slice(0, limit);
 

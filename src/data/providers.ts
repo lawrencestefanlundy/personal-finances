@@ -4,12 +4,12 @@
  */
 export const providerDomains: Record<string, string> = {
   // Banks & Financial
-  'Monzo': 'monzo.com',
-  'Chase': 'chase.co.uk',
+  Monzo: 'monzo.com',
+  Chase: 'chase.co.uk',
   'Lloyds Bank': 'lloydsbank.co.uk',
-  'Amex': 'americanexpress.com',
-  'Aldermore': 'aldermore.co.uk',
-  'SLC': 'slc.co.uk',
+  Amex: 'americanexpress.com',
+  Aldermore: 'aldermore.co.uk',
+  SLC: 'slc.co.uk',
 
   // Energy & Utilities
   'Octopus Energy': 'octopusenergy.com',
@@ -17,31 +17,31 @@ export const providerDomains: Record<string, string> = {
   'Virgin Media': 'virginmedia.com',
 
   // Health & Fitness
-  'Bupa': 'bupa.co.uk',
-  'Peloton': 'onepeloton.co.uk',
+  Bupa: 'bupa.co.uk',
+  Peloton: 'onepeloton.co.uk',
 
   // Government
-  'DVLA': 'gov.uk',
+  DVLA: 'gov.uk',
   'Lewes District': 'lewes-eastbourne.gov.uk',
   'TV License': 'tvlicensing.co.uk',
 
   // Insurance
   'Policy Expert': 'policyexpert.co.uk',
   'Purely Pets': 'purelypetsinsurance.co.uk',
-  'Hastings': 'hastingsdirect.com',
+  Hastings: 'hastingsdirect.com',
 
   // Telecoms & Subscriptions
-  'Smarty': 'smarty.co.uk',
-  'Spotify': 'spotify.com',
-  'Amazon': 'amazon.co.uk',
+  Smarty: 'smarty.co.uk',
+  Spotify: 'spotify.com',
+  Amazon: 'amazon.co.uk',
 
   // Investments & Crypto
-  'Coinbase': 'coinbase.com',
-  'Vanguard': 'vanguardinvestor.co.uk',
+  Coinbase: 'coinbase.com',
+  Vanguard: 'vanguardinvestor.co.uk',
   'Lunar Ventures': 'lunar.vc',
-  'Cloudberry': 'cloudberry.vc',
+  Cloudberry: 'cloudberry.vc',
   'Insig AI': 'insig.ai',
-  'Volkswagen': 'volkswagen.co.uk',
+  Volkswagen: 'volkswagen.co.uk',
 
   // Work
   'State of the Future': 'stateofthefuture.io',

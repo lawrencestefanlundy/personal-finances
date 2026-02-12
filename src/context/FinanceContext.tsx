@@ -23,11 +23,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     saveState(state);
   }, [state]);
 
-  return (
-    <FinanceContext.Provider value={{ state, dispatch }}>
-      {children}
-    </FinanceContext.Provider>
-  );
+  return <FinanceContext.Provider value={{ state, dispatch }}>{children}</FinanceContext.Provider>;
 }
 
 export function useFinance() {

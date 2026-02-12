@@ -33,10 +33,7 @@ export default function WealthChart({ projections }: WealthChartProps) {
       <AreaChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
         <XAxis dataKey="year" tick={{ fontSize: 11 }} />
-        <YAxis
-          tick={{ fontSize: 11 }}
-          tickFormatter={(v) => `£${(v / 1000000).toFixed(1)}M`}
-        />
+        <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `£${(v / 1000000).toFixed(1)}M`} />
         <Tooltip
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           formatter={((value: number, name: string) => [formatCurrency(value), name]) as any}

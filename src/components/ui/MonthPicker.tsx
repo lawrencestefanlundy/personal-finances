@@ -30,9 +30,7 @@ export default function MonthPicker({ label, selected, onChange }: MonthPickerPr
               type="button"
               onClick={() => toggle(monthNum)}
               className={`px-2 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                active
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                active ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
               {name}

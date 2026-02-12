@@ -22,9 +22,7 @@ export default function StatCard({ title, value, subtitle, color = 'blue' }: Sta
         <div>
           <p className="text-sm font-medium text-slate-500">{title}</p>
           <p className={`text-2xl font-bold mt-1 ${colors.text}`}>{value}</p>
-          {subtitle && (
-            <p className="text-xs text-slate-400 mt-1">{subtitle}</p>
-          )}
+          {subtitle && <p className="text-xs text-slate-400 mt-1">{subtitle}</p>}
         </div>
       </div>
     </div>

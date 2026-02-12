@@ -226,7 +226,9 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between pt-4 border-t border-slate-200">
             <div>
               <p className="text-sm font-medium text-red-600">Reset to Defaults</p>
-              <p className="text-xs text-slate-400">Restore all data to original spreadsheet values</p>
+              <p className="text-xs text-slate-400">
+                Restore all data to original spreadsheet values
+              </p>
             </div>
             <button
               onClick={handleReset}
@@ -267,7 +269,9 @@ export default function SettingsPage() {
           </div>
 
           {txImportStatus && (
-            <p className={`text-xs ${txImportStatus.startsWith('Import failed') ? 'text-red-500' : 'text-emerald-600'}`}>
+            <p
+              className={`text-xs ${txImportStatus.startsWith('Import failed') ? 'text-red-500' : 'text-emerald-600'}`}
+            >
               {txImportStatus}
             </p>
           )}
@@ -281,11 +285,10 @@ export default function SettingsPage() {
                 {state.transactions.length > 0
                   ? `Latest: ${new Date(
                       [...state.transactions].sort(
-                        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-                      )[0]?.date
+                        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+                      )[0]?.date,
                     ).toLocaleDateString('en-GB')}`
-                  : 'No transactions imported yet'
-                }
+                  : 'No transactions imported yet'}
               </p>
             </div>
             {state.transactions.length > 0 && (

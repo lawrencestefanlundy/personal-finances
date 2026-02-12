@@ -36,7 +36,8 @@ export default function IncomeStreamForm({ existing, onClose }: IncomeStreamForm
   const [paymentMonths, setPaymentMonths] = useState<number[]>(existing?.paymentMonths ?? []);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const inputClass = 'w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500';
+  const inputClass =
+    'w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500';
   const selectClass = inputClass;
 
   const showPaymentMonths = frequency !== 'monthly';
@@ -44,8 +45,10 @@ export default function IncomeStreamForm({ existing, onClose }: IncomeStreamForm
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
     if (!name.trim()) errs.name = 'Name is required';
-    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) errs.amount = 'Valid amount is required';
-    if (showPaymentMonths && paymentMonths.length === 0) errs.paymentMonths = 'Select at least one payment month';
+    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0)
+      errs.amount = 'Valid amount is required';
+    if (showPaymentMonths && paymentMonths.length === 0)
+      errs.paymentMonths = 'Select at least one payment month';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -79,7 +82,10 @@ export default function IncomeStreamForm({ existing, onClose }: IncomeStreamForm
         <input
           type="text"
           value={name}
-          onChange={(e) => { setName(e.target.value); setErrors((prev) => ({ ...prev, name: '' })); }}
+          onChange={(e) => {
+            setName(e.target.value);
+            setErrors((prev) => ({ ...prev, name: '' }));
+          }}
           placeholder="e.g. Salary"
           className={inputClass}
         />
@@ -102,24 +108,39 @@ export default function IncomeStreamForm({ existing, onClose }: IncomeStreamForm
             type="number"
             step="0.01"
             value={amount}
-            onChange={(e) => { setAmount(e.target.value); setErrors((prev) => ({ ...prev, amount: '' })); }}
+            onChange={(e) => {
+              setAmount(e.target.value);
+              setErrors((prev) => ({ ...prev, amount: '' }));
+            }}
             className={`${inputClass} pl-7`}
           />
         </div>
       </FormField>
 
       <FormField label="Frequency" required>
-        <select value={frequency} onChange={(e) => setFrequency(e.target.value as IncomeFrequency)} className={selectClass}>
+        <select
+          value={frequency}
+          onChange={(e) => setFrequency(e.target.value as IncomeFrequency)}
+          className={selectClass}
+        >
           {FREQUENCIES.map((f) => (
-            <option key={f.value} value={f.value}>{f.label}</option>
+            <option key={f.value} value={f.value}>
+              {f.label}
+            </option>
           ))}
         </select>
       </FormField>
 
       <FormField label="Owner" required>
-        <select value={owner} onChange={(e) => setOwner(e.target.value as IncomeStream['owner'])} className={selectClass}>
+        <select
+          value={owner}
+          onChange={(e) => setOwner(e.target.value as IncomeStream['owner'])}
+          className={selectClass}
+        >
           {OWNERS.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
           ))}
         </select>
       </FormField>
@@ -132,7 +153,9 @@ export default function IncomeStreamForm({ existing, onClose }: IncomeStreamForm
           onChange={(e) => setTaxable(e.target.checked)}
           className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
         />
-        <label htmlFor="taxable" className="text-sm text-slate-700">Taxable income</label>
+        <label htmlFor="taxable" className="text-sm text-slate-700">
+          Taxable income
+        </label>
       </div>
 
       {showPaymentMonths && (
@@ -140,9 +163,14 @@ export default function IncomeStreamForm({ existing, onClose }: IncomeStreamForm
           <MonthPicker
             label="Payment Months"
             selected={paymentMonths}
-            onChange={(m) => { setPaymentMonths(m); setErrors((prev) => ({ ...prev, paymentMonths: '' })); }}
+            onChange={(m) => {
+              setPaymentMonths(m);
+              setErrors((prev) => ({ ...prev, paymentMonths: '' }));
+            }}
           />
-          {errors.paymentMonths && <p className="text-xs text-red-500 mt-1">{errors.paymentMonths}</p>}
+          {errors.paymentMonths && (
+            <p className="text-xs text-red-500 mt-1">{errors.paymentMonths}</p>
+          )}
         </div>
       )}
 

@@ -60,7 +60,7 @@ function getExpenseForMonth(expense: Expense, month: string, monthNum: number): 
 
 export function computeMonthlySnapshots(
   state: FinanceState,
-  numMonths: number = 50
+  numMonths: number = 50,
 ): MonthlySnapshot[] {
   const snapshots: MonthlySnapshot[] = [];
   let runningBalance = state.cashPositions.reduce((sum, cp) => sum + cp.balance, 0);
@@ -110,7 +110,7 @@ export function computeMonthlySnapshots(
 
 export function getUpcomingLargeExpenses(
   state: FinanceState,
-  numMonths: number = 3
+  numMonths: number = 3,
 ): { name: string; amount: number; month: string }[] {
   const upcoming: { name: string; amount: number; month: string }[] = [];
 

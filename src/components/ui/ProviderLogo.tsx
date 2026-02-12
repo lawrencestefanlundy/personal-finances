@@ -9,8 +9,16 @@ interface ProviderLogoProps {
 }
 
 const COLORS = [
-  '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6',
-  '#ec4899', '#14b8a6', '#f97316', '#6366f1', '#84cc16',
+  '#3b82f6',
+  '#ef4444',
+  '#10b981',
+  '#f59e0b',
+  '#8b5cf6',
+  '#ec4899',
+  '#14b8a6',
+  '#f97316',
+  '#6366f1',
+  '#84cc16',
 ];
 
 function getColorForProvider(name: string): string {
@@ -21,7 +29,12 @@ function getColorForProvider(name: string): string {
   return COLORS[Math.abs(hash) % COLORS.length];
 }
 
-function LetterAvatar({ provider, size, className, hidden = false }: {
+function LetterAvatar({
+  provider,
+  size,
+  className,
+  hidden = false,
+}: {
   provider: string;
   size: number;
   className: string;

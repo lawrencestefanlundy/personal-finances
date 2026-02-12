@@ -1,4 +1,13 @@
-import { FinanceState, CashPosition, IncomeStream, Expense, Asset, Liability, Scenario, Transaction } from '@/types/finance';
+import {
+  FinanceState,
+  CashPosition,
+  IncomeStream,
+  Expense,
+  Asset,
+  Liability,
+  Scenario,
+  Transaction,
+} from '@/types/finance';
 
 export type FinanceAction =
   | { type: 'ADD_CASH_POSITION'; payload: CashPosition }
@@ -43,7 +52,7 @@ export function financeReducer(state: FinanceState, action: FinanceAction): Fina
       return updateTimestamp({
         ...state,
         cashPositions: state.cashPositions.map((cp) =>
-          cp.id === action.payload.id ? action.payload : cp
+          cp.id === action.payload.id ? action.payload : cp,
         ),
       });
 
@@ -63,7 +72,7 @@ export function financeReducer(state: FinanceState, action: FinanceAction): Fina
       return updateTimestamp({
         ...state,
         incomeStreams: state.incomeStreams.map((is) =>
-          is.id === action.payload.id ? action.payload : is
+          is.id === action.payload.id ? action.payload : is,
         ),
       });
 
@@ -82,9 +91,7 @@ export function financeReducer(state: FinanceState, action: FinanceAction): Fina
     case 'UPDATE_EXPENSE':
       return updateTimestamp({
         ...state,
-        expenses: state.expenses.map((e) =>
-          e.id === action.payload.id ? action.payload : e
-        ),
+        expenses: state.expenses.map((e) => (e.id === action.payload.id ? action.payload : e)),
       });
 
     case 'DELETE_EXPENSE':
@@ -102,9 +109,7 @@ export function financeReducer(state: FinanceState, action: FinanceAction): Fina
     case 'UPDATE_ASSET':
       return updateTimestamp({
         ...state,
-        assets: state.assets.map((a) =>
-          a.id === action.payload.id ? action.payload : a
-        ),
+        assets: state.assets.map((a) => (a.id === action.payload.id ? action.payload : a)),
       });
 
     case 'DELETE_ASSET':
@@ -123,7 +128,7 @@ export function financeReducer(state: FinanceState, action: FinanceAction): Fina
       return updateTimestamp({
         ...state,
         liabilities: state.liabilities.map((l) =>
-          l.id === action.payload.id ? action.payload : l
+          l.id === action.payload.id ? action.payload : l,
         ),
       });
 
@@ -136,10 +141,10 @@ export function financeReducer(state: FinanceState, action: FinanceAction): Fina
     case 'ADD_TRANSACTIONS': {
       // Merge new transactions, deduplicating by emailId where present
       const existingEmailIds = new Set(
-        state.transactions.filter((t) => t.emailId).map((t) => t.emailId)
+        state.transactions.filter((t) => t.emailId).map((t) => t.emailId),
       );
       const newTransactions = action.payload.filter(
-        (t) => !t.emailId || !existingEmailIds.has(t.emailId)
+        (t) => !t.emailId || !existingEmailIds.has(t.emailId),
       );
       return updateTimestamp({
         ...state,
@@ -168,9 +173,7 @@ export function financeReducer(state: FinanceState, action: FinanceAction): Fina
     case 'UPDATE_SCENARIO':
       return updateTimestamp({
         ...state,
-        scenarios: state.scenarios.map((s) =>
-          s.id === action.payload.id ? action.payload : s
-        ),
+        scenarios: state.scenarios.map((s) => (s.id === action.payload.id ? action.payload : s)),
       });
 
     case 'DELETE_SCENARIO':

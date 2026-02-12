@@ -25,23 +25,27 @@ export default function LiabilityForm({ existing, onClose }: LiabilityFormProps)
   const [provider, setProvider] = useState(existing?.provider ?? '');
   const [currentBalance, setCurrentBalance] = useState(existing?.currentBalance?.toString() ?? '');
   const [interestRate, setInterestRate] = useState(
-    existing ? (existing.interestRate * 100).toString() : ''
+    existing ? (existing.interestRate * 100).toString() : '',
   );
   const [monthlyPayment, setMonthlyPayment] = useState(existing?.monthlyPayment?.toString() ?? '');
   const [type, setType] = useState<Liability['type']>(existing?.type ?? 'other');
   const [endYear, setEndYear] = useState(existing?.endYear?.toString() ?? '');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const inputClass = 'w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500';
+  const inputClass =
+    'w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500';
   const selectClass = inputClass;
 
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
     if (!name.trim()) errs.name = 'Name is required';
-    if (!currentBalance || isNaN(Number(currentBalance))) errs.currentBalance = 'Valid balance is required';
+    if (!currentBalance || isNaN(Number(currentBalance)))
+      errs.currentBalance = 'Valid balance is required';
     if (interestRate !== '' && isNaN(Number(interestRate))) errs.interestRate = 'Must be a number';
-    if (monthlyPayment !== '' && isNaN(Number(monthlyPayment))) errs.monthlyPayment = 'Must be a number';
-    if (endYear && (isNaN(Number(endYear)) || Number(endYear) < 2000 || Number(endYear) > 2100)) errs.endYear = 'Valid year (2000-2100)';
+    if (monthlyPayment !== '' && isNaN(Number(monthlyPayment)))
+      errs.monthlyPayment = 'Must be a number';
+    if (endYear && (isNaN(Number(endYear)) || Number(endYear) < 2000 || Number(endYear) > 2100))
+      errs.endYear = 'Valid year (2000-2100)';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -75,7 +79,10 @@ export default function LiabilityForm({ existing, onClose }: LiabilityFormProps)
         <input
           type="text"
           value={name}
-          onChange={(e) => { setName(e.target.value); setErrors((prev) => ({ ...prev, name: '' })); }}
+          onChange={(e) => {
+            setName(e.target.value);
+            setErrors((prev) => ({ ...prev, name: '' }));
+          }}
           placeholder="e.g. Mortgage"
           className={inputClass}
         />
@@ -98,7 +105,10 @@ export default function LiabilityForm({ existing, onClose }: LiabilityFormProps)
             type="number"
             step="0.01"
             value={currentBalance}
-            onChange={(e) => { setCurrentBalance(e.target.value); setErrors((prev) => ({ ...prev, currentBalance: '' })); }}
+            onChange={(e) => {
+              setCurrentBalance(e.target.value);
+              setErrors((prev) => ({ ...prev, currentBalance: '' }));
+            }}
             className={`${inputClass} pl-7`}
           />
         </div>
@@ -110,11 +120,16 @@ export default function LiabilityForm({ existing, onClose }: LiabilityFormProps)
             type="number"
             step="0.01"
             value={interestRate}
-            onChange={(e) => { setInterestRate(e.target.value); setErrors((prev) => ({ ...prev, interestRate: '' })); }}
+            onChange={(e) => {
+              setInterestRate(e.target.value);
+              setErrors((prev) => ({ ...prev, interestRate: '' }));
+            }}
             placeholder="0"
             className={`${inputClass} pr-7`}
           />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500">%</span>
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500">
+            %
+          </span>
         </div>
       </FormField>
 
@@ -125,16 +140,25 @@ export default function LiabilityForm({ existing, onClose }: LiabilityFormProps)
             type="number"
             step="0.01"
             value={monthlyPayment}
-            onChange={(e) => { setMonthlyPayment(e.target.value); setErrors((prev) => ({ ...prev, monthlyPayment: '' })); }}
+            onChange={(e) => {
+              setMonthlyPayment(e.target.value);
+              setErrors((prev) => ({ ...prev, monthlyPayment: '' }));
+            }}
             className={`${inputClass} pl-7`}
           />
         </div>
       </FormField>
 
       <FormField label="Type" required>
-        <select value={type} onChange={(e) => setType(e.target.value as Liability['type'])} className={selectClass}>
+        <select
+          value={type}
+          onChange={(e) => setType(e.target.value as Liability['type'])}
+          className={selectClass}
+        >
           {TYPES.map((t) => (
-            <option key={t.value} value={t.value}>{t.label}</option>
+            <option key={t.value} value={t.value}>
+              {t.label}
+            </option>
           ))}
         </select>
       </FormField>
@@ -143,7 +167,10 @@ export default function LiabilityForm({ existing, onClose }: LiabilityFormProps)
         <input
           type="number"
           value={endYear}
-          onChange={(e) => { setEndYear(e.target.value); setErrors((prev) => ({ ...prev, endYear: '' })); }}
+          onChange={(e) => {
+            setEndYear(e.target.value);
+            setErrors((prev) => ({ ...prev, endYear: '' }));
+          }}
           placeholder="e.g. 2050"
           className={inputClass}
         />

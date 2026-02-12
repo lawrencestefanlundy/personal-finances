@@ -19,7 +19,7 @@ export default function AssetForm({ existing, onClose }: AssetFormProps) {
   const [provider, setProvider] = useState(existing?.provider ?? '');
   const [currentValue, setCurrentValue] = useState(existing?.currentValue?.toString() ?? '');
   const [annualGrowthRate, setAnnualGrowthRate] = useState(
-    existing ? (existing.annualGrowthRate * 100).toString() : ''
+    existing ? (existing.annualGrowthRate * 100).toString() : '',
   );
   const [category, setCategory] = useState<AssetCategory>(existing?.category ?? 'savings');
   const [isLiquid, setIsLiquid] = useState(existing?.isLiquid ?? true);
@@ -36,16 +36,23 @@ export default function AssetForm({ existing, onClose }: AssetFormProps) {
   const [platform, setPlatform] = useState(existing?.platform ?? '');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const inputClass = 'w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500';
+  const inputClass =
+    'w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500';
   const selectClass = inputClass;
 
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
     if (!name.trim()) errs.name = 'Name is required';
     if (!currentValue || isNaN(Number(currentValue))) errs.currentValue = 'Valid value is required';
-    if (annualGrowthRate !== '' && isNaN(Number(annualGrowthRate))) errs.annualGrowthRate = 'Must be a number';
-    if (unlockYear && (isNaN(Number(unlockYear)) || Number(unlockYear) < 2000 || Number(unlockYear) > 2100)) errs.unlockYear = 'Valid year (2000-2100)';
-    if (endYear && (isNaN(Number(endYear)) || Number(endYear) < 2000 || Number(endYear) > 2100)) errs.endYear = 'Valid year (2000-2100)';
+    if (annualGrowthRate !== '' && isNaN(Number(annualGrowthRate)))
+      errs.annualGrowthRate = 'Must be a number';
+    if (
+      unlockYear &&
+      (isNaN(Number(unlockYear)) || Number(unlockYear) < 2000 || Number(unlockYear) > 2100)
+    )
+      errs.unlockYear = 'Valid year (2000-2100)';
+    if (endYear && (isNaN(Number(endYear)) || Number(endYear) < 2000 || Number(endYear) > 2100))
+      errs.endYear = 'Valid year (2000-2100)';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -89,7 +96,10 @@ export default function AssetForm({ existing, onClose }: AssetFormProps) {
         <input
           type="text"
           value={name}
-          onChange={(e) => { setName(e.target.value); setErrors((prev) => ({ ...prev, name: '' })); }}
+          onChange={(e) => {
+            setName(e.target.value);
+            setErrors((prev) => ({ ...prev, name: '' }));
+          }}
           placeholder="e.g. Lunar Fund I"
           className={inputClass}
         />
@@ -112,7 +122,10 @@ export default function AssetForm({ existing, onClose }: AssetFormProps) {
             type="number"
             step="0.01"
             value={currentValue}
-            onChange={(e) => { setCurrentValue(e.target.value); setErrors((prev) => ({ ...prev, currentValue: '' })); }}
+            onChange={(e) => {
+              setCurrentValue(e.target.value);
+              setErrors((prev) => ({ ...prev, currentValue: '' }));
+            }}
             className={`${inputClass} pl-7`}
           />
         </div>
@@ -124,18 +137,29 @@ export default function AssetForm({ existing, onClose }: AssetFormProps) {
             type="number"
             step="0.1"
             value={annualGrowthRate}
-            onChange={(e) => { setAnnualGrowthRate(e.target.value); setErrors((prev) => ({ ...prev, annualGrowthRate: '' })); }}
+            onChange={(e) => {
+              setAnnualGrowthRate(e.target.value);
+              setErrors((prev) => ({ ...prev, annualGrowthRate: '' }));
+            }}
             placeholder="0"
             className={`${inputClass} pr-7`}
           />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500">%</span>
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-500">
+            %
+          </span>
         </div>
       </FormField>
 
       <FormField label="Category" required>
-        <select value={category} onChange={(e) => setCategory(e.target.value as AssetCategory)} className={selectClass}>
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value as AssetCategory)}
+          className={selectClass}
+        >
           {Object.entries(assetCategories).map(([value, meta]) => (
-            <option key={value} value={value}>{meta.label}</option>
+            <option key={value} value={value}>
+              {meta.label}
+            </option>
           ))}
         </select>
       </FormField>
@@ -148,7 +172,9 @@ export default function AssetForm({ existing, onClose }: AssetFormProps) {
           onChange={(e) => setIsLiquid(e.target.checked)}
           className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
         />
-        <label htmlFor="assetLiquid" className="text-sm text-slate-700">Liquid asset</label>
+        <label htmlFor="assetLiquid" className="text-sm text-slate-700">
+          Liquid asset
+        </label>
       </div>
 
       {/* Investment-specific fields — shown only for angel category */}
@@ -231,7 +257,10 @@ export default function AssetForm({ existing, onClose }: AssetFormProps) {
           <input
             type="number"
             value={unlockYear}
-            onChange={(e) => { setUnlockYear(e.target.value); setErrors((prev) => ({ ...prev, unlockYear: '' })); }}
+            onChange={(e) => {
+              setUnlockYear(e.target.value);
+              setErrors((prev) => ({ ...prev, unlockYear: '' }));
+            }}
             placeholder="e.g. 2030"
             className={inputClass}
           />
@@ -241,7 +270,10 @@ export default function AssetForm({ existing, onClose }: AssetFormProps) {
           <input
             type="number"
             value={endYear}
-            onChange={(e) => { setEndYear(e.target.value); setErrors((prev) => ({ ...prev, endYear: '' })); }}
+            onChange={(e) => {
+              setEndYear(e.target.value);
+              setErrors((prev) => ({ ...prev, endYear: '' }));
+            }}
             placeholder="e.g. 2040"
             className={inputClass}
           />

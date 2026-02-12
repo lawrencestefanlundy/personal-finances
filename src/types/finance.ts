@@ -24,7 +24,13 @@ export interface IncomeStream {
 }
 
 // === EXPENSES ===
-export type ExpenseFrequency = 'monthly' | 'quarterly' | 'termly' | 'annual' | 'bimonthly' | 'one-off';
+export type ExpenseFrequency =
+  | 'monthly'
+  | 'quarterly'
+  | 'termly'
+  | 'annual'
+  | 'bimonthly'
+  | 'one-off';
 
 export type ExpenseCategory =
   | 'debt'

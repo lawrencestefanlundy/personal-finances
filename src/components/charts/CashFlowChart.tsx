@@ -34,7 +34,10 @@ interface QuarterlyData {
 }
 
 function aggregateToQuarterly(snapshots: MonthlySnapshot[]): QuarterlyData[] {
-  const quarterMap = new Map<string, { income: number; expenses: number; balance: number; net: number }>();
+  const quarterMap = new Map<
+    string,
+    { income: number; expenses: number; balance: number; net: number }
+  >();
 
   for (const s of snapshots) {
     const label = getQuarterLabel(s.month);
@@ -83,15 +86,28 @@ export default function CashFlowChart({ snapshots }: CashFlowChartProps) {
           tickFormatter={(v) => `£${(v / 1000).toFixed(0)}k`}
         />
         <Tooltip
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          formatter={((value: number, name: string) => [
-            formatCurrency(Math.abs(value)),
-            name === 'expenses' ? 'Expenses' : name === 'income' ? 'Income' : name === 'balance' ? 'Balance' : 'Net',
-          ]) as any}
+          formatter={
+            ((value: number, name: string) => [
+              formatCurrency(Math.abs(value)),
+              name === 'expenses'
+                ? 'Expenses'
+                : name === 'income'
+                  ? 'Income'
+                  : name === 'balance'
+                    ? 'Balance'
+                    : 'Net',
+            ]) as any
+          }
         />
         <Legend />
         <Bar yAxisId="bars" dataKey="income" fill="#10b981" name="Income" radius={[2, 2, 0, 0]} />
-        <Bar yAxisId="bars" dataKey="expenses" fill="#ef4444" name="Expenses" radius={[2, 2, 0, 0]} />
+        <Bar
+          yAxisId="bars"
+          dataKey="expenses"
+          fill="#ef4444"
+          name="Expenses"
+          radius={[2, 2, 0, 0]}
+        />
         <Line
           yAxisId="line"
           type="monotone"

@@ -32,7 +32,7 @@ export function applyScenario(state: FinanceState, scenario: Scenario): FinanceS
   }
   if (scenario.overrides.removedExpenseIds) {
     modified.expenses = modified.expenses.filter(
-      (e) => !scenario.overrides.removedExpenseIds?.includes(e.id)
+      (e) => !scenario.overrides.removedExpenseIds?.includes(e.id),
     );
   }
 
@@ -41,7 +41,7 @@ export function applyScenario(state: FinanceState, scenario: Scenario): FinanceS
 
 export function computeScenarioProjections(
   state: FinanceState,
-  scenario: Scenario
+  scenario: Scenario,
 ): YearlyProjection[] {
   const modifiedState = applyScenario(state, scenario);
   return computeYearlyProjections(modifiedState);
@@ -64,7 +64,7 @@ export const presetScenarios: Scenario[] = [
         'asset-llb-pension': 0.04,
         'asset-kit-isa': 0.04,
         'asset-finn-isa': 0.04,
-        'asset-house': 0.00,
+        'asset-house': 0.0,
         'asset-car': -0.05,
       },
     },

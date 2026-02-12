@@ -10,7 +10,12 @@ interface DeleteConfirmationProps {
   itemName: string;
 }
 
-export default function DeleteConfirmation({ open, onConfirm, onCancel, itemName }: DeleteConfirmationProps) {
+export default function DeleteConfirmation({
+  open,
+  onConfirm,
+  onCancel,
+  itemName,
+}: DeleteConfirmationProps) {
   useEffect(() => {
     if (!open) return;
     const handleKey = (e: KeyboardEvent) => {
@@ -46,6 +51,6 @@ export default function DeleteConfirmation({ open, onConfirm, onCancel, itemName
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

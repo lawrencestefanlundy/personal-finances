@@ -37,10 +37,7 @@ export default function SlidePanel({ open, onClose, title, children }: SlidePane
   return createPortal(
     <div className="fixed inset-0 z-[60]">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/30 transition-opacity"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/30 transition-opacity" onClick={onClose} />
       {/* Panel */}
       <div className="absolute inset-y-0 right-0 w-full max-w-md bg-white shadow-xl flex flex-col">
         {/* Header */}
@@ -54,11 +51,9 @@ export default function SlidePanel({ open, onClose, title, children }: SlidePane
           </button>
         </div>
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {children}
-        </div>
+        <div className="flex-1 overflow-y-auto p-6">{children}</div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

@@ -37,7 +37,8 @@ export default function ExpenseForm({ existing, onClose }: ExpenseFormProps) {
   const [notes, setNotes] = useState(existing?.notes ?? '');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const inputClass = 'w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500';
+  const inputClass =
+    'w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500';
   const selectClass = inputClass;
 
   const showPaymentMonths = ['quarterly', 'termly', 'annual', 'bimonthly'].includes(frequency);
@@ -45,7 +46,8 @@ export default function ExpenseForm({ existing, onClose }: ExpenseFormProps) {
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
     if (!name.trim()) errs.name = 'Name is required';
-    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) errs.amount = 'Valid amount is required';
+    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0)
+      errs.amount = 'Valid amount is required';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -83,7 +85,10 @@ export default function ExpenseForm({ existing, onClose }: ExpenseFormProps) {
         <input
           type="text"
           value={name}
-          onChange={(e) => { setName(e.target.value); setErrors((prev) => ({ ...prev, name: '' })); }}
+          onChange={(e) => {
+            setName(e.target.value);
+            setErrors((prev) => ({ ...prev, name: '' }));
+          }}
           placeholder="e.g. Council Tax"
           className={inputClass}
         />
@@ -106,7 +111,10 @@ export default function ExpenseForm({ existing, onClose }: ExpenseFormProps) {
             type="number"
             step="0.01"
             value={amount}
-            onChange={(e) => { setAmount(e.target.value); setErrors((prev) => ({ ...prev, amount: '' })); }}
+            onChange={(e) => {
+              setAmount(e.target.value);
+              setErrors((prev) => ({ ...prev, amount: '' }));
+            }}
             className={`${inputClass} pl-7`}
           />
         </div>
@@ -114,17 +122,29 @@ export default function ExpenseForm({ existing, onClose }: ExpenseFormProps) {
 
       <div className="grid grid-cols-2 gap-3">
         <FormField label="Frequency" required>
-          <select value={frequency} onChange={(e) => setFrequency(e.target.value as ExpenseFrequency)} className={selectClass}>
+          <select
+            value={frequency}
+            onChange={(e) => setFrequency(e.target.value as ExpenseFrequency)}
+            className={selectClass}
+          >
             {FREQUENCIES.map((f) => (
-              <option key={f.value} value={f.value}>{f.label}</option>
+              <option key={f.value} value={f.value}>
+                {f.label}
+              </option>
             ))}
           </select>
         </FormField>
 
         <FormField label="Category" required>
-          <select value={category} onChange={(e) => setCategory(e.target.value as ExpenseCategory)} className={selectClass}>
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value as ExpenseCategory)}
+            className={selectClass}
+          >
             {Object.entries(expenseCategories).map(([value, meta]) => (
-              <option key={value} value={value}>{meta.label}</option>
+              <option key={value} value={value}>
+                {meta.label}
+              </option>
             ))}
           </select>
         </FormField>
@@ -132,11 +152,7 @@ export default function ExpenseForm({ existing, onClose }: ExpenseFormProps) {
 
       {/* Timing fields */}
       {showPaymentMonths && (
-        <MonthPicker
-          label="Payment Months"
-          selected={paymentMonths}
-          onChange={setPaymentMonths}
-        />
+        <MonthPicker label="Payment Months" selected={paymentMonths} onChange={setPaymentMonths} />
       )}
 
       <MonthPicker

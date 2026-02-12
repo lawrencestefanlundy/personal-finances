@@ -1,16 +1,10 @@
 import { FinanceState, YearlyProjection, Asset, Liability } from '@/types/finance';
 
-function projectAssetValue(
-  asset: Asset,
-  baseYear: number,
-  targetYear: number
-): number {
+function projectAssetValue(asset: Asset, baseYear: number, targetYear: number): number {
   if (asset.currentValue === 0) return 0;
   if (asset.endYear && targetYear > asset.endYear) return 0;
 
-  const effectiveStartYear = asset.unlockYear
-    ? Math.max(baseYear, asset.unlockYear)
-    : baseYear;
+  const effectiveStartYear = asset.unlockYear ? Math.max(baseYear, asset.unlockYear) : baseYear;
 
   // Before unlock year, value stays flat
   if (targetYear < effectiveStartYear) {
@@ -28,7 +22,7 @@ function projectAssetValue(
 function projectLiabilityBalance(
   liability: Liability,
   baseYear: number,
-  targetYear: number
+  targetYear: number,
 ): number {
   if (liability.endYear && targetYear > liability.endYear) return 0;
 

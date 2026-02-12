@@ -9,7 +9,12 @@ interface EditableCellProps {
   className?: string;
 }
 
-export default function EditableCell({ value, onSave, prefix = '£', className = '' }: EditableCellProps) {
+export default function EditableCell({
+  value,
+  onSave,
+  prefix = '£',
+  className = '',
+}: EditableCellProps) {
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -59,7 +64,8 @@ export default function EditableCell({ value, onSave, prefix = '£', className =
       className={`cursor-pointer hover:bg-blue-50 px-2 py-1 rounded text-sm text-right block ${className}`}
       title="Click to edit"
     >
-      {prefix}{value.toLocaleString('en-GB')}
+      {prefix}
+      {value.toLocaleString('en-GB')}
     </span>
   );
 }
