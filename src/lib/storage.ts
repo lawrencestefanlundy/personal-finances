@@ -12,6 +12,9 @@ function migrateState(state: FinanceState): FinanceState {
   if (!Array.isArray(s.transactions)) {
     s.transactions = [];
   }
+  if (!Array.isArray(s.carryPositions)) {
+    s.carryPositions = [];
+  }
   return s as FinanceState;
 }
 

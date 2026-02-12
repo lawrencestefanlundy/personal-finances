@@ -9,6 +9,7 @@ const navItems = [
   { href: '/assets', label: 'Assets' },
   { href: '/investments', label: 'Investments' },
   { href: '/wealth', label: 'Wealth' },
+  { href: '/carry', label: 'Carry' },
   { href: '/scenarios', label: 'Scenarios' },
   { href: '/settings', label: 'Settings' },
 ];

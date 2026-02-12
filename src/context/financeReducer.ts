@@ -7,6 +7,7 @@ import {
   Liability,
   Scenario,
   Transaction,
+  CarryPosition,
 } from '@/types/finance';
 
 export type FinanceAction =
@@ -28,6 +29,9 @@ export type FinanceAction =
   | { type: 'ADD_TRANSACTIONS'; payload: Transaction[] }
   | { type: 'DELETE_TRANSACTION'; payload: string }
   | { type: 'CLEAR_TRANSACTIONS' }
+  | { type: 'ADD_CARRY_POSITION'; payload: CarryPosition }
+  | { type: 'UPDATE_CARRY_POSITION'; payload: CarryPosition }
+  | { type: 'DELETE_CARRY_POSITION'; payload: string }
   | { type: 'ADD_SCENARIO'; payload: Scenario }
   | { type: 'UPDATE_SCENARIO'; payload: Scenario }
   | { type: 'DELETE_SCENARIO'; payload: string }
@@ -162,6 +166,26 @@ export function financeReducer(state: FinanceState, action: FinanceAction): Fina
       return updateTimestamp({
         ...state,
         transactions: [],
+      });
+
+    case 'ADD_CARRY_POSITION':
+      return updateTimestamp({
+        ...state,
+        carryPositions: [...state.carryPositions, action.payload],
+      });
+
+    case 'UPDATE_CARRY_POSITION':
+      return updateTimestamp({
+        ...state,
+        carryPositions: state.carryPositions.map((cp) =>
+          cp.id === action.payload.id ? action.payload : cp,
+        ),
+      });
+
+    case 'DELETE_CARRY_POSITION':
+      return updateTimestamp({
+        ...state,
+        carryPositions: state.carryPositions.filter((cp) => cp.id !== action.payload),
       });
 
     case 'ADD_SCENARIO':

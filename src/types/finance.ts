@@ -156,6 +156,33 @@ export interface YearlyProjection {
   liquidAssets: number;
 }
 
+// === CARRY / FUND CARRY POSITIONS ===
+export type PortfolioCompanyStatus = 'active' | 'exited' | 'written_off' | 'marked_up';
+
+export interface PortfolioCompany {
+  id: string;
+  name: string;
+  investedAmount: number; // fund's investment in this company
+  currentValuation: number; // current estimated valuation of holding
+  ownershipPercent: number; // fund's ownership % (decimal, e.g. 0.15 = 15%)
+  status: PortfolioCompanyStatus;
+  notes?: string;
+}
+
+export interface CarryPosition {
+  id: string;
+  fundName: string;
+  provider: string; // e.g. 'Lunar Ventures'
+  fundSize: number; // total fund size
+  committedCapital: number; // total capital committed/called
+  carryPercent: number; // carry % as decimal (e.g. 0.20 = 20%)
+  hurdleRate: number; // hurdle rate as decimal (e.g. 0.08 = 8%)
+  personalSharePercent: number; // personal share of GP carry pool (decimal)
+  portfolioCompanies: PortfolioCompany[];
+  linkedAssetId?: string; // optional link to corresponding Asset entry
+  notes?: string;
+}
+
 // === ROOT STATE ===
 export interface FinanceState {
   cashPositions: CashPosition[];
@@ -164,6 +191,7 @@ export interface FinanceState {
   assets: Asset[];
   liabilities: Liability[];
   transactions: Transaction[];
+  carryPositions: CarryPosition[];
   scenarios: Scenario[];
   activeScenarioId: string | null;
   settings: {
