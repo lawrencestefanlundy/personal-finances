@@ -35,8 +35,8 @@ export default function ScenarioOverlay({
     <ResponsiveContainer width="100%" height={350}>
       <AreaChart data={data} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-        <XAxis dataKey="year" tick={{ fontSize: 12 }} />
-        <YAxis tickFormatter={(v) => formatCurrency(v)} tick={{ fontSize: 12 }} width={90} />
+        <XAxis dataKey="year" tick={{ fontSize: 11 }} />
+        <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `£${(v / 1000000).toFixed(1)}M`} />
         <Tooltip
           formatter={(value, name) => [
             formatCurrency(Number(value)),
