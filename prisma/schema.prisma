@@ -1,0 +1,146 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model CashPosition {
+  id           String   @id
+  name         String
+  balance      Float
+  interestRate Float
+  isLiquid     Boolean
+  category     String   // cash, savings, isa, crypto
+  provider     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model IncomeStream {
+  id            String   @id
+  name          String
+  amount        Float
+  frequency     String   // monthly, quarterly, annual
+  paymentMonths Int[]    // which months (1-12)
+  owner         String   // lawrence, stephanie, joint
+  taxable       Boolean
+  provider      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Expense {
+  id            String   @id
+  name          String
+  provider      String?
+  amount        Float
+  frequency     String   // monthly, quarterly, termly, annual, bimonthly, one-off
+  category      String   // debt, school, holiday, groceries, etc.
+  activeMonths  Int[]    // 1-12, if only active certain months
+  paymentMonths Int[]    // specific months for quarterly/annual/bimonthly
+  startDate     String?  // YYYY-MM
+  endDate       String?  // YYYY-MM
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Asset {
+  id               String   @id
+  name             String
+  currentValue     Float
+  annualGrowthRate Float
+  category         String   // savings, isa, crypto, fund, angel, pension, property, vehicle, children_isa
+  isLiquid         Boolean
+  unlockYear       Int?
+  endYear          Int?
+  notes            String?
+  provider         String?
+  costBasis        Float?
+  costCurrency     String?  // GBP, USD, EUR, CHF
+  instrument       String?  // safe, equity, options, advance_subscription
+  investmentDate   String?  // ISO date
+  status           String?  // active, exited, written_off
+  taxScheme        String?  // SEIS, EIS
+  platform         String?  // odin, direct, feedforward
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Liability {
+  id             String   @id
+  name           String
+  currentBalance Float
+  interestRate   Float
+  monthlyPayment Float
+  type           String   // mortgage, student_loan, credit_card, other
+  endYear        Int?
+  provider       String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Transaction {
+  id             String   @id
+  date           String   // ISO date string
+  description    String
+  amount         Float    // negative = debit, positive = credit
+  category       String?
+  source         String   // monzo, manual
+  linkedEntityId String?
+  emailId        String?  @unique // for deduplication on reimport
+  createdAt      DateTime @default(now())
+
+  @@index([date])
+  @@index([source])
+}
+
+model CarryPosition {
+  id                   String             @id
+  fundName             String
+  provider             String
+  fundSize             Float
+  committedCapital     Float
+  carryPercent         Float
+  hurdleRate           Float
+  personalSharePercent Float
+  linkedAssetId        String?
+  notes                String?
+  portfolioCompanies   PortfolioCompany[]
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+}
+
+model PortfolioCompany {
+  id               String        @id
+  name             String
+  investedAmount   Float
+  currentValuation Float
+  ownershipPercent Float
+  status           String        // active, exited, written_off, marked_up
+  notes            String?
+  carryPositionId  String
+  carryPosition    CarryPosition @relation(fields: [carryPositionId], references: [id], onDelete: Cascade)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+model Scenario {
+  id          String   @id
+  name        String
+  description String
+  overrides   String   // JSON string for complex nested structure
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Settings {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}

@@ -1,10 +1,8 @@
 import { FinanceState } from '@/types/finance';
 
-const STORAGE_KEY = 'finance-dashboard-state';
-
 /**
- * Migrate stored state to ensure backward compatibility with new fields.
- * Adds `transactions: []` if missing (pre-transaction-support data).
+ * Migrate state to ensure backward compatibility with new fields.
+ * Used when importing from JSON files that may be from older versions.
  */
 function migrateState(state: FinanceState): FinanceState {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -18,27 +16,9 @@ function migrateState(state: FinanceState): FinanceState {
   return s as FinanceState;
 }
 
-export function loadState(): FinanceState | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    return migrateState(JSON.parse(raw) as FinanceState);
-  } catch {
-    return null;
-  }
-}
-
-export function saveState(state: FinanceState): void {
-  if (typeof window === 'undefined') return;
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch (e) {
-    console.error('Failed to save state to localStorage:', e);
-  }
-}
-
-export function exportStateAsJSON(state: FinanceState): void {
+export async function exportStateAsJSON(): Promise<void> {
+  const res = await fetch('/api/state');
+  const state = await res.json();
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -72,9 +52,4 @@ export function importStateFromJSON(file: File): Promise<FinanceState> {
     reader.onerror = () => reject(new Error('Failed to read file'));
     reader.readAsText(file);
   });
-}
-
-export function clearState(): void {
-  if (typeof window === 'undefined') return;
-  localStorage.removeItem(STORAGE_KEY);
 }

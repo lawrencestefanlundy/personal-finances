@@ -3,8 +3,7 @@
 import { useRef, useState } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { Transaction } from '@/types/finance';
-import { exportStateAsJSON, importStateFromJSON, clearState } from '@/lib/storage';
-import { seedData } from '@/data/seedData';
+import { exportStateAsJSON, importStateFromJSON } from '@/lib/storage';
 import { formatCurrency } from '@/lib/formatters';
 
 export default function SettingsPage() {
@@ -15,7 +14,7 @@ export default function SettingsPage() {
   const [showGrowthRates, setShowGrowthRates] = useState(false);
 
   const handleExport = () => {
-    exportStateAsJSON(state);
+    exportStateAsJSON();
   };
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -64,10 +63,11 @@ export default function SettingsPage() {
     }
   };
 
-  const handleReset = () => {
-    if (confirm('Are you sure? This will reset all data to the original spreadsheet values.')) {
-      clearState();
-      dispatch({ type: 'RESET_DATA', payload: seedData });
+  const handleReset = async () => {
+    if (confirm('Are you sure? This will reset all data to the original seed values.')) {
+      const res = await fetch('/api/state');
+      const freshState = await res.json();
+      dispatch({ type: 'RESET_DATA', payload: freshState });
     }
   };
 
@@ -146,7 +146,9 @@ export default function SettingsPage() {
           <button
             onClick={() => setShowGrowthRates(!showGrowthRates)}
             className={`px-4 py-2 text-sm rounded-md transition-colors ${
-              showGrowthRates ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              showGrowthRates
+                ? 'bg-slate-900 text-white'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
             {showGrowthRates ? 'Hide' : 'Show'}
@@ -155,7 +157,10 @@ export default function SettingsPage() {
         {showGrowthRates && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {state.assets.map((asset) => (
-              <div key={asset.id} className="flex items-center justify-between bg-slate-50 rounded-lg p-3">
+              <div
+                key={asset.id}
+                className="flex items-center justify-between bg-slate-50 rounded-lg p-3"
+              >
                 <div>
                   <p className="text-sm font-medium text-slate-900">{asset.name}</p>
                   <p className="text-xs text-slate-400">{formatCurrency(asset.currentValue)}</p>
@@ -314,7 +319,7 @@ export default function SettingsPage() {
           <p>Assets: {state.assets.length}</p>
           <p>Liabilities: {state.liabilities.length}</p>
           <p>Transactions: {state.transactions.length}</p>
-          <p>Data stored in browser localStorage</p>
+          <p>Data stored in Neon PostgreSQL</p>
         </div>
       </div>
     </div>
