@@ -29,7 +29,7 @@ const emptyState: FinanceState = {
     birthYear: 1986,
     currency: 'GBP',
   },
-  lastModified: new Date().toISOString(),
+  lastModified: '',
 };
 
 interface FinanceContextValue {
@@ -71,7 +71,16 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
 
   return (
     <FinanceContext.Provider value={{ state, dispatch: apiDispatch, loading }}>
-      {children}
+      {loading ? (
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto" />
+            <p className="text-slate-500 mt-3 text-sm">Loading financial data...</p>
+          </div>
+        </div>
+      ) : (
+        children
+      )}
     </FinanceContext.Provider>
   );
 }
