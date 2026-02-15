@@ -6,13 +6,13 @@ function getIncomeForMonth(stream: IncomeStream, monthNum: number): number {
     case 'monthly':
       return stream.amount;
     case 'quarterly':
-      if (stream.paymentMonths && stream.paymentMonths.includes(monthNum)) {
-        return stream.amount;
+      if (hasItems(stream.paymentMonths)) {
+        return stream.paymentMonths.includes(monthNum) ? stream.amount : 0;
       }
-      return 0;
+      return [3, 6, 9, 12].includes(monthNum) ? stream.amount : 0;
     case 'annual':
-      if (stream.paymentMonths && stream.paymentMonths.includes(monthNum)) {
-        return stream.amount;
+      if (hasItems(stream.paymentMonths)) {
+        return stream.paymentMonths.includes(monthNum) ? stream.amount : 0;
       }
       return monthNum === 1 ? stream.amount : 0;
     default:
@@ -20,34 +20,38 @@ function getIncomeForMonth(stream: IncomeStream, monthNum: number): number {
   }
 }
 
+function hasItems(arr: unknown[] | undefined | null): arr is unknown[] & { length: number } {
+  return Array.isArray(arr) && arr.length > 0;
+}
+
 function getExpenseForMonth(expense: Expense, month: string, monthNum: number): number {
   // Check start/end dates
   if (expense.startDate && month < expense.startDate) return 0;
   if (expense.endDate && month > expense.endDate) return 0;
 
-  // Check active months
-  if (expense.activeMonths && !expense.activeMonths.includes(monthNum)) return 0;
+  // Check active months (only filter if array has entries; empty array = all months)
+  if (hasItems(expense.activeMonths) && !expense.activeMonths.includes(monthNum)) return 0;
 
   switch (expense.frequency) {
     case 'monthly':
       return expense.amount;
     case 'quarterly':
-      if (expense.paymentMonths) {
+      if (hasItems(expense.paymentMonths)) {
         return expense.paymentMonths.includes(monthNum) ? expense.amount : 0;
       }
       return [3, 6, 9, 12].includes(monthNum) ? expense.amount : 0;
     case 'termly':
-      if (expense.paymentMonths) {
+      if (hasItems(expense.paymentMonths)) {
         return expense.paymentMonths.includes(monthNum) ? expense.amount : 0;
       }
       return [1, 5, 9].includes(monthNum) ? expense.amount : 0;
     case 'annual':
-      if (expense.paymentMonths) {
+      if (hasItems(expense.paymentMonths)) {
         return expense.paymentMonths.includes(monthNum) ? expense.amount : 0;
       }
       return monthNum === 1 ? expense.amount : 0;
     case 'bimonthly':
-      if (expense.paymentMonths) {
+      if (hasItems(expense.paymentMonths)) {
         return expense.paymentMonths.includes(monthNum) ? expense.amount : 0;
       }
       return monthNum % 2 === 0 ? expense.amount : 0;

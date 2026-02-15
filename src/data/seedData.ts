@@ -121,19 +121,37 @@ export const seedData: FinanceState = {
       amount: 7038,
       frequency: 'termly',
       category: 'school',
-      paymentMonths: [5, 9],
-      notes: 'Schools Fees — First payment Feb 2026 is 13,154',
+      paymentMonths: [1, 5, 9],
+      notes: 'Schools Fees — termly. First payment Feb 2026 was 13,154',
     },
 
     // Holidays
     {
-      id: 'exp-holidays',
+      id: 'exp-holidays-easter',
       name: 'Holidays',
-      amount: 500,
-      frequency: 'quarterly',
+      amount: 3000,
+      frequency: 'annual',
       category: 'holiday',
       paymentMonths: [4],
-      notes: 'Apr budget. Separate one-offs for summer & winter holidays.',
+      notes: 'Easter / spring holiday',
+    },
+    {
+      id: 'exp-holidays-summer',
+      name: 'Holidays',
+      amount: 6000,
+      frequency: 'annual',
+      category: 'holiday',
+      paymentMonths: [8],
+      notes: 'Summer holiday',
+    },
+    {
+      id: 'exp-holidays-winter',
+      name: 'Holidays',
+      amount: 8000,
+      frequency: 'annual',
+      category: 'holiday',
+      paymentMonths: [12],
+      notes: 'Christmas / winter holiday',
     },
 
     // Groceries
@@ -327,8 +345,6 @@ export const seedData: FinanceState = {
 
     // House
     { id: 'exp-cleaner', name: 'Cleaner', amount: 120, frequency: 'monthly', category: 'house' },
-    { id: 'exp-furniture', name: 'Furniture', amount: 0, frequency: 'monthly', category: 'house' },
-    { id: 'exp-nat', name: 'Nat', amount: 0, frequency: 'monthly', category: 'house' },
     {
       id: 'exp-jamie',
       name: 'Jamie',
@@ -337,12 +353,17 @@ export const seedData: FinanceState = {
       category: 'house',
       startDate: '2026-02',
     },
-    { id: 'exp-flooring', name: 'Flooring', amount: 0, frequency: 'monthly', category: 'house' },
-    { id: 'exp-plumbing', name: 'Plumbing', amount: 0, frequency: 'monthly', category: 'house' },
-    { id: 'exp-curtains', name: 'Curtains', amount: 0, frequency: 'monthly', category: 'house' },
-    { id: 'exp-carpets', name: 'Carpets', amount: 0, frequency: 'monthly', category: 'house' },
 
     // Tax
+    {
+      id: 'exp-tax-lawrence-y1',
+      name: 'Tax (Lawrence)',
+      amount: 7424,
+      frequency: 'one-off',
+      category: 'tax',
+      startDate: '2026-07',
+      notes: 'First year payment Jul 2026',
+    },
     {
       id: 'exp-tax-lawrence',
       name: 'Tax (Lawrence)',
@@ -350,7 +371,8 @@ export const seedData: FinanceState = {
       frequency: 'annual',
       category: 'tax',
       paymentMonths: [1],
-      notes: 'Jul 2026 = £7,424 (first year)',
+      startDate: '2028-01',
+      notes: 'Annual from Jan 2028 onwards',
     },
     {
       id: 'exp-tax-stephanie',
@@ -359,6 +381,8 @@ export const seedData: FinanceState = {
       frequency: 'annual',
       category: 'tax',
       paymentMonths: [1],
+      startDate: '2028-01',
+      notes: 'Annual from Jan 2028 onwards',
     },
   ],
 

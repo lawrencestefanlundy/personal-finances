@@ -301,82 +301,57 @@ export default function DashboardPage() {
             subtitle="Total assets minus liabilities"
             color="purple"
           />
-          <StatCard
-            title="Liquid Cash"
-            value={formatCurrency(liquidCash)}
-            subtitle="Cash + savings + ISA + crypto"
-            color="green"
-          />
-        </div>
-
-        {/* Cash Positions */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-slate-900">Cash Positions</h2>
-            <button
-              onClick={() => {
-                setEditingCash(undefined);
-                setPanelType('cashPosition');
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-            >
-              <PlusIcon className="w-4 h-4" />
-              Add
-            </button>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {state.cashPositions.map((cp) => (
-              <div key={cp.id} className="group relative bg-slate-50 rounded-lg p-4">
-                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={() => {
-                      setEditingCash(cp);
-                      setPanelType('cashPosition');
-                    }}
-                    className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
-                    title="Edit"
-                  >
-                    <PencilIcon />
-                  </button>
-                  <button
-                    onClick={() =>
-                      setDeleteTarget({ id: cp.id, name: cp.name, type: 'cashPosition' })
-                    }
-                    className="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
-                    title="Delete"
-                  >
-                    <TrashIcon />
-                  </button>
-                </div>
-                <div className="flex items-center gap-2">
-                  <ProviderLogo provider={cp.provider} size={20} />
-                  <p className="text-sm text-slate-500">{cp.name}</p>
-                </div>
-                <p className="text-xl font-bold text-slate-900">{formatCurrency(cp.balance)}</p>
-                {cp.interestRate > 0 && (
-                  <p className="text-xs text-slate-400">
-                    {(cp.interestRate * 100).toFixed(1)}% interest
-                  </p>
-                )}
+          <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-slate-500">Liquid Cash</p>
+                <p className="text-2xl font-bold mt-1 text-emerald-600">
+                  {formatCurrency(liquidCash)}
+                </p>
               </div>
-            ))}
+              <button
+                onClick={() => {
+                  setEditingCash(undefined);
+                  setPanelType('cashPosition');
+                }}
+                className="p-1.5 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+                title="Add Cash Position"
+              >
+                <PlusIcon className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-3 pt-3 border-t border-slate-100">
+              {state.cashPositions.map((cp) => (
+                <div
+                  key={cp.id}
+                  className="flex items-center justify-between group cursor-pointer hover:bg-slate-50 rounded px-1 -mx-1"
+                  onClick={() => {
+                    setEditingCash(cp);
+                    setPanelType('cashPosition');
+                  }}
+                >
+                  <span className="text-xs text-slate-500 truncate">{cp.name}</span>
+                  <span className="text-xs font-medium text-slate-700 tabular-nums">
+                    {formatCurrency(cp.balance)}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
-          {state.transactions.length > 0 && <TransactionList transactions={state.transactions} />}
         </div>
+        {state.transactions.length > 0 && (
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+            <TransactionList transactions={state.transactions} />
+          </div>
+        )}
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
           SECTION 2: CASH FLOW
           ═══════════════════════════════════════════════════════════════════════ */}
       <section id="cash-flow" className="scroll-mt-20 space-y-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Cash Flow</h1>
-            <p className="text-sm text-slate-500 mt-1">
-              Income, expenses, and running balance — {formatMonth(snapshots[0]?.month)} to{' '}
-              {formatMonth(snapshots[snapshots.length - 1]?.month)}
-            </p>
-          </div>
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Cash Flow</h1>
         </div>
 
         {/* Monthly Forecast Table */}
