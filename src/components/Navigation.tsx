@@ -3,19 +3,15 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-const navItems = [
-  { href: '/', label: 'Dashboard' },
-  { href: '/cash-flow', label: 'Cash Flow' },
-  { href: '/assets', label: 'Assets' },
-  { href: '/investments', label: 'Investments' },
-  { href: '/wealth', label: 'Wealth' },
-  { href: '/carry', label: 'Lunar Ventures' },
-  { href: '/scenarios', label: 'Scenarios' },
-  { href: '/settings', label: 'Settings' },
+const sectionLinks = [
+  { href: '#overview', label: 'Overview' },
+  { href: '#cash-flow', label: 'Cash Flow' },
+  { href: '#assets', label: 'Assets' },
 ];
 
 export default function Navigation() {
   const pathname = usePathname();
+  const isHome = pathname === '/';
 
   return (
     <header className="bg-slate-900 border-b border-slate-700 sticky top-0 z-50">
@@ -25,22 +21,44 @@ export default function Navigation() {
             Finance Dashboard
           </Link>
           <nav className="flex space-x-1">
-            {navItems.map((item) => {
-              const isActive = pathname === item.href;
-              return (
+            {isHome ? (
+              <>
+                {sectionLinks.map((item) => (
+                  <a
+                    key={item.href}
+                    href={item.href}
+                    className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+                  >
+                    {item.label}
+                  </a>
+                ))}
                 <Link
-                  key={item.href}
-                  href={item.href}
+                  href="/settings"
+                  className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+                >
+                  Settings
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/"
+                  className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  href="/settings"
                   className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive
+                    pathname === '/settings'
                       ? 'bg-slate-700 text-white'
                       : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                   }`}
                 >
-                  {item.label}
+                  Settings
                 </Link>
-              );
-            })}
+              </>
+            )}
           </nav>
         </div>
       </div>

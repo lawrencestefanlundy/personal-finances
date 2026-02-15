@@ -62,6 +62,15 @@ export interface Expense {
   notes?: string;
 }
 
+// === EMAIL UPDATES (for angel investments) ===
+export interface EmailUpdate {
+  subject: string;
+  from: string;
+  date: string;
+  snippet: string;
+  has_attachments?: boolean;
+}
+
 // === LONG-TERM ASSETS ===
 export type AssetCategory =
   | 'savings'
@@ -93,6 +102,7 @@ export interface Asset {
   status?: 'active' | 'exited' | 'written_off';
   taxScheme?: 'SEIS' | 'EIS';
   platform?: string; // odin, direct, feedforward
+  emailUpdates?: string; // JSON string of EmailUpdate[]
 }
 
 // === LIABILITIES ===
