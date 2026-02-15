@@ -29,7 +29,6 @@ import {
   statusStyles,
 } from '@/lib/investmentFormatters';
 import WealthChart from '@/components/charts/WealthChart';
-import LiabilityChart from '@/components/charts/LiabilityChart';
 import EditableCell from '@/components/EditableCell';
 import { PencilIcon, TrashIcon, PlusIcon } from '@/components/ui/Icons';
 import SlidePanel from '@/components/ui/SlidePanel';
@@ -128,24 +127,6 @@ export default function DashboardPage() {
     }
     return groups;
   }, [state.liabilities]);
-
-  // Milestone projections
-  const milestones = useMemo(() => {
-    const targets = [currentYear?.age, 45, 50, 55, 60, 65];
-    const result = targets
-      .map((age) => projections.find((p) => p.age === age))
-      .filter((p): p is (typeof projections)[0] => p !== undefined);
-    const final = projections[projections.length - 1];
-    if (final && (!result.length || result[result.length - 1].year !== final.year)) {
-      result.push(final);
-    }
-    const seen = new Set<number>();
-    return result.filter((p) => {
-      if (seen.has(p.year)) return false;
-      seen.add(p.year);
-      return true;
-    });
-  }, [projections, currentYear]);
 
   // ─── Carry computations ─────────────────────────────────────────────────────
   const totalCarryAt2x = useMemo(
@@ -1418,53 +1399,6 @@ export default function DashboardPage() {
             )}
           </>
         )}
-
-        {/* Liability Paydown Chart */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Liability Paydown</h2>
-          <LiabilityChart projections={projections} liabilities={state.liabilities} />
-        </div>
-
-        {/* Milestone Projections */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Milestone Projections</h2>
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-200">
-                  <th className="text-left py-2 px-3 font-semibold text-slate-600">Year</th>
-                  <th className="text-center py-2 px-3 font-semibold text-slate-600">Age</th>
-                  <th className="text-right py-2 px-3 font-semibold text-slate-600">
-                    Total Assets
-                  </th>
-                  <th className="text-right py-2 px-3 font-semibold text-slate-600">Liabilities</th>
-                  <th className="text-right py-2 px-3 font-semibold text-slate-600">Net Wealth</th>
-                  <th className="text-right py-2 px-3 font-semibold text-slate-600">Liquid</th>
-                </tr>
-              </thead>
-              <tbody>
-                {milestones.map((p) => (
-                  <tr key={p.year} className="border-b border-slate-50 hover:bg-slate-50">
-                    <td className="py-2 px-3 font-medium text-slate-900">{p.year}</td>
-                    <td className="py-2 px-3 text-center text-slate-500">{p.age}</td>
-                    <td className="py-2 px-3 text-right text-slate-900">
-                      {formatCurrency(p.totalAssets)}
-                    </td>
-                    <td className="py-2 px-3 text-right text-red-600">
-                      {formatCurrency(p.totalLiabilities)}
-                    </td>
-                    <td className="py-2 px-3 text-right font-bold text-purple-700">
-                      {formatCurrency(p.netWealth)}
-                    </td>
-                    <td className="py-2 px-3 text-right text-emerald-600">
-                      {formatCurrency(p.liquidAssets)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
