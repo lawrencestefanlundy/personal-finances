@@ -5,7 +5,7 @@ export const seedData: FinanceState = {
     {
       id: 'cash-bank',
       name: 'Bank Account',
-      balance: 639,
+      balance: 105,
       interestRate: 0,
       isLiquid: true,
       category: 'cash',
@@ -22,17 +22,17 @@ export const seedData: FinanceState = {
     },
     {
       id: 'cash-isa',
-      name: 'Investments',
-      balance: 20917,
+      name: 'LLB ISA',
+      balance: 21078,
       interestRate: 0.06,
       isLiquid: true,
       category: 'isa',
-      provider: 'Monzo',
+      provider: 'LLB',
     },
     {
       id: 'cash-crypto',
       name: 'Crypto',
-      balance: 6508,
+      balance: 6381,
       interestRate: 0,
       isLiquid: true,
       category: 'crypto',
@@ -88,7 +88,7 @@ export const seedData: FinanceState = {
       id: 'exp-cc-lloyds',
       name: 'Credit Card',
       provider: 'Lloyds Bank',
-      amount: 1014,
+      amount: 3145,
       frequency: 'one-off',
       category: 'debt',
       startDate: '2026-03',
@@ -97,7 +97,7 @@ export const seedData: FinanceState = {
       id: 'exp-cc-amex',
       name: 'Credit Card',
       provider: 'Amex',
-      amount: 858,
+      amount: 899,
       frequency: 'one-off',
       category: 'debt',
       startDate: '2026-02',
@@ -116,31 +116,31 @@ export const seedData: FinanceState = {
     // School Fees
     {
       id: 'exp-school-tmp',
-      name: 'School Fees',
+      name: 'Education',
       provider: 'TMP',
       amount: 7038,
       frequency: 'termly',
       category: 'school',
-      paymentMonths: [2, 5, 9],
-      notes: 'First payment Feb is 13154',
+      paymentMonths: [5, 9],
+      notes: 'Schools Fees — First payment Feb 2026 is 13,154',
     },
 
     // Holidays
     {
       id: 'exp-holidays',
       name: 'Holidays',
-      amount: 3000,
+      amount: 500,
       frequency: 'quarterly',
       category: 'holiday',
-      paymentMonths: [4, 7, 11],
-      notes: 'Varies: Apr £3k, Jul £6k, Nov £8k',
+      paymentMonths: [4],
+      notes: 'Apr budget. Separate one-offs for summer & winter holidays.',
     },
 
     // Groceries
     {
       id: 'exp-groceries',
       name: 'Groceries',
-      amount: 2300,
+      amount: 2325,
       frequency: 'monthly',
       category: 'groceries',
     },
@@ -153,7 +153,7 @@ export const seedData: FinanceState = {
       amount: 911,
       frequency: 'monthly',
       category: 'bills',
-      notes: 'Starts Mar 2026',
+      startDate: '2026-03',
     },
     {
       id: 'exp-council-tax',
@@ -162,7 +162,7 @@ export const seedData: FinanceState = {
       amount: 460,
       frequency: 'monthly',
       category: 'bills',
-      activeMonths: [3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+      activeMonths: [4, 5, 6, 7, 8, 9, 10, 11, 12],
     },
     {
       id: 'exp-gas-electric',
@@ -211,8 +211,8 @@ export const seedData: FinanceState = {
     { id: 'exp-petrol', name: 'Petrol', amount: 100, frequency: 'monthly', category: 'car' },
     {
       id: 'exp-dvla',
-      name: 'Car Tax',
-      provider: 'DVLA',
+      name: 'DVLA',
+      provider: 'Car Tax',
       amount: 190,
       frequency: 'annual',
       category: 'car',
@@ -224,7 +224,7 @@ export const seedData: FinanceState = {
       id: 'exp-home-insurance',
       name: 'Home Insurance',
       provider: 'Policy Expert',
-      amount: 226,
+      amount: 237,
       frequency: 'annual',
       category: 'insurance',
       paymentMonths: [7],
@@ -274,8 +274,8 @@ export const seedData: FinanceState = {
     },
     {
       id: 'exp-smarty',
-      name: 'Mobile',
-      provider: 'Smarty',
+      name: 'Smarty',
+      provider: 'Mobile Subscription',
       amount: 20,
       frequency: 'monthly',
       category: 'subscriptions',
@@ -283,7 +283,7 @@ export const seedData: FinanceState = {
     {
       id: 'exp-spotify',
       name: 'Spotify',
-      provider: 'Spotify',
+      provider: 'Music Subscription',
       amount: 17,
       frequency: 'monthly',
       category: 'subscriptions',
@@ -291,36 +291,16 @@ export const seedData: FinanceState = {
     {
       id: 'exp-amazon',
       name: 'Amazon Prime',
-      provider: 'Amazon',
+      provider: 'TV Subscription',
       amount: 9,
       frequency: 'monthly',
       category: 'subscriptions',
-    },
-    {
-      id: 'exp-apple',
-      name: 'Apple Services',
-      provider: 'Apple',
-      amount: 22,
-      frequency: 'monthly',
-      category: 'subscriptions',
-      notes: 'iCloud, Apple TV+, etc.',
-    },
-
-    // Transport
-    {
-      id: 'exp-trainline',
-      name: 'Trainline',
-      provider: 'Trainline',
-      amount: 80,
-      frequency: 'monthly',
-      category: 'other',
-      notes: 'Rail travel (average monthly)',
     },
 
     // Extracurricular
     {
       id: 'exp-music',
-      name: 'Music Lessons',
+      name: 'Music',
       provider: 'TBC',
       amount: 110,
       frequency: 'bimonthly',
@@ -345,30 +325,22 @@ export const seedData: FinanceState = {
       paymentMonths: [2, 4, 6, 8, 10, 12],
     },
 
-    // School — Alvis
-    {
-      id: 'exp-school-alvis',
-      name: 'Alvis Fees',
-      provider: 'Alvis',
-      amount: 500,
-      frequency: 'termly',
-      category: 'school',
-      paymentMonths: [2, 5, 9],
-      notes: 'Termly fees',
-    },
-
     // House
     { id: 'exp-cleaner', name: 'Cleaner', amount: 120, frequency: 'monthly', category: 'house' },
-
-    // Other — Foreign merchants
+    { id: 'exp-furniture', name: 'Furniture', amount: 0, frequency: 'monthly', category: 'house' },
+    { id: 'exp-nat', name: 'Nat', amount: 0, frequency: 'monthly', category: 'house' },
     {
-      id: 'exp-foreign-merchants',
-      name: 'Foreign Merchants',
-      amount: 50,
-      frequency: 'monthly',
-      category: 'other',
-      notes: 'Avg monthly foreign currency charges (apps, services, etc.)',
+      id: 'exp-jamie',
+      name: 'Jamie',
+      amount: 475,
+      frequency: 'one-off',
+      category: 'house',
+      startDate: '2026-02',
     },
+    { id: 'exp-flooring', name: 'Flooring', amount: 0, frequency: 'monthly', category: 'house' },
+    { id: 'exp-plumbing', name: 'Plumbing', amount: 0, frequency: 'monthly', category: 'house' },
+    { id: 'exp-curtains', name: 'Curtains', amount: 0, frequency: 'monthly', category: 'house' },
+    { id: 'exp-carpets', name: 'Carpets', amount: 0, frequency: 'monthly', category: 'house' },
 
     // Tax
     {
@@ -377,7 +349,7 @@ export const seedData: FinanceState = {
       amount: 3999,
       frequency: 'annual',
       category: 'tax',
-      paymentMonths: [12],
+      paymentMonths: [1],
       notes: 'Jul 2026 = £7,424 (first year)',
     },
     {
@@ -386,7 +358,7 @@ export const seedData: FinanceState = {
       amount: 3999,
       frequency: 'annual',
       category: 'tax',
-      paymentMonths: [12],
+      paymentMonths: [1],
     },
   ],
 

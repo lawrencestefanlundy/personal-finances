@@ -6,6 +6,7 @@ import {
   CashPosition,
   IncomeStream,
   Expense,
+  ExpenseCategory,
   Asset,
   EmailUpdate,
   Liability,
@@ -21,7 +22,7 @@ import {
   computeTotalPersonalCarryAtMultiple,
 } from '@/lib/carryCalculations';
 import { formatCurrency, formatMonth, formatPercent } from '@/lib/formatters';
-import { assetCategories } from '@/data/categories';
+import { assetCategories, expenseCategories } from '@/data/categories';
 import {
   formatCostBasis,
   formatMoic,
@@ -72,7 +73,7 @@ export default function DashboardPage() {
   const { state, dispatch } = useFinance();
 
   // ─── Cash Flow ──────────────────────────────────────────────────────────────
-  const snapshots = useMemo(() => computeMonthlySnapshots(state, 12), [state]);
+  const snapshots = useMemo(() => computeMonthlySnapshots(state, 26), [state]);
 
   // ─── Projections ────────────────────────────────────────────────────────────
   const projections = useMemo(() => computeYearlyProjections(state), [state]);
@@ -98,6 +99,40 @@ export default function DashboardPage() {
     .filter((a) => a.isLiquid)
     .reduce((sum, a) => sum + a.currentValue, 0);
   const illiquidAssets = totalAssets - liquidAssets;
+
+  // ─── Expense category ordering (matches spreadsheet) ───────────────────────
+  const EXPENSE_CATEGORY_ORDER: ExpenseCategory[] = [
+    'debt',
+    'investment',
+    'school',
+    'holiday',
+    'groceries',
+    'bills',
+    'health',
+    'car',
+    'insurance',
+    'subscriptions',
+    'extracurricular',
+    'house',
+    'tax',
+    'other',
+  ];
+
+  const expensesByCategory = useMemo(() => {
+    const groups: Record<string, Expense[]> = {};
+    for (const expense of state.expenses) {
+      if (!groups[expense.category]) groups[expense.category] = [];
+      groups[expense.category].push(expense);
+    }
+    return groups;
+  }, [state.expenses]);
+
+  // ─── SOFT commitment (ISA + savings not counted in day-to-day) ────────────
+  const softCommitment = useMemo(() => {
+    return state.cashPositions
+      .filter((cp) => cp.category === 'isa' || cp.category === 'savings')
+      .reduce((sum, cp) => sum + cp.balance, 0);
+  }, [state.cashPositions]);
 
   const assetsByCategory = useMemo(() => {
     const groups: Record<string, Asset[]> = {};
@@ -337,7 +372,10 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Cash Flow</h1>
-            <p className="text-sm text-slate-500 mt-1">Income, expenses, and running balance</p>
+            <p className="text-sm text-slate-500 mt-1">
+              Income, expenses, and running balance — {formatMonth(snapshots[0]?.month)} to{' '}
+              {formatMonth(snapshots[snapshots.length - 1]?.month)}
+            </p>
           </div>
         </div>
 
@@ -345,18 +383,24 @@ export default function DashboardPage() {
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table
-              className="w-full text-sm"
-              style={{ minWidth: `${200 + snapshots.length * 100}px` }}
+              className="w-full text-xs"
+              style={{ minWidth: `${360 + snapshots.length * 85}px` }}
             >
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50">
-                  <th className="text-left py-2.5 px-4 font-semibold text-slate-600 sticky left-0 z-10 bg-slate-50 w-[200px]">
+                  <th className="text-left py-2 px-3 font-semibold text-slate-600 sticky left-0 z-10 bg-slate-50 w-[140px] min-w-[140px]">
                     Item
+                  </th>
+                  <th className="text-left py-2 px-2 font-semibold text-slate-600 w-[110px] min-w-[110px]">
+                    Provider
+                  </th>
+                  <th className="text-left py-2 px-2 font-semibold text-slate-600 w-[100px] min-w-[100px]">
+                    Category
                   </th>
                   {snapshots.map((s) => (
                     <th
                       key={s.month}
-                      className="text-right py-2.5 px-3 font-semibold text-slate-600 whitespace-nowrap"
+                      className="text-right py-2 px-2 font-semibold text-slate-600 whitespace-nowrap"
                     >
                       {formatMonth(s.month)}
                     </th>
@@ -364,12 +408,55 @@ export default function DashboardPage() {
                 </tr>
               </thead>
 
+              {/* ── Cash ── */}
+              <tbody>
+                <tr className="border-b border-slate-200 bg-blue-50">
+                  <td
+                    className="py-1.5 px-3 font-bold text-slate-800 sticky left-0 z-10 bg-blue-50"
+                    colSpan={3 + snapshots.length}
+                  >
+                    Cash
+                  </td>
+                </tr>
+                {state.cashPositions.map((cp) => (
+                  <tr key={cp.id} className="border-b border-slate-50">
+                    <td className="py-1 px-3 text-slate-700 sticky left-0 z-10 bg-white">
+                      {cp.name}
+                    </td>
+                    <td className="py-1 px-2 text-slate-500">{cp.provider}</td>
+                    <td className="py-1 px-2 text-slate-500 capitalize">{cp.category}</td>
+                    <td className="py-1 px-2 text-right tabular-nums text-slate-700">
+                      {formatCurrency(cp.balance)}
+                    </td>
+                    <td colSpan={snapshots.length - 1} />
+                  </tr>
+                ))}
+                <tr className="border-b border-slate-200 bg-slate-50 font-semibold">
+                  <td className="py-1.5 px-3 text-slate-800 sticky left-0 z-10 bg-slate-50">
+                    Total
+                  </td>
+                  <td className="py-1.5 px-2 bg-slate-50" />
+                  <td className="py-1.5 px-2 bg-slate-50" />
+                  <td className="py-1.5 px-2 text-right tabular-nums text-slate-800 bg-slate-50">
+                    {formatCurrency(liquidCash)}
+                  </td>
+                  <td colSpan={snapshots.length - 1} className="bg-slate-50" />
+                </tr>
+              </tbody>
+
+              {/* ── Blank row ── */}
+              <tbody>
+                <tr>
+                  <td colSpan={3 + snapshots.length} className="py-1" />
+                </tr>
+              </tbody>
+
               {/* ── Earnings ── */}
               <tbody>
-                <tr className="border-b border-slate-100">
+                <tr className="border-b border-slate-200 bg-emerald-50">
                   <td
-                    className="py-2 px-4 font-bold text-slate-800 sticky left-0 z-10 bg-white"
-                    colSpan={snapshots.length + 1}
+                    className="py-1.5 px-3 font-bold text-slate-800 sticky left-0 z-10 bg-emerald-50"
+                    colSpan={3 + snapshots.length}
                   >
                     <div className="flex items-center gap-2">
                       <span>Earnings</span>
@@ -378,7 +465,7 @@ export default function DashboardPage() {
                           setEditingIncome(undefined);
                           setPanelType('income');
                         }}
-                        className="p-0.5 rounded hover:bg-slate-100 text-slate-400"
+                        className="p-0.5 rounded hover:bg-emerald-100 text-slate-400"
                         title="Add Income Stream"
                       >
                         <PlusIcon className="w-3.5 h-3.5" />
@@ -388,9 +475,8 @@ export default function DashboardPage() {
                 </tr>
                 {state.incomeStreams.map((stream) => (
                   <tr key={stream.id} className="border-b border-slate-50 hover:bg-slate-50 group">
-                    <td className="py-1.5 px-4 text-slate-700 sticky left-0 z-10 bg-white">
-                      <div className="flex items-center gap-2">
-                        <ProviderLogo provider={stream.provider} size={16} />
+                    <td className="py-1 px-3 text-slate-700 sticky left-0 z-10 bg-white">
+                      <div className="flex items-center gap-1">
                         <span>{stream.name}</span>
                         <div className="flex gap-0.5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
@@ -415,45 +501,56 @@ export default function DashboardPage() {
                         </div>
                       </div>
                     </td>
+                    <td className="py-1 px-2 text-slate-500">{stream.provider}</td>
+                    <td className="py-1 px-2 text-slate-500 capitalize">{stream.frequency}</td>
                     {snapshots.map((s) => {
                       const amount = s.incomeBreakdown[stream.id] || 0;
                       return (
-                        <td key={s.month} className="py-1.5 px-3 text-right tabular-nums">
+                        <td key={s.month} className="py-1 px-2 text-right tabular-nums">
                           {amount > 0 ? (
                             <span className="text-emerald-600">{formatCurrency(amount)}</span>
                           ) : (
-                            <span className="text-slate-200">-</span>
+                            <span className="text-slate-300">0</span>
                           )}
                         </td>
                       );
                     })}
                   </tr>
                 ))}
-                <tr className="border-b border-slate-200 bg-slate-50 font-semibold">
-                  <td className="py-2 px-4 text-slate-800 sticky left-0 z-10 bg-slate-50">
-                    Total Earnings
+                <tr className="border-b border-slate-200 bg-emerald-50 font-semibold">
+                  <td className="py-1.5 px-3 text-slate-800 sticky left-0 z-10 bg-emerald-50">
+                    Total
                   </td>
+                  <td className="py-1.5 px-2 bg-emerald-50" />
+                  <td className="py-1.5 px-2 bg-emerald-50" />
                   {snapshots.map((s) => (
                     <td
                       key={s.month}
-                      className="py-2 px-3 text-right tabular-nums text-emerald-700"
+                      className="py-1.5 px-2 text-right tabular-nums text-emerald-700 bg-emerald-50"
                     >
                       {s.totalIncome > 0 ? (
                         formatCurrency(s.totalIncome)
                       ) : (
-                        <span className="text-slate-200">-</span>
+                        <span className="text-slate-300">0</span>
                       )}
                     </td>
                   ))}
                 </tr>
               </tbody>
 
-              {/* ── Expenses ── */}
+              {/* ── Blank row ── */}
               <tbody>
-                <tr className="border-b border-slate-100">
+                <tr>
+                  <td colSpan={3 + snapshots.length} className="py-1" />
+                </tr>
+              </tbody>
+
+              {/* ── Expenses (grouped by category) ── */}
+              <tbody>
+                <tr className="border-b border-slate-200 bg-red-50">
                   <td
-                    className="py-2 px-4 font-bold text-slate-800 sticky left-0 z-10 bg-white"
-                    colSpan={snapshots.length + 1}
+                    className="py-1.5 px-3 font-bold text-slate-800 sticky left-0 z-10 bg-red-50"
+                    colSpan={3 + snapshots.length}
                   >
                     <div className="flex items-center gap-2">
                       <span>Expenses</span>
@@ -462,7 +559,7 @@ export default function DashboardPage() {
                           setEditingExpense(undefined);
                           setPanelType('expense');
                         }}
-                        className="p-0.5 rounded hover:bg-slate-100 text-slate-400"
+                        className="p-0.5 rounded hover:bg-red-100 text-slate-400"
                         title="Add Expense"
                       >
                         <PlusIcon className="w-3.5 h-3.5" />
@@ -470,94 +567,141 @@ export default function DashboardPage() {
                     </div>
                   </td>
                 </tr>
-                {state.expenses.map((expense) => (
-                  <tr key={expense.id} className="border-b border-slate-50 hover:bg-slate-50 group">
-                    <td className="py-1.5 px-4 text-slate-700 sticky left-0 z-10 bg-white">
-                      <div className="flex items-center gap-2">
-                        <ProviderLogo provider={expense.provider} size={16} />
-                        <span>{expense.name}</span>
-                        <div className="flex gap-0.5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={() => {
-                              setEditingExpense(expense);
-                              setPanelType('expense');
-                            }}
-                            className="p-0.5 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
-                            title="Edit"
-                          >
-                            <PencilIcon />
-                          </button>
-                          <button
-                            onClick={() =>
-                              setDeleteTarget({
-                                id: expense.id,
-                                name: expense.name,
-                                type: 'expense',
-                              })
-                            }
-                            className="p-0.5 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
-                            title="Delete"
-                          >
-                            <TrashIcon />
-                          </button>
+                {EXPENSE_CATEGORY_ORDER.filter(
+                  (cat) => expensesByCategory[cat] && expensesByCategory[cat].length > 0,
+                ).flatMap((cat) =>
+                  expensesByCategory[cat].map((expense) => (
+                    <tr
+                      key={expense.id}
+                      className="border-b border-slate-50 hover:bg-slate-50 group"
+                    >
+                      <td className="py-1 px-3 text-slate-700 sticky left-0 z-10 bg-white">
+                        <div className="flex items-center gap-1">
+                          <span>{expense.name}</span>
+                          <div className="flex gap-0.5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              onClick={() => {
+                                setEditingExpense(expense);
+                                setPanelType('expense');
+                              }}
+                              className="p-0.5 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
+                              title="Edit"
+                            >
+                              <PencilIcon />
+                            </button>
+                            <button
+                              onClick={() =>
+                                setDeleteTarget({
+                                  id: expense.id,
+                                  name: expense.name,
+                                  type: 'expense',
+                                })
+                              }
+                              className="p-0.5 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
+                              title="Delete"
+                            >
+                              <TrashIcon />
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    {snapshots.map((s) => {
-                      const amount = s.expenseBreakdown[expense.id] || 0;
-                      return (
-                        <td key={s.month} className="py-1.5 px-3 text-right tabular-nums">
-                          {amount > 0 ? (
-                            <span className="text-slate-700">{formatCurrency(amount)}</span>
-                          ) : (
-                            <span className="text-slate-200">-</span>
-                          )}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-                <tr className="border-b border-slate-200 bg-slate-50 font-semibold">
-                  <td className="py-2 px-4 text-slate-800 sticky left-0 z-10 bg-slate-50">
-                    Total Expenses
-                  </td>
+                      </td>
+                      <td className="py-1 px-2 text-slate-500">{expense.provider || ''}</td>
+                      <td className="py-1 px-2">
+                        <span
+                          className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium"
+                          style={{
+                            color: expenseCategories[expense.category]?.color,
+                            backgroundColor: expenseCategories[expense.category]?.bgColor,
+                          }}
+                        >
+                          {expenseCategories[expense.category]?.label}
+                        </span>
+                      </td>
+                      {snapshots.map((s) => {
+                        const amount = s.expenseBreakdown[expense.id] || 0;
+                        return (
+                          <td key={s.month} className="py-1 px-2 text-right tabular-nums">
+                            {amount > 0 ? (
+                              <span className="text-slate-700">{formatCurrency(amount)}</span>
+                            ) : (
+                              <span className="text-slate-300">0</span>
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  )),
+                )}
+                <tr className="border-b border-slate-200 bg-red-50 font-semibold">
+                  <td className="py-1.5 px-3 text-slate-800 sticky left-0 z-10 bg-red-50">Total</td>
+                  <td className="py-1.5 px-2 bg-red-50" />
+                  <td className="py-1.5 px-2 bg-red-50" />
                   {snapshots.map((s) => (
-                    <td key={s.month} className="py-2 px-3 text-right tabular-nums text-red-600">
+                    <td
+                      key={s.month}
+                      className="py-1.5 px-2 text-right tabular-nums text-red-600 bg-red-50"
+                    >
                       {s.totalExpenses > 0 ? (
                         formatCurrency(s.totalExpenses)
                       ) : (
-                        <span className="text-slate-200">-</span>
+                        <span className="text-slate-300">0</span>
                       )}
                     </td>
                   ))}
                 </tr>
               </tbody>
 
-              {/* ── Summary ── */}
+              {/* ── Blank row ── */}
               <tbody>
-                <tr className="border-b border-slate-200 font-bold">
-                  <td className="py-2.5 px-4 text-slate-900 sticky left-0 z-10 bg-white">
-                    Net Cash Flow
+                <tr>
+                  <td colSpan={3 + snapshots.length} className="py-1" />
+                </tr>
+              </tbody>
+
+              {/* ── Summary: Net, SOFT, Total ── */}
+              <tbody>
+                <tr className="border-b border-slate-200 bg-yellow-50 font-bold">
+                  <td className="py-1.5 px-3 text-slate-900 sticky left-0 z-10 bg-yellow-50">
+                    Net
                   </td>
+                  <td className="py-1.5 px-2 bg-yellow-50" />
+                  <td className="py-1.5 px-2 bg-yellow-50" />
                   {snapshots.map((s) => (
                     <td
                       key={s.month}
-                      className={`py-2.5 px-3 text-right tabular-nums ${s.netCashFlow >= 0 ? 'text-emerald-700' : 'text-red-700'}`}
+                      className={`py-1.5 px-2 text-right tabular-nums bg-yellow-50 ${s.runningBalance >= 0 ? 'text-slate-900' : 'text-red-700'}`}
                     >
-                      {formatCurrency(s.netCashFlow)}
+                      {formatCurrency(s.runningBalance)}
                     </td>
                   ))}
                 </tr>
-                <tr className="font-bold bg-slate-50">
-                  <td className="py-2.5 px-4 text-slate-900 sticky left-0 z-10 bg-slate-50">
-                    Running Balance
+                <tr className="border-b border-slate-200 bg-green-50 font-bold">
+                  <td className="py-1.5 px-3 text-slate-900 sticky left-0 z-10 bg-green-50">
+                    SOFT
                   </td>
+                  <td className="py-1.5 px-2 bg-green-50" />
+                  <td className="py-1.5 px-2 bg-green-50" />
                   {snapshots.map((s) => (
                     <td
                       key={s.month}
-                      className={`py-2.5 px-3 text-right tabular-nums ${s.runningBalance >= 0 ? 'text-slate-900' : 'text-red-700'}`}
+                      className="py-1.5 px-2 text-right tabular-nums text-slate-700 bg-green-50"
                     >
-                      {formatCurrency(s.runningBalance)}
+                      {formatCurrency(softCommitment)}
+                    </td>
+                  ))}
+                </tr>
+                <tr className="bg-emerald-100 font-bold">
+                  <td className="py-1.5 px-3 text-slate-900 sticky left-0 z-10 bg-emerald-100">
+                    Total
+                  </td>
+                  <td className="py-1.5 px-2 bg-emerald-100" />
+                  <td className="py-1.5 px-2 bg-emerald-100" />
+                  {snapshots.map((s) => (
+                    <td
+                      key={s.month}
+                      className={`py-1.5 px-2 text-right tabular-nums bg-emerald-100 ${s.runningBalance + softCommitment >= 0 ? 'text-slate-900' : 'text-red-700'}`}
+                    >
+                      {formatCurrency(s.runningBalance + softCommitment)}
                     </td>
                   ))}
                 </tr>
