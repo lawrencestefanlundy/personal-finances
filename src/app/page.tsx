@@ -21,14 +21,8 @@ import {
   computePortfolioMetrics,
   computeTotalPersonalCarryAtMultiple,
 } from '@/lib/carryCalculations';
-import {
-  formatCurrency,
-  formatEUR,
-  eurToGbp,
-  EUR_TO_GBP,
-  formatMonth,
-  formatPercent,
-} from '@/lib/formatters';
+import { formatCurrency, formatEUR, formatMonth, formatPercent } from '@/lib/formatters';
+import { useEurGbpRate } from '@/hooks/useEurGbpRate';
 import { assetCategories, expenseCategories } from '@/data/categories';
 import {
   formatCostBasis,
@@ -77,6 +71,7 @@ type PanelType =
 
 export default function DashboardPage() {
   const { state, dispatch } = useFinance();
+  const fx = useEurGbpRate();
 
   // ─── Cash Flow ──────────────────────────────────────────────────────────────
   const snapshots = useMemo(() => computeMonthlySnapshots(state, 26), [state]);
@@ -1394,20 +1389,20 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <StatCard
                 title="Personal Carry @2x"
-                value={formatCurrency(eurToGbp(totalCarryAt2x))}
-                subtitle={`${formatEUR(totalCarryAt2x)} at ${EUR_TO_GBP} EUR/GBP`}
+                value={formatCurrency(totalCarryAt2x * fx.rate)}
+                subtitle={`${formatEUR(totalCarryAt2x)} · ECB ${fx.rate.toFixed(4)}${fx.date ? ` (${fx.date})` : ''}`}
                 color="blue"
               />
               <StatCard
                 title="Personal Carry @3x"
-                value={formatCurrency(eurToGbp(totalCarryAt3x))}
-                subtitle={`${formatEUR(totalCarryAt3x)} at ${EUR_TO_GBP} EUR/GBP`}
+                value={formatCurrency(totalCarryAt3x * fx.rate)}
+                subtitle={`${formatEUR(totalCarryAt3x)} · ECB ${fx.rate.toFixed(4)}${fx.date ? ` (${fx.date})` : ''}`}
                 color="green"
               />
               <StatCard
                 title="Personal Carry @5x"
-                value={formatCurrency(eurToGbp(totalCarryAt5x))}
-                subtitle={`${formatEUR(totalCarryAt5x)} at ${EUR_TO_GBP} EUR/GBP`}
+                value={formatCurrency(totalCarryAt5x * fx.rate)}
+                subtitle={`${formatEUR(totalCarryAt5x)} · ECB ${fx.rate.toFixed(4)}${fx.date ? ` (${fx.date})` : ''}`}
                 color="purple"
               />
             </div>
@@ -1491,7 +1486,7 @@ export default function DashboardPage() {
                               </td>
                             ))}
                             <td className="py-2 px-3 text-right font-bold text-emerald-700">
-                              {formatCurrency(eurToGbp(totalPersonalEur))}
+                              {formatCurrency(totalPersonalEur * fx.rate)}
                             </td>
                           </tr>
                         );
