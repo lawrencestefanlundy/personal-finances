@@ -159,3 +159,14 @@ model Settings {
   value     String
   updatedAt DateTime @updatedAt
 }
+
+model MonzoToken {
+  id           Int      @id @default(1)
+  accessToken  String
+  refreshToken String
+  expiresAt    DateTime
+  accountId    String
+  userId       String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}

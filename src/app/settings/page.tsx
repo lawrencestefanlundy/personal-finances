@@ -1,10 +1,17 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { Transaction } from '@/types/finance';
 import { exportStateAsJSON, importStateFromJSON } from '@/lib/storage';
 import { formatCurrency } from '@/lib/formatters';
+
+interface MonzoStatus {
+  connected: boolean;
+  accountId: string | null;
+  expiresAt: string | null;
+  lastSync: string | null;
+}
 
 export default function SettingsPage() {
   const { state, dispatch } = useFinance();
@@ -12,6 +19,37 @@ export default function SettingsPage() {
   const txFileInputRef = useRef<HTMLInputElement>(null);
   const [txImportStatus, setTxImportStatus] = useState<string | null>(null);
   const [showGrowthRates, setShowGrowthRates] = useState(false);
+  const [monzoStatus, setMonzoStatus] = useState<MonzoStatus | null>(null);
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<string | null>(null);
+
+  // Fetch Monzo connection status on mount
+  useEffect(() => {
+    fetch('/api/monzo/status')
+      .then((res) => res.json())
+      .then(setMonzoStatus)
+      .catch(() =>
+        setMonzoStatus({ connected: false, accountId: null, expiresAt: null, lastSync: null }),
+      );
+  }, []);
+
+  // Check for OAuth callback query params
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const monzoParam = params.get('monzo');
+    if (monzoParam === 'connected') {
+      setSyncResult('Monzo connected successfully! Open the Monzo app to approve the connection.');
+      window.history.replaceState({}, '', '/settings');
+      fetch('/api/monzo/status')
+        .then((res) => res.json())
+        .then(setMonzoStatus)
+        .catch(() => {});
+    } else if (monzoParam === 'error') {
+      const message = params.get('message') ?? 'Connection failed';
+      setSyncResult(`Error: ${message}`);
+      window.history.replaceState({}, '', '/settings');
+    }
+  }, []);
 
   const handleExport = () => {
     exportStateAsJSON();
@@ -69,6 +107,37 @@ export default function SettingsPage() {
       const freshState = await res.json();
       dispatch({ type: 'RESET_DATA', payload: freshState });
     }
+  };
+
+  const handleMonzoSync = async () => {
+    setSyncing(true);
+    setSyncResult(null);
+    try {
+      const res = await fetch('/api/monzo/sync', { method: 'POST' });
+      const data = await res.json();
+      if (res.ok) {
+        setSyncResult(`Synced ${data.synced} new transactions (${data.total} total from Monzo)`);
+        // Refresh status to update lastSync
+        const statusRes = await fetch('/api/monzo/status');
+        setMonzoStatus(await statusRes.json());
+        // Reload transactions in the main state
+        const stateRes = await fetch('/api/state');
+        const stateData = await stateRes.json();
+        dispatch({ type: 'IMPORT_DATA', payload: stateData });
+      } else {
+        setSyncResult(`Error: ${data.error}`);
+      }
+    } catch {
+      setSyncResult('Error: Sync request failed');
+    }
+    setSyncing(false);
+  };
+
+  const handleMonzoDisconnect = async () => {
+    if (!confirm('Disconnect Monzo? Synced transactions will remain in the database.')) return;
+    await fetch('/api/auth/monzo', { method: 'DELETE' });
+    setMonzoStatus({ connected: false, accountId: null, expiresAt: null, lastSync: null });
+    setSyncResult(null);
   };
 
   return (
@@ -187,6 +256,76 @@ export default function SettingsPage() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Monzo Connection */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+        <h2 className="text-lg font-semibold text-slate-900 mb-4">Monzo Connection</h2>
+        <div className="space-y-4">
+          {monzoStatus === null ? (
+            <p className="text-sm text-slate-400">Loading...</p>
+          ) : monzoStatus.connected ? (
+            <>
+              <div className="flex items-center gap-2">
+                <span className="inline-block w-2 h-2 bg-emerald-500 rounded-full" />
+                <span className="text-sm font-medium text-emerald-700">Connected</span>
+              </div>
+              <div className="text-xs text-slate-400 space-y-1">
+                <p>Account: {monzoStatus.accountId}</p>
+                <p>
+                  Token expires:{' '}
+                  {monzoStatus.expiresAt
+                    ? new Date(monzoStatus.expiresAt).toLocaleString()
+                    : 'Unknown'}
+                </p>
+                <p>
+                  Last sync:{' '}
+                  {monzoStatus.lastSync ? new Date(monzoStatus.lastSync).toLocaleString() : 'Never'}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleMonzoSync}
+                  disabled={syncing}
+                  className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+                >
+                  {syncing ? 'Syncing...' : 'Sync Now'}
+                </button>
+                <button
+                  onClick={handleMonzoDisconnect}
+                  className="px-4 py-2 text-sm bg-red-50 text-red-600 rounded-md hover:bg-red-100 transition-colors border border-red-200"
+                >
+                  Disconnect
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-2">
+                <span className="inline-block w-2 h-2 bg-slate-300 rounded-full" />
+                <span className="text-sm font-medium text-slate-500">Not connected</span>
+              </div>
+              <p className="text-xs text-slate-400">
+                Connect your Monzo business account to automatically sync transactions. After
+                connecting, you will need to approve the connection in the Monzo app within 5
+                minutes.
+              </p>
+              <a
+                href="/api/auth/monzo"
+                className="inline-block px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              >
+                Connect Monzo
+              </a>
+            </>
+          )}
+          {syncResult && (
+            <p
+              className={`text-xs ${syncResult.startsWith('Error') ? 'text-red-500' : 'text-emerald-600'}`}
+            >
+              {syncResult}
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Data Management */}
