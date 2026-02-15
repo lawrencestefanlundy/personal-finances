@@ -78,7 +78,9 @@ export function computeYearlyProjections(state: FinanceState): YearlyProjection[
     for (const liability of state.liabilities) {
       const balance = Math.round(projectLiabilityBalance(liability, startYear, year));
       liabilities[liability.id] = balance;
-      totalLiabilities += balance;
+      if (liability.type !== 'student_loan') {
+        totalLiabilities += balance;
+      }
     }
 
     projections.push({

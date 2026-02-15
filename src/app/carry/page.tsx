@@ -279,6 +279,28 @@ function FundSection({
   const scenarios = useMemo(() => computeCarryScenarios(carryPosition, MULTIPLES), [carryPosition]);
   const metrics = useMemo(() => computePortfolioMetrics(carryPosition), [carryPosition]);
 
+  // Filters
+  const [nameFilter, setNameFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [moicFilter, setMoicFilter] = useState<string>('all');
+
+  const filteredCompanies = useMemo(() => {
+    return carryPosition.portfolioCompanies.filter((company) => {
+      if (nameFilter && !company.name.toLowerCase().includes(nameFilter.toLowerCase()))
+        return false;
+      if (statusFilter !== 'all' && company.status !== statusFilter) return false;
+      if (moicFilter !== 'all') {
+        const moic =
+          company.investedAmount > 0 ? company.currentValuation / company.investedAmount : 0;
+        if (moicFilter === 'above1' && moic < 1) return false;
+        if (moicFilter === 'below1' && moic >= 1) return false;
+      }
+      return true;
+    });
+  }, [carryPosition.portfolioCompanies, nameFilter, statusFilter, moicFilter]);
+
+  const hasActiveFilters = nameFilter !== '' || statusFilter !== 'all' || moicFilter !== 'all';
+
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
       {/* Fund Header */}
@@ -347,6 +369,11 @@ function FundSection({
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-semibold text-slate-700">
             Portfolio Companies ({carryPosition.portfolioCompanies.length})
+            {hasActiveFilters && (
+              <span className="ml-1 text-slate-400 font-normal">
+                — showing {filteredCompanies.length}
+              </span>
+            )}
           </h3>
           <button
             onClick={onAddCompany}
@@ -372,9 +399,62 @@ function FundSection({
                     Actions
                   </th>
                 </tr>
+                <tr className="border-b border-slate-100 bg-slate-50/50">
+                  <th className="py-1.5 px-3">
+                    <input
+                      type="text"
+                      placeholder="Filter..."
+                      value={nameFilter}
+                      onChange={(e) => setNameFilter(e.target.value)}
+                      className="w-full text-xs font-normal px-2 py-1 border border-slate-200 rounded bg-white text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                    />
+                  </th>
+                  <th className="py-1.5 px-3" />
+                  <th className="py-1.5 px-3" />
+                  <th className="py-1.5 px-3" />
+                  <th className="py-1.5 px-3">
+                    <select
+                      value={moicFilter}
+                      onChange={(e) => setMoicFilter(e.target.value)}
+                      className="w-full text-xs font-normal px-1 py-1 border border-slate-200 rounded bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                    >
+                      <option value="all">All</option>
+                      <option value="above1">&ge; 1x</option>
+                      <option value="below1">&lt; 1x</option>
+                    </select>
+                  </th>
+                  <th className="py-1.5 px-3">
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                      className="w-full text-xs font-normal px-1 py-1 border border-slate-200 rounded bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                    >
+                      <option value="all">All</option>
+                      <option value="active">Active</option>
+                      <option value="marked_up">Marked Up</option>
+                      <option value="exited">Exited</option>
+                      <option value="written_off">Written Off</option>
+                    </select>
+                  </th>
+                  <th className="py-1.5 px-3">
+                    {hasActiveFilters && (
+                      <button
+                        onClick={() => {
+                          setNameFilter('');
+                          setStatusFilter('all');
+                          setMoicFilter('all');
+                        }}
+                        className="text-xs text-blue-600 hover:text-blue-800"
+                        title="Clear filters"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </th>
+                </tr>
               </thead>
               <tbody>
-                {carryPosition.portfolioCompanies.map((company) => {
+                {filteredCompanies.map((company) => {
                   const moic =
                     company.investedAmount > 0
                       ? company.currentValuation / company.investedAmount

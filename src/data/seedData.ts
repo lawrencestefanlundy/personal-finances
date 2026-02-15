@@ -296,6 +296,26 @@ export const seedData: FinanceState = {
       frequency: 'monthly',
       category: 'subscriptions',
     },
+    {
+      id: 'exp-apple',
+      name: 'Apple Services',
+      provider: 'Apple',
+      amount: 22,
+      frequency: 'monthly',
+      category: 'subscriptions',
+      notes: 'iCloud, Apple TV+, etc.',
+    },
+
+    // Transport
+    {
+      id: 'exp-trainline',
+      name: 'Trainline',
+      provider: 'Trainline',
+      amount: 80,
+      frequency: 'monthly',
+      category: 'other',
+      notes: 'Rail travel (average monthly)',
+    },
 
     // Extracurricular
     {
@@ -325,8 +345,30 @@ export const seedData: FinanceState = {
       paymentMonths: [2, 4, 6, 8, 10, 12],
     },
 
+    // School — Alvis
+    {
+      id: 'exp-school-alvis',
+      name: 'Alvis Fees',
+      provider: 'Alvis',
+      amount: 500,
+      frequency: 'termly',
+      category: 'school',
+      paymentMonths: [2, 5, 9],
+      notes: 'Termly fees',
+    },
+
     // House
     { id: 'exp-cleaner', name: 'Cleaner', amount: 120, frequency: 'monthly', category: 'house' },
+
+    // Other — Foreign merchants
+    {
+      id: 'exp-foreign-merchants',
+      name: 'Foreign Merchants',
+      amount: 50,
+      frequency: 'monthly',
+      category: 'other',
+      notes: 'Avg monthly foreign currency charges (apps, services, etc.)',
+    },
 
     // Tax
     {
@@ -450,6 +492,7 @@ export const seedData: FinanceState = {
       annualGrowthRate: 0,
       category: 'angel',
       isLiquid: false,
+      status: 'written_off',
       notes: 'Exited investment',
     },
     {
@@ -507,6 +550,7 @@ export const seedData: FinanceState = {
       annualGrowthRate: 0,
       category: 'angel',
       isLiquid: false,
+      status: 'written_off',
       notes: 'Exited investment',
     },
     {
@@ -616,7 +660,7 @@ export const seedData: FinanceState = {
       committedCapital: 27_165_393,
       carryPercent: 0.2,
       hurdleRate: 0.08,
-      personalSharePercent: 1.0,
+      personalSharePercent: 0.03763,
       portfolioCompanies: [
         // Current Portfolio (16 companies) — Q3 2025 report (30 Sep 2025)
         {
@@ -760,10 +804,102 @@ export const seedData: FinanceState = {
           status: 'active',
           notes: 'AI monitoring — acquired NannyML',
         },
+        // Fully Realised Investments (10) — Q3 2025 report
+        {
+          id: 'pco-mutable',
+          name: 'Mutable',
+          investedAmount: 314_818,
+          currentValuation: 0,
+          ownershipPercent: 0,
+          status: 'written_off',
+          notes: 'Cloud infrastructure — Dec 2019 to Dec 2021, write-off',
+        },
+        {
+          id: 'pco-mobius',
+          name: 'Mobius',
+          investedAmount: 491_146,
+          currentValuation: 0,
+          ownershipPercent: 0,
+          status: 'written_off',
+          notes: 'Computer vision — Dec 2019 to Dec 2023, write-off',
+        },
+        {
+          id: 'pco-kyso',
+          name: 'Kyso',
+          investedAmount: 194_722,
+          currentValuation: 0,
+          ownershipPercent: 0,
+          status: 'written_off',
+          notes: 'Data science tooling — Mar 2020 to Jun 2023, write-off',
+        },
+        {
+          id: 'pco-nannyml',
+          name: 'NannyML',
+          investedAmount: 950_000,
+          currentValuation: 1_168_192,
+          ownershipPercent: 0,
+          status: 'exited',
+          notes:
+            'AI monitoring — Oct 2020 to May 2025, secondary exit 1.23x. Acquired by Soda Data',
+        },
+        {
+          id: 'pco-mysticai',
+          name: 'Mystic AI',
+          investedAmount: 1_446_887,
+          currentValuation: 0,
+          ownershipPercent: 0,
+          status: 'written_off',
+          notes: 'Serverless ML — May 2021 to Jan 2025, write-off',
+        },
+        {
+          id: 'pco-codavel',
+          name: 'Codavel',
+          investedAmount: 503_153,
+          currentValuation: 82_036,
+          ownershipPercent: 0,
+          status: 'written_off',
+          notes: 'CDN — Aug 2021 to Dec 2022, partial recovery €82K (0.16x)',
+        },
+        {
+          id: 'pco-stackers',
+          name: 'Stackers',
+          investedAmount: 512_304,
+          currentValuation: 0,
+          ownershipPercent: 0,
+          status: 'written_off',
+          notes: 'Productivity software — Sep 2021 to Jun 2022, write-off',
+        },
+        {
+          id: 'pco-samudai',
+          name: 'Samudai',
+          investedAmount: 112_065,
+          currentValuation: 0,
+          ownershipPercent: 0,
+          status: 'written_off',
+          notes: 'DAO productivity — Apr 2022 to Mar 2024, write-off',
+        },
+        {
+          id: 'pco-flipt',
+          name: 'Flipt',
+          investedAmount: 603_369,
+          currentValuation: 10_302,
+          ownershipPercent: 0,
+          status: 'written_off',
+          notes: 'CI/CD DevTool — Sep 2022 to Sep 2025, partial recovery €10K (0.02x)',
+        },
+        {
+          id: 'pco-wayfare',
+          name: 'Wayfare',
+          investedAmount: 351_775,
+          currentValuation: 0,
+          ownershipPercent: 0,
+          status: 'written_off',
+          notes: 'Modern data stack — Mar 2023 to Sep 2025, write-off',
+        },
       ],
       linkedAssetId: 'asset-lunar1',
       notes:
-        'Berlin Innovation Ventures 1 GmbH & Co. KG — vintage 2019, 10yr term to Aug 2029. Q3 2025 report (30 Sep 2025). All values in EUR. Gross MOIC 2.40x, TVPI 1.80x. Hurdle exceeded. Accrued carry €2.58M. CIP = 100% Lawrence. Flipt & Wayfare fully written off.',
+        'Berlin Innovation Ventures 1 GmbH & Co. KG — vintage 2019, 10yr term to Aug 2029. Q3 2025 report (30 Sep 2025). All values in EUR. 25 companies total (16 current + 9 write-offs + 1 secondary exit). Total cost basis €21.8M, FMV €51.1M. Gross MOIC 2.40x, TVPI 1.80x, Gross IRR 32%. Hurdle exceeded. 3.763% personal carry share.',
     },
     {
       id: 'carry-lunar2',
@@ -773,7 +909,7 @@ export const seedData: FinanceState = {
       committedCapital: 6_437_102,
       carryPercent: 0.2,
       hurdleRate: 0.08,
-      personalSharePercent: 0.04,
+      personalSharePercent: 0.02,
       portfolioCompanies: [
         // Current Portfolio (8 companies) — Q3 2025 report (30 Sep 2025)
         {
@@ -848,10 +984,20 @@ export const seedData: FinanceState = {
           status: 'marked_up',
           notes: 'Space robotics — 2.7x MOIC, flipping to US (Delaware)',
         },
+        // Fully Realised Investments (1) — Q3 2025 report
+        {
+          id: 'pco-runware',
+          name: 'Runware',
+          investedAmount: 826_370,
+          currentValuation: 1_144_033,
+          ownershipPercent: 0,
+          status: 'exited',
+          notes: 'Generative AI — Nov 2023 to Apr 2025, secondary exit 1.38x',
+        },
       ],
       linkedAssetId: 'asset-lunar2',
       notes:
-        'Lunar Ventures 2 SCSp — vintage 2023, 10yr term to Sep 2033. Q3 2025 report (30 Sep 2025). Final close at €49.3M. All values in EUR. Gross MOIC 1.20x, TVPI 0.84x. 4% personal carry share (carry letter), linear vesting Sep 2023–Sep 2027. Hurdle not yet exceeded.',
+        'Lunar Ventures 2 SCSp — vintage 2023, 10yr term to Sep 2033. Q3 2025 report (30 Sep 2025). Final close at €49.3M. All values in EUR. 9 companies total (8 current + 1 secondary exit). Total cost basis €6.4M, FMV €6.6M. Gross MOIC 1.20x, TVPI 0.84x, Gross IRR 18%. 2% personal carry share, linear vesting Sep 2023–Sep 2027. Hurdle not yet exceeded.',
     },
   ],
 
