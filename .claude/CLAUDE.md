@@ -26,7 +26,7 @@ Next.js 16 wealth tracking dashboard. Manages cash positions, income streams, ex
 - **Migrations**: In `prisma/migrations/` (baseline + incremental)
 - **Build**: `prisma generate && next build` (migrations deployed separately)
 - **Singleton Prisma client** in `src/lib/db.ts`
-- **Critical route**: `POST /api/state` does full wipe-and-reload of all tables (deleteMany → createMany). Wrapped in try/catch but NOT in a Prisma transaction.
+- **Critical route**: `POST /api/state` does full wipe-and-reload of all tables (deleteMany → createMany) inside a `prisma.$transaction()` — atomic, rolls back on any failure.
 
 ## Error Handling
 
