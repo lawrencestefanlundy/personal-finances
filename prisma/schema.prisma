@@ -18,6 +18,8 @@ model CashPosition {
   provider     String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  @@index([createdAt])
 }
 
 model IncomeStream {
@@ -31,6 +33,8 @@ model IncomeStream {
   provider      String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  @@index([createdAt])
 }
 
 model Expense {
@@ -47,6 +51,8 @@ model Expense {
   notes         String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  @@index([createdAt])
 }
 
 model Asset {
@@ -70,6 +76,8 @@ model Asset {
   emailUpdates     String?  // JSON array of {subject, from, date, snippet}
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+
+  @@index([createdAt])
 }
 
 model Liability {
@@ -83,6 +91,8 @@ model Liability {
   provider       String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+
+  @@index([createdAt])
 }
 
 model Transaction {
@@ -114,6 +124,8 @@ model CarryPosition {
   portfolioCompanies   PortfolioCompany[]
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
+
+  @@index([createdAt])
 }
 
 model PortfolioCompany {
@@ -137,6 +149,8 @@ model Scenario {
   overrides   String   // JSON string for complex nested structure
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([createdAt])
 }
 
 model Settings {

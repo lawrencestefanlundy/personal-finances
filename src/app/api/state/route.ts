@@ -59,10 +59,15 @@ export async function GET() {
         }),
       ) as FinanceState['carryPositions'],
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      scenarios: scenarios.map(({ createdAt, updatedAt, overrides, ...rest }) => ({
-        ...rest,
-        overrides: JSON.parse(overrides),
-      })) as FinanceState['scenarios'],
+      scenarios: scenarios.map(({ createdAt, updatedAt, overrides, ...rest }) => {
+        let parsedOverrides = {};
+        try {
+          parsedOverrides = JSON.parse(overrides);
+        } catch {
+          console.error(`Corrupt overrides JSON for scenario ${rest.id}, using empty object`);
+        }
+        return { ...rest, overrides: parsedOverrides };
+      }) as FinanceState['scenarios'],
       activeScenarioId: settingsMap['activeScenarioId'] ?? null,
       settings: {
         startMonth: settingsMap['startMonth'] ?? '2026-02',

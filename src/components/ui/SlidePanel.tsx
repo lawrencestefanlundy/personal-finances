@@ -4,6 +4,10 @@ import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { XIcon } from './Icons';
 
+// Module-level counter to track how many panels are open.
+// Only reset body overflow when all panels are closed.
+let openPanelCount = 0;
+
 interface SlidePanelProps {
   open: boolean;
   onClose: () => void;
@@ -14,12 +18,17 @@ interface SlidePanelProps {
 export default function SlidePanel({ open, onClose, title, children }: SlidePanelProps) {
   useEffect(() => {
     if (open) {
+      openPanelCount++;
       document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
     }
     return () => {
-      document.body.style.overflow = '';
+      if (open) {
+        openPanelCount--;
+        if (openPanelCount <= 0) {
+          openPanelCount = 0; // guard against negative
+          document.body.style.overflow = '';
+        }
+      }
     };
   }, [open]);
 

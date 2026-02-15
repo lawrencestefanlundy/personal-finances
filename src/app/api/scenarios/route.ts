@@ -5,7 +5,17 @@ import { handlePrismaError } from '@/lib/api-utils';
 export async function GET() {
   try {
     const items = await prisma.scenario.findMany({ orderBy: { createdAt: 'asc' } });
-    return NextResponse.json(items.map((s) => ({ ...s, overrides: JSON.parse(s.overrides) })));
+    return NextResponse.json(
+      items.map((s) => {
+        let parsedOverrides = {};
+        try {
+          parsedOverrides = JSON.parse(s.overrides);
+        } catch {
+          console.error(`Corrupt overrides JSON for scenario ${s.id}, using empty object`);
+        }
+        return { ...s, overrides: parsedOverrides };
+      }),
+    );
   } catch (error) {
     return handlePrismaError(error, 'Failed to fetch scenarios');
   }

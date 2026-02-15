@@ -72,12 +72,12 @@ export default function TransactionList({ transactions, limit = 20 }: Transactio
               ))}
             </tbody>
           </table>
-          {!expanded && sorted.length > limit && (
-            <div className="px-3 py-2 text-center text-xs text-slate-400 bg-slate-50 border-t border-slate-200">
-              Showing {limit} of {sorted.length} transactions
-            </div>
-          )}
         </div>
+      )}
+      {!expanded && sorted.length > limit && (
+        <p className="text-xs text-slate-400 mt-1 ml-6">
+          {sorted.length} transactions total — click to expand
+        </p>
       )}
     </div>
   );

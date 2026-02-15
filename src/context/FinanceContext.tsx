@@ -7,6 +7,7 @@ import {
   useEffect,
   useCallback,
   useState,
+  useRef,
   ReactNode,
 } from 'react';
 import { FinanceState } from '@/types/finance';
@@ -43,8 +44,9 @@ const FinanceContext = createContext<FinanceContextValue | null>(null);
 export function FinanceProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(financeReducer, emptyState);
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState<string | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const syncErrorTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Hydrate from API on mount (with retry for deployment transitions)
   useEffect(() => {
@@ -88,6 +90,22 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  // Listen for sync-error events from syncToAPI and show a toast
+  useEffect(() => {
+    function handleSyncError(e: Event) {
+      const detail = (e as CustomEvent).detail;
+      setSyncError(`Changes may not have saved (${detail?.action ?? 'unknown'}). Try again.`);
+      // Auto-dismiss after 6 seconds
+      if (syncErrorTimer.current) clearTimeout(syncErrorTimer.current);
+      syncErrorTimer.current = setTimeout(() => setSyncError(null), 6000);
+    }
+    window.addEventListener('sync-error', handleSyncError);
+    return () => {
+      window.removeEventListener('sync-error', handleSyncError);
+      if (syncErrorTimer.current) clearTimeout(syncErrorTimer.current);
+    };
+  }, []);
+
   // Wrap dispatch to also sync to API (skip the initial IMPORT_DATA from hydration)
   const apiDispatch = useCallback(
     (action: FinanceAction) => {
@@ -121,7 +139,27 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
           </div>
         </div>
       ) : (
-        children
+        <>
+          {syncError && (
+            <div className="fixed bottom-4 right-4 z-50 max-w-sm bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-lg text-sm flex items-center gap-2">
+              <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <span>{syncError}</span>
+              <button
+                onClick={() => setSyncError(null)}
+                className="ml-auto text-red-600 hover:text-red-800 font-medium"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+          {children}
+        </>
       )}
     </FinanceContext.Provider>
   );
