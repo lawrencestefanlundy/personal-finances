@@ -21,7 +21,14 @@ import {
   computePortfolioMetrics,
   computeTotalPersonalCarryAtMultiple,
 } from '@/lib/carryCalculations';
-import { formatCurrency, formatMonth, formatPercent } from '@/lib/formatters';
+import {
+  formatCurrency,
+  formatEUR,
+  eurToGbp,
+  EUR_TO_GBP,
+  formatMonth,
+  formatPercent,
+} from '@/lib/formatters';
 import { assetCategories, expenseCategories } from '@/data/categories';
 import {
   formatCostBasis,
@@ -1387,20 +1394,20 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <StatCard
                 title="Personal Carry @2x"
-                value={formatCurrency(totalCarryAt2x)}
-                subtitle="Across all funds"
+                value={formatCurrency(eurToGbp(totalCarryAt2x))}
+                subtitle={`${formatEUR(totalCarryAt2x)} at ${EUR_TO_GBP} EUR/GBP`}
                 color="blue"
               />
               <StatCard
                 title="Personal Carry @3x"
-                value={formatCurrency(totalCarryAt3x)}
-                subtitle="Across all funds"
+                value={formatCurrency(eurToGbp(totalCarryAt3x))}
+                subtitle={`${formatEUR(totalCarryAt3x)} at ${EUR_TO_GBP} EUR/GBP`}
                 color="green"
               />
               <StatCard
                 title="Personal Carry @5x"
-                value={formatCurrency(totalCarryAt5x)}
-                subtitle="Across all funds"
+                value={formatCurrency(eurToGbp(totalCarryAt5x))}
+                subtitle={`${formatEUR(totalCarryAt5x)} at ${EUR_TO_GBP} EUR/GBP`}
                 color="purple"
               />
             </div>
@@ -1459,7 +1466,7 @@ export default function DashboardPage() {
                           </th>
                         ))}
                         <th className="text-right py-2 px-3 font-semibold text-slate-900">
-                          Total Personal
+                          Total Personal (GBP)
                         </th>
                       </tr>
                     </thead>
@@ -1469,7 +1476,7 @@ export default function DashboardPage() {
                           const scenarios = computeCarryScenarios(cp, [m]);
                           return scenarios[0];
                         });
-                        const totalPersonal = perFund.reduce(
+                        const totalPersonalEur = perFund.reduce(
                           (s, sc) => s + (sc?.personalCarry ?? 0),
                           0,
                         );
@@ -1480,11 +1487,11 @@ export default function DashboardPage() {
                             </td>
                             {perFund.map((sc, i) => (
                               <td key={i} className="py-2 px-3 text-right text-slate-600">
-                                {formatCurrency(sc?.personalCarry ?? 0)}
+                                {formatEUR(sc?.personalCarry ?? 0)}
                               </td>
                             ))}
                             <td className="py-2 px-3 text-right font-bold text-emerald-700">
-                              {formatCurrency(totalPersonal)}
+                              {formatCurrency(eurToGbp(totalPersonalEur))}
                             </td>
                           </tr>
                         );
@@ -1646,13 +1653,13 @@ function FundSection({
         <div>
           <p className="text-xs text-slate-500">Fund Size</p>
           <p className="text-sm font-semibold text-slate-900">
-            {formatCurrency(carryPosition.fundSize)}
+            {formatEUR(carryPosition.fundSize)}
           </p>
         </div>
         <div>
           <p className="text-xs text-slate-500">Committed</p>
           <p className="text-sm font-semibold text-slate-900">
-            {formatCurrency(carryPosition.committedCapital)}
+            {formatEUR(carryPosition.committedCapital)}
           </p>
         </div>
         <div>
@@ -1776,10 +1783,10 @@ function FundSection({
                     >
                       <td className="py-2 px-3 font-medium text-slate-900">{company.name}</td>
                       <td className="py-2 px-3 text-right text-slate-600">
-                        {formatCurrency(company.investedAmount)}
+                        {formatEUR(company.investedAmount)}
                       </td>
                       <td className="py-2 px-3 text-right text-slate-900">
-                        {formatCurrency(company.currentValuation)}
+                        {formatEUR(company.currentValuation)}
                       </td>
                       <td className="py-2 px-3 text-right text-slate-600">
                         {formatPercent(company.ownershipPercent)}
@@ -1821,10 +1828,10 @@ function FundSection({
                 <tr className="bg-slate-50 font-semibold">
                   <td className="py-2 px-3 text-slate-900">Total</td>
                   <td className="py-2 px-3 text-right text-slate-900">
-                    {formatCurrency(metrics.totalInvested)}
+                    {formatEUR(metrics.totalInvested)}
                   </td>
                   <td className="py-2 px-3 text-right text-slate-900">
-                    {formatCurrency(metrics.totalCurrentValuation)}
+                    {formatEUR(metrics.totalCurrentValuation)}
                   </td>
                   <td className="py-2 px-3"></td>
                   <td className="py-2 px-3 text-right">
@@ -1870,16 +1877,16 @@ function FundSection({
                     {sc.multiple.toFixed(1)}x
                   </td>
                   <td className="py-2 px-3 text-right text-slate-600">
-                    {formatCurrency(sc.totalFundValue)}
+                    {formatEUR(sc.totalFundValue)}
                   </td>
                   <td className="py-2 px-3 text-right text-slate-600">
-                    {formatCurrency(sc.totalProfit)}
+                    {formatEUR(sc.totalProfit)}
                   </td>
                   <td className="py-2 px-3 text-right text-slate-900">
-                    {formatCurrency(sc.totalCarryPool)}
+                    {formatEUR(sc.totalCarryPool)}
                   </td>
                   <td className="py-2 px-3 text-right font-bold text-emerald-700">
-                    {formatCurrency(sc.personalCarry)}
+                    {formatEUR(sc.personalCarry)}
                   </td>
                 </tr>
               ))}

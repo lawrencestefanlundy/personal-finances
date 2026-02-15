@@ -16,6 +16,22 @@ export function formatCurrencyFull(value: number): string {
   }).format(value);
 }
 
+export function formatEUR(value: number): string {
+  return new Intl.NumberFormat('en-GB', {
+    style: 'currency',
+    currency: 'EUR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+// Fixed EUR→GBP conversion rate (update periodically)
+export const EUR_TO_GBP = 0.84;
+
+export function eurToGbp(eurValue: number): number {
+  return eurValue * EUR_TO_GBP;
+}
+
 export function formatPercent(value: number): string {
   return `${(value * 100).toFixed(1)}%`;
 }
