@@ -18,16 +18,16 @@ export const seedData: FinanceState = {
       interestRate: 0.035,
       isLiquid: true,
       category: 'savings',
-      provider: 'Chase',
+      provider: 'Monzo',
     },
     {
       id: 'cash-isa',
-      name: 'LLB ISA',
+      name: 'Investments',
       balance: 20917,
       interestRate: 0.06,
       isLiquid: true,
       category: 'isa',
-      provider: 'Lloyds Bank',
+      provider: 'Monzo',
     },
     {
       id: 'cash-crypto',
@@ -459,7 +459,8 @@ export const seedData: FinanceState = {
       notes:
         '1.5M options at 50p exercise. Vesting: 1M Apr 2026, 500K Apr 2027. Currently out of the money (~28p share price Nov 2025)',
       provider: 'Insig AI',
-      emailUpdates: '[{"subject":"FW: Project Capital","from":"Richard Bernstein <rb@crystalamber.com>","date":"2025-08-06","snippet":"Inside information - appreciate thoughts on this section."},{"subject":"AIM Submission","from":"Richard Bernstein <rb@crystalamber.com>","date":"2025-08-20","snippet":"Detailed submission. Pressing for a response. Lawyers working on it."},{"subject":"AIM Submission","from":"Lawrence Lundy","date":"2025-08-27","snippet":"See email from company email. Formal submission update."}]',
+      emailUpdates:
+        '[{"subject":"FW: Project Capital","from":"Richard Bernstein <rb@crystalamber.com>","date":"2025-08-06","snippet":"Inside information - appreciate thoughts on this section."},{"subject":"AIM Submission","from":"Richard Bernstein <rb@crystalamber.com>","date":"2025-08-20","snippet":"Detailed submission. Pressing for a response. Lawyers working on it."},{"subject":"AIM Submission","from":"Lawrence Lundy","date":"2025-08-27","snippet":"See email from company email. Formal submission update."}]',
     },
     {
       id: 'asset-car',
@@ -490,7 +491,8 @@ export const seedData: FinanceState = {
       investmentDate: '2022-04-19',
       platform: 'direct',
       notes: 'SAFE note signed Apr 2022 (crypto/ETH). Transferring to Peek Sep 2025.',
-      emailUpdates: '[{"subject":"Bluejay Finance Investor Update #1 - July 20th, 2022","from":"Sherry Jiang <sherry@bluejay.finance>","date":"2022-07-20","snippet":"Closed seed round of $2.9M for Bluejay Finance."},{"subject":"You just signed Bluejay Finance SAFE Note - Individuals","from":"HelloSign <noreply@mail.hellosign.com>","date":"2022-04-19","snippet":"You have successfully signed your document."},{"subject":"Bluejay Finance - Updates to pBLU vesting schedule","from":"Sherry Jiang <sherry@bluejay.finance>","date":"2022-08-17","snippet":"Change the vesting schedule for the pBLU tokens."},{"subject":"Important Update on Bluejay Direction","from":"Sherry Jiang <sherry@bluejay.finance>","date":"2025-01-28","snippet":"Update on Bluejay direction."},{"subject":"Transfer of Investment from Bluejay to Peek","from":"Sherry Jiang <sherry@bluejay.finance>","date":"2025-09-02","snippet":"Officially set things up and have a formal document for transfer."},{"subject":"You just signed Bluejay Transfer Agreement","from":"Dropbox Sign <noreply@mail.hellosign.com>","date":"2025-09-17","snippet":"You have successfully signed your document."}]',
+      emailUpdates:
+        '[{"subject":"Bluejay Finance Investor Update #1 - July 20th, 2022","from":"Sherry Jiang <sherry@bluejay.finance>","date":"2022-07-20","snippet":"Closed seed round of $2.9M for Bluejay Finance."},{"subject":"You just signed Bluejay Finance SAFE Note - Individuals","from":"HelloSign <noreply@mail.hellosign.com>","date":"2022-04-19","snippet":"You have successfully signed your document."},{"subject":"Bluejay Finance - Updates to pBLU vesting schedule","from":"Sherry Jiang <sherry@bluejay.finance>","date":"2022-08-17","snippet":"Change the vesting schedule for the pBLU tokens."},{"subject":"Important Update on Bluejay Direction","from":"Sherry Jiang <sherry@bluejay.finance>","date":"2025-01-28","snippet":"Update on Bluejay direction."},{"subject":"Transfer of Investment from Bluejay to Peek","from":"Sherry Jiang <sherry@bluejay.finance>","date":"2025-09-02","snippet":"Officially set things up and have a formal document for transfer."},{"subject":"You just signed Bluejay Transfer Agreement","from":"Dropbox Sign <noreply@mail.hellosign.com>","date":"2025-09-17","snippet":"You have successfully signed your document."}]',
     },
     {
       id: 'asset-angel-bonnet',
@@ -506,7 +508,8 @@ export const seedData: FinanceState = {
       taxScheme: 'SEIS',
       platform: 'odin',
       notes: 'Disposed 20/10/2023. 478 shares. Capital loss £3,903 claimed 2023/24.',
-      emailUpdates: '[{"subject":"Refund - Bonnet","from":"Taos Edmondson <Taos.Edmondson@dmgventures.co.uk>","date":"2024-10-23","snippet":"Hey Lawrence, Thanks for sharing! Discussing with the team."},{"subject":"[Odin] Re: Refund - Bonnet","from":"Odin - Support team <hello@joinodin.com>","date":"2024-11-05","snippet":"Shares have been held by Odin nominees."},{"subject":"2024 Tax Return","from":"Brian Mason <brian@alviscompany.com>","date":"2024-10-16","snippet":"Completed 2024 Self Assessment Tax Return."}]',
+      emailUpdates:
+        '[{"subject":"Refund - Bonnet","from":"Taos Edmondson <Taos.Edmondson@dmgventures.co.uk>","date":"2024-10-23","snippet":"Hey Lawrence, Thanks for sharing! Discussing with the team."},{"subject":"[Odin] Re: Refund - Bonnet","from":"Odin - Support team <hello@joinodin.com>","date":"2024-11-05","snippet":"Shares have been held by Odin nominees."},{"subject":"2024 Tax Return","from":"Brian Mason <brian@alviscompany.com>","date":"2024-10-16","snippet":"Completed 2024 Self Assessment Tax Return."}]',
     },
     {
       id: 'asset-angel-callosum',
@@ -521,7 +524,8 @@ export const seedData: FinanceState = {
       taxScheme: 'EIS',
       platform: 'direct',
       notes: 'Subscription adherence agreement Dec 2025. Ordinary shares. EIS eligible.',
-      emailUpdates: '[{"subject":"Complete with Docusign: Callosum - Subscription Adherence Agreement & SHA Adherence Agreement","from":"Danyal Akarca via Docusign","date":"2025-12-02","snippet":"Sent you a document to review and sign."},{"subject":"Completed: Callosum - SHA Adherence Agreement (Ordinary Shares)","from":"Danyal Akarca via Docusign","date":"2026-01-15","snippet":"All parties have signed the document."},{"subject":"Callosum - Investor Update, January 2026","from":"Danyal Akarca <danyal@callosum.com>","date":"2026-01-01","snippet":"Happy new year! We believe this will be a defining year for Callosum."}]',
+      emailUpdates:
+        '[{"subject":"Complete with Docusign: Callosum - Subscription Adherence Agreement & SHA Adherence Agreement","from":"Danyal Akarca via Docusign","date":"2025-12-02","snippet":"Sent you a document to review and sign."},{"subject":"Completed: Callosum - SHA Adherence Agreement (Ordinary Shares)","from":"Danyal Akarca via Docusign","date":"2026-01-15","snippet":"All parties have signed the document."},{"subject":"Callosum - Investor Update, January 2026","from":"Danyal Akarca <danyal@callosum.com>","date":"2026-01-01","snippet":"Happy new year! We believe this will be a defining year for Callosum."}]',
     },
     {
       id: 'asset-angel-catapult',
@@ -535,7 +539,8 @@ export const seedData: FinanceState = {
       investmentDate: '2022-05-06',
       platform: 'direct',
       notes: 'SAFE financing completed May 2022. Certificate signed via DocuSign/Goodwin Law.',
-      emailUpdates: '[{"subject":"Catapult Labs Ltd – SAFE Financing","from":"Amber Bagshaw <ABagshaw@goodwinlaw.com>","date":"2022-05-17","snippet":"SAFE financing round has now completed. Please find attached the fully executed documents."}]',
+      emailUpdates:
+        '[{"subject":"Catapult Labs Ltd – SAFE Financing","from":"Amber Bagshaw <ABagshaw@goodwinlaw.com>","date":"2022-05-17","snippet":"SAFE financing round has now completed. Please find attached the fully executed documents."}]',
     },
     {
       id: 'asset-angel-charm',
@@ -546,7 +551,8 @@ export const seedData: FinanceState = {
       isLiquid: false,
       status: 'active',
       notes: 'Series B referenced May 2025.',
-      emailUpdates: '[{"subject":"ACTION REQUIRED: Charm Tx Series B","from":"Amar Shah <amar@dhyan.vc>","date":"2025-05-05","snippet":"Charm Therapeutics Series B action required."},{"subject":"CheMastery - Science Angel Syndicate Due Diligence Complete","from":"Johnathan Matlock <johnathan@scienceangelsyndicate.com>","date":"2022-05-16","snippet":"Charm sounds interesting. Laksh Aithani and David Baker, commercial AlphaFold2."}]',
+      emailUpdates:
+        '[{"subject":"ACTION REQUIRED: Charm Tx Series B","from":"Amar Shah <amar@dhyan.vc>","date":"2025-05-05","snippet":"Charm Therapeutics Series B action required."},{"subject":"CheMastery - Science Angel Syndicate Due Diligence Complete","from":"Johnathan Matlock <johnathan@scienceangelsyndicate.com>","date":"2022-05-16","snippet":"Charm sounds interesting. Laksh Aithani and David Baker, commercial AlphaFold2."}]',
     },
     {
       id: 'asset-angel-elemendar',
@@ -560,7 +566,8 @@ export const seedData: FinanceState = {
       investmentDate: '2021-08-14',
       platform: 'seedlegals',
       notes: 'Share option certificate issued via SeedLegals Aug 2021.',
-      emailUpdates: '[{"subject":"Wow it\'s Autumn! - Elemendar AI for CTI News and Webtalks","from":"Tristan <tristan@elemendar.com>","date":"2021-09-28","snippet":"Giorgos discovered a brilliant paper on interconnectedness within CTI management systems."},{"subject":"Elemendar News 26: Summer Conferences, Graph Editing & More","from":"Elemendar Team <renee@elemendar.com>","date":"2022-07-14","snippet":"Graph Editing functionality - user can now see the corresponding graph."}]',
+      emailUpdates:
+        '[{"subject":"Wow it\'s Autumn! - Elemendar AI for CTI News and Webtalks","from":"Tristan <tristan@elemendar.com>","date":"2021-09-28","snippet":"Giorgos discovered a brilliant paper on interconnectedness within CTI management systems."},{"subject":"Elemendar News 26: Summer Conferences, Graph Editing & More","from":"Elemendar Team <renee@elemendar.com>","date":"2022-07-14","snippet":"Graph Editing functionality - user can now see the corresponding graph."}]',
     },
     {
       id: 'asset-angel-nevermined',
@@ -571,7 +578,8 @@ export const seedData: FinanceState = {
       isLiquid: false,
       status: 'active',
       notes: 'Swiss AG. AGM invitation Jun 2025. Agentic commerce focus.',
-      emailUpdates: '[{"subject":"Nevermined AG - Invitation to the Annual General Meeting of Shareholders","from":"Don Gossen <don@nevermined.ai>","date":"2025-06-04","snippet":"Annual general meeting of shareholders invitation."},{"subject":"Cheers to 2025 and Hello to 2026: The Year of Agentic Commerce","from":"Don Gossen <don@nevermined.ai>","date":"2025-12-31","snippet":"Reflecting on 2025 progress and outlining plans for agentic commerce."}]',
+      emailUpdates:
+        '[{"subject":"Nevermined AG - Invitation to the Annual General Meeting of Shareholders","from":"Don Gossen <don@nevermined.ai>","date":"2025-06-04","snippet":"Annual general meeting of shareholders invitation."},{"subject":"Cheers to 2025 and Hello to 2026: The Year of Agentic Commerce","from":"Don Gossen <don@nevermined.ai>","date":"2025-12-31","snippet":"Reflecting on 2025 progress and outlining plans for agentic commerce."}]',
     },
     {
       id: 'asset-angel-rain',
@@ -584,7 +592,8 @@ export const seedData: FinanceState = {
       investmentDate: '2023-01-04',
       platform: 'feedforward',
       notes: 'Investment via Feed Forward/Odin. Rain Neuromorphics. Closed Jan 2023.',
-      emailUpdates: '[{"subject":"[Investment closed] Your investment in Rain Neuromorphics with Feed Forward VC","from":"Odin Team <hello@joinodin.com>","date":"2023-01-04","snippet":"Happy New Year! Resolved KYC issue, migrating investment."}]',
+      emailUpdates:
+        '[{"subject":"[Investment closed] Your investment in Rain Neuromorphics with Feed Forward VC","from":"Odin Team <hello@joinodin.com>","date":"2023-01-04","snippet":"Happy New Year! Resolved KYC issue, migrating investment."}]',
     },
     {
       id: 'asset-angel-roleshare',
@@ -599,8 +608,10 @@ export const seedData: FinanceState = {
       instrument: 'equity',
       taxScheme: 'EIS',
       platform: 'odin',
-      notes: 'Disposed 14/11/2023. 23.99 shares. Share loss relief £2,100 claimed 2023/24 (EIS/SEIS attributable).',
-      emailUpdates: '[{"subject":"Notification of exited investment","from":"Odin Team <hello@joinodin.com>","date":"2024-08-06","snippet":"Updated version of exited investment notification attached."},{"subject":"2024 Tax Return","from":"Brian Mason <brian@alviscompany.com>","date":"2024-10-16","snippet":"Completed 2024 Self Assessment Tax Return."},{"subject":"Tax return for 2023-2024","from":"Brian Mason <brian@alviscompany.com>","date":"2024-08-06","snippet":"Progressing tax return for mortgage application."}]',
+      notes:
+        'Disposed 14/11/2023. 23.99 shares. Share loss relief £2,100 claimed 2023/24 (EIS/SEIS attributable).',
+      emailUpdates:
+        '[{"subject":"Notification of exited investment","from":"Odin Team <hello@joinodin.com>","date":"2024-08-06","snippet":"Updated version of exited investment notification attached."},{"subject":"2024 Tax Return","from":"Brian Mason <brian@alviscompany.com>","date":"2024-10-16","snippet":"Completed 2024 Self Assessment Tax Return."},{"subject":"Tax return for 2023-2024","from":"Brian Mason <brian@alviscompany.com>","date":"2024-08-06","snippet":"Progressing tax return for mortgage application."}]',
     },
     {
       id: 'asset-angel-telesqobe',
@@ -620,7 +631,8 @@ export const seedData: FinanceState = {
       isLiquid: false,
       status: 'active',
       notes: 'Regular investor updates from Matt Milligan. Push towards profitability 2024.',
-      emailUpdates: '[{"subject":"Uhubs July investor Update","from":"Matt Milligan <matt@uhubs.co.uk>","date":"2025-08-05","snippet":"Pushing on pipeline growth for strong H2. First ever $400k+ sale."},{"subject":"Uhubs April Investor Update","from":"Matt Milligan <matt@uhubs.co.uk>","date":"2025-04-22","snippet":"Solid Q1, returned from a month in the US meeting prospects."},{"subject":"Uhubs Investor update - December 2024","from":"Matt Milligan <matt@uhubs.co.uk>","date":"2024-11-24","snippet":"Busy 8 weeks at Uhubs, doubling up on update."},{"subject":"Uhubs August Investor Update","from":"Matt Milligan <matt@uhubs.co.uk>","date":"2024-09-25","snippet":"2024 push towards profitability. ~550k ARR."},{"subject":"Uhubs July investor update","from":"Matt Milligan <matt@uhubs.co.uk>","date":"2024-08-28","snippet":"July sales update on 2024 push towards profitability."}]',
+      emailUpdates:
+        '[{"subject":"Uhubs July investor Update","from":"Matt Milligan <matt@uhubs.co.uk>","date":"2025-08-05","snippet":"Pushing on pipeline growth for strong H2. First ever $400k+ sale."},{"subject":"Uhubs April Investor Update","from":"Matt Milligan <matt@uhubs.co.uk>","date":"2025-04-22","snippet":"Solid Q1, returned from a month in the US meeting prospects."},{"subject":"Uhubs Investor update - December 2024","from":"Matt Milligan <matt@uhubs.co.uk>","date":"2024-11-24","snippet":"Busy 8 weeks at Uhubs, doubling up on update."},{"subject":"Uhubs August Investor Update","from":"Matt Milligan <matt@uhubs.co.uk>","date":"2024-09-25","snippet":"2024 push towards profitability. ~550k ARR."},{"subject":"Uhubs July investor update","from":"Matt Milligan <matt@uhubs.co.uk>","date":"2024-08-28","snippet":"July sales update on 2024 push towards profitability."}]',
     },
     {
       id: 'asset-angel-upside',
@@ -631,7 +643,8 @@ export const seedData: FinanceState = {
       isLiquid: false,
       status: 'active',
       notes: 'EIS mentioned in tax correspondence Jan 2023.',
-      emailUpdates: '[{"subject":"2022 Amended Tax Return","from":"Brian Mason <brian@alviscompany.com>","date":"2023-01-26","snippet":"Completed 2022 Self Assessment Tax Return with amendments."},{"subject":"URGENT: 2022 Tax Return","from":"Brian Mason <brian@alviscompany.com>","date":"2023-01-26","snippet":"Already on it. You will hear from me later."}]',
+      emailUpdates:
+        '[{"subject":"2022 Amended Tax Return","from":"Brian Mason <brian@alviscompany.com>","date":"2023-01-26","snippet":"Completed 2022 Self Assessment Tax Return with amendments."},{"subject":"URGENT: 2022 Tax Return","from":"Brian Mason <brian@alviscompany.com>","date":"2023-01-26","snippet":"Already on it. You will hear from me later."}]',
     },
     {
       id: 'asset-sb-pension',

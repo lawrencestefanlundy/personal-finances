@@ -566,17 +566,10 @@ export default function DashboardPage() {
                   return (
                     <tbody key={category}>
                       <tr
-                        style={{ backgroundColor: meta?.bgColor || '#f9fafb' }}
-                        className="cursor-pointer"
+                        className="bg-slate-50 cursor-pointer hover:bg-slate-100"
                         onClick={() => toggleSection(sectionKey)}
                       >
-                        <td
-                          className="py-2 px-3 font-bold sticky left-0"
-                          style={{
-                            color: meta?.color,
-                            backgroundColor: meta?.bgColor || '#f9fafb',
-                          }}
-                        >
+                        <td className="py-2 px-3 font-bold text-slate-700 sticky left-0 bg-slate-50">
                           <div className="flex items-center gap-2">
                             {chevron(!!isExpanded)}
                             <span>{meta?.label || category}</span>
@@ -587,7 +580,7 @@ export default function DashboardPage() {
                                   setEditingExpense(undefined);
                                   setPanelType('expense');
                                 }}
-                                className="p-0.5 rounded hover:bg-red-100 text-red-500 ml-auto"
+                                className="p-0.5 rounded hover:bg-slate-200 text-slate-500 ml-auto"
                                 title="Add Expense"
                               >
                                 <PlusIcon />
@@ -600,8 +593,7 @@ export default function DashboardPage() {
                           return (
                             <td
                               key={s.month}
-                              className="py-2 px-3 text-right font-medium"
-                              style={{ color: meta?.color }}
+                              className="py-2 px-3 text-right font-medium text-slate-700"
                             >
                               {subtotal > 0 ? (
                                 formatCurrency(subtotal)

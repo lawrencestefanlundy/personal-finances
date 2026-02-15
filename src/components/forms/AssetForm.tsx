@@ -72,15 +72,17 @@ export default function AssetForm({ existing, onClose }: AssetFormProps) {
       ...(endYear ? { endYear: Number(endYear) } : {}),
       ...(notes.trim() ? { notes: notes.trim() } : {}),
       ...(provider.trim() ? { provider: provider.trim() } : {}),
-      ...(category === 'angel' ? {
-        ...(costBasis ? { costBasis: Number(costBasis), costCurrency } : {}),
-        ...(instrument ? { instrument } : {}),
-        ...(investmentDate ? { investmentDate } : {}),
-        status: status as 'active' | 'exited' | 'written_off',
-        ...(taxScheme ? { taxScheme: taxScheme as 'SEIS' | 'EIS' } : {}),
-        ...(platform.trim() ? { platform: platform.trim() } : {}),
-        ...(existing?.emailUpdates ? { emailUpdates: existing.emailUpdates } : {}),
-      } : {}),
+      ...(category === 'angel'
+        ? {
+            ...(costBasis ? { costBasis: Number(costBasis), costCurrency } : {}),
+            ...(instrument ? { instrument } : {}),
+            ...(investmentDate ? { investmentDate } : {}),
+            status: status as 'active' | 'exited' | 'written_off',
+            ...(taxScheme ? { taxScheme: taxScheme as 'SEIS' | 'EIS' } : {}),
+            ...(platform.trim() ? { platform: platform.trim() } : {}),
+            ...(existing?.emailUpdates ? { emailUpdates: existing.emailUpdates } : {}),
+          }
+        : {}),
     };
 
     if (existing) {
@@ -195,7 +197,11 @@ export default function AssetForm({ existing, onClose }: AssetFormProps) {
               </FormField>
             </div>
             <FormField label="Currency">
-              <select value={costCurrency} onChange={(e) => setCostCurrency(e.target.value)} className={selectClass}>
+              <select
+                value={costCurrency}
+                onChange={(e) => setCostCurrency(e.target.value)}
+                className={selectClass}
+              >
                 <option value="GBP">GBP</option>
                 <option value="USD">USD</option>
                 <option value="EUR">EUR</option>
@@ -205,7 +211,11 @@ export default function AssetForm({ existing, onClose }: AssetFormProps) {
           </div>
 
           <FormField label="Instrument">
-            <select value={instrument} onChange={(e) => setInstrument(e.target.value)} className={selectClass}>
+            <select
+              value={instrument}
+              onChange={(e) => setInstrument(e.target.value)}
+              className={selectClass}
+            >
               <option value="">Select...</option>
               <option value="equity">Equity</option>
               <option value="safe">SAFE</option>
@@ -224,7 +234,11 @@ export default function AssetForm({ existing, onClose }: AssetFormProps) {
               />
             </FormField>
             <FormField label="Status">
-              <select value={status} onChange={(e) => setStatus(e.target.value as 'active' | 'exited' | 'written_off')} className={selectClass}>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value as 'active' | 'exited' | 'written_off')}
+                className={selectClass}
+              >
                 <option value="active">Active</option>
                 <option value="exited">Exited</option>
                 <option value="written_off">Written Off</option>
@@ -234,7 +248,11 @@ export default function AssetForm({ existing, onClose }: AssetFormProps) {
 
           <div className="grid grid-cols-2 gap-3">
             <FormField label="Tax Scheme">
-              <select value={taxScheme} onChange={(e) => setTaxScheme(e.target.value)} className={selectClass}>
+              <select
+                value={taxScheme}
+                onChange={(e) => setTaxScheme(e.target.value)}
+                className={selectClass}
+              >
                 <option value="">None</option>
                 <option value="SEIS">SEIS</option>
                 <option value="EIS">EIS</option>

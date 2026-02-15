@@ -206,9 +206,33 @@ describe('computeAverageMonthlyBurn', () => {
 
   it('averages total expenses across snapshots', () => {
     const snapshots = [
-      { month: '2026-01', totalIncome: 0, totalExpenses: 1000, netCashFlow: -1000, runningBalance: 9000, incomeBreakdown: {}, expenseBreakdown: {} },
-      { month: '2026-02', totalIncome: 0, totalExpenses: 2000, netCashFlow: -2000, runningBalance: 7000, incomeBreakdown: {}, expenseBreakdown: {} },
-      { month: '2026-03', totalIncome: 0, totalExpenses: 3000, netCashFlow: -3000, runningBalance: 4000, incomeBreakdown: {}, expenseBreakdown: {} },
+      {
+        month: '2026-01',
+        totalIncome: 0,
+        totalExpenses: 1000,
+        netCashFlow: -1000,
+        runningBalance: 9000,
+        incomeBreakdown: {},
+        expenseBreakdown: {},
+      },
+      {
+        month: '2026-02',
+        totalIncome: 0,
+        totalExpenses: 2000,
+        netCashFlow: -2000,
+        runningBalance: 7000,
+        incomeBreakdown: {},
+        expenseBreakdown: {},
+      },
+      {
+        month: '2026-03',
+        totalIncome: 0,
+        totalExpenses: 3000,
+        netCashFlow: -3000,
+        runningBalance: 4000,
+        incomeBreakdown: {},
+        expenseBreakdown: {},
+      },
     ];
     expect(computeAverageMonthlyBurn(snapshots)).toBe(2000);
   });
@@ -217,14 +241,30 @@ describe('computeAverageMonthlyBurn', () => {
 describe('computeMonthsOfRunway', () => {
   it('returns Infinity when net cash flow is positive', () => {
     const snapshots = [
-      { month: '2026-01', totalIncome: 5000, totalExpenses: 3000, netCashFlow: 2000, runningBalance: 12000, incomeBreakdown: {}, expenseBreakdown: {} },
+      {
+        month: '2026-01',
+        totalIncome: 5000,
+        totalExpenses: 3000,
+        netCashFlow: 2000,
+        runningBalance: 12000,
+        incomeBreakdown: {},
+        expenseBreakdown: {},
+      },
     ];
     expect(computeMonthsOfRunway(10000, snapshots)).toBe(Infinity);
   });
 
   it('calculates months of runway for negative burn', () => {
     const snapshots = [
-      { month: '2026-01', totalIncome: 0, totalExpenses: 5000, netCashFlow: -5000, runningBalance: 5000, incomeBreakdown: {}, expenseBreakdown: {} },
+      {
+        month: '2026-01',
+        totalIncome: 0,
+        totalExpenses: 5000,
+        netCashFlow: -5000,
+        runningBalance: 5000,
+        incomeBreakdown: {},
+        expenseBreakdown: {},
+      },
     ];
     expect(computeMonthsOfRunway(10000, snapshots)).toBe(2);
   });
