@@ -29,7 +29,6 @@ import {
   instrumentLabels,
   statusStyles,
 } from '@/lib/investmentFormatters';
-import WealthChart from '@/components/charts/WealthChart';
 import { PencilIcon, TrashIcon, PlusIcon } from '@/components/ui/Icons';
 import SlidePanel from '@/components/ui/SlidePanel';
 import DeleteConfirmation from '@/components/ui/DeleteConfirmation';
@@ -283,7 +282,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-16">
       {/* ═══════════════════════════════════════════════════════════════════════
-          SECTION 1: OVERVIEW
+          SECTION 1: SUMMARY
           ═══════════════════════════════════════════════════════════════════════ */}
       <section id="overview" className="scroll-mt-20 space-y-8">
         <div>
@@ -293,52 +292,215 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        {/* Stat Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <StatCard
-            title="Net Wealth"
-            value={formatCurrency(netWealth)}
-            subtitle="Total assets minus liabilities"
-            color="purple"
-          />
-          <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Liquid Cash */}
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
+            <div
+              className="flex items-center justify-between p-6 cursor-pointer"
+              onClick={() => toggleSection('summary-cash')}
+            >
+              <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-slate-500">Liquid Cash</p>
                 <p className="text-2xl font-bold mt-1 text-emerald-600">
                   {formatCurrency(liquidCash)}
                 </p>
               </div>
-              <button
-                onClick={() => {
-                  setEditingCash(undefined);
-                  setPanelType('cashPosition');
-                }}
-                className="p-1.5 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
-                title="Add Cash Position"
-              >
-                <PlusIcon className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-3 pt-3 border-t border-slate-100">
-              {state.cashPositions.map((cp) => (
-                <div
-                  key={cp.id}
-                  className="flex items-center justify-between group cursor-pointer hover:bg-slate-50 rounded px-1 -mx-1"
-                  onClick={() => {
-                    setEditingCash(cp);
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEditingCash(undefined);
                     setPanelType('cashPosition');
                   }}
+                  className="p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600"
+                  title="Add Cash Position"
                 >
-                  <span className="text-xs text-slate-500 truncate">{cp.name}</span>
-                  <span className="text-xs font-medium text-slate-700 tabular-nums">
-                    {formatCurrency(cp.balance)}
+                  <PlusIcon className="w-3.5 h-3.5" />
+                </button>
+                <span className="text-slate-400">{chevron(!!expanded['summary-cash'])}</span>
+              </div>
+            </div>
+            {expanded['summary-cash'] && (
+              <div className="px-6 pb-4 pt-0 border-t border-slate-100 space-y-1">
+                {state.cashPositions.map((cp) => (
+                  <div
+                    key={cp.id}
+                    className="flex items-center justify-between cursor-pointer hover:bg-slate-50 rounded px-1 -mx-1 py-0.5"
+                    onClick={() => {
+                      setEditingCash(cp);
+                      setPanelType('cashPosition');
+                    }}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <ProviderLogo provider={cp.provider} size={14} />
+                      <span className="text-xs text-slate-600">{cp.name}</span>
+                    </div>
+                    <span className="text-xs font-medium text-slate-700 tabular-nums">
+                      {formatCurrency(cp.balance)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Total Assets */}
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
+            <div
+              className="flex items-center justify-between p-6 cursor-pointer"
+              onClick={() => toggleSection('summary-assets')}
+            >
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-slate-500">Total Assets</p>
+                <p className="text-2xl font-bold mt-1 text-emerald-600">
+                  {formatCurrency(totalAssets)}
+                </p>
+                <p className="text-xs text-slate-400 mt-1">{state.assets.length} positions</p>
+              </div>
+              <span className="text-slate-400">{chevron(!!expanded['summary-assets'])}</span>
+            </div>
+            {expanded['summary-assets'] && (
+              <div className="px-6 pb-4 pt-0 border-t border-slate-100 space-y-1">
+                {Object.entries(assetsByCategory).map(([category, assets]) => {
+                  const meta = assetCategories[category as keyof typeof assetCategories];
+                  const subtotal = assets.reduce((sum, a) => sum + a.currentValue, 0);
+                  return (
+                    <div key={category} className="flex items-center justify-between py-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className="inline-block w-2 h-2 rounded-full"
+                          style={{ backgroundColor: meta?.color }}
+                        />
+                        <span className="text-xs text-slate-600">{meta?.label ?? category}</span>
+                      </div>
+                      <span className="text-xs font-medium text-slate-700 tabular-nums">
+                        {formatCurrency(subtotal)}
+                      </span>
+                    </div>
+                  );
+                })}
+                {fundAssets.length > 0 && (
+                  <div className="flex items-center justify-between py-0.5">
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className="inline-block w-2 h-2 rounded-full"
+                        style={{ backgroundColor: assetCategories.fund?.color }}
+                      />
+                      <span className="text-xs text-slate-600">Fund Carry</span>
+                    </div>
+                    <span className="text-xs font-medium text-slate-700 tabular-nums">
+                      {formatCurrency(fundAssets.reduce((sum, a) => sum + a.currentValue, 0))}
+                    </span>
+                  </div>
+                )}
+                {angelAssets.length > 0 && (
+                  <div className="flex items-center justify-between py-0.5">
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className="inline-block w-2 h-2 rounded-full"
+                        style={{ backgroundColor: assetCategories.angel?.color }}
+                      />
+                      <span className="text-xs text-slate-600">Angel</span>
+                    </div>
+                    <span className="text-xs font-medium text-slate-700 tabular-nums">
+                      {formatCurrency(angelTotal)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Total Liabilities */}
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
+            <div
+              className="flex items-center justify-between p-6 cursor-pointer"
+              onClick={() => toggleSection('summary-liabilities')}
+            >
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-slate-500">Total Liabilities</p>
+                <p className="text-2xl font-bold mt-1 text-amber-600">
+                  {formatCurrency(totalLiabilities)}
+                </p>
+                <p className="text-xs text-slate-400 mt-1">
+                  {state.liabilities.length} obligations
+                </p>
+              </div>
+              <span className="text-slate-400">{chevron(!!expanded['summary-liabilities'])}</span>
+            </div>
+            {expanded['summary-liabilities'] && (
+              <div className="px-6 pb-4 pt-0 border-t border-slate-100 space-y-1">
+                {state.liabilities.map((liability) => (
+                  <div
+                    key={liability.id}
+                    className="flex items-center justify-between cursor-pointer hover:bg-slate-50 rounded px-1 -mx-1 py-0.5"
+                    onClick={() => {
+                      setEditingLiability(liability);
+                      setPanelType('liability');
+                    }}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <ProviderLogo provider={liability.provider} size={14} />
+                      <span className="text-xs text-slate-600">{liability.name}</span>
+                    </div>
+                    <span className="text-xs font-medium text-red-600 tabular-nums">
+                      {formatCurrency(liability.currentBalance)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Net Wealth */}
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
+            <div
+              className="flex items-center justify-between p-6 cursor-pointer"
+              onClick={() => toggleSection('summary-netwealth')}
+            >
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-slate-500">Net Wealth</p>
+                <p className="text-2xl font-bold mt-1 text-purple-600">
+                  {formatCurrency(netWealth)}
+                </p>
+                <p className="text-xs text-slate-400 mt-1">Age {currentYear?.age}</p>
+              </div>
+              <span className="text-slate-400">{chevron(!!expanded['summary-netwealth'])}</span>
+            </div>
+            {expanded['summary-netwealth'] && (
+              <div className="px-6 pb-4 pt-0 border-t border-slate-100 space-y-1">
+                <div className="flex items-center justify-between py-0.5">
+                  <span className="text-xs text-slate-600">Total Assets</span>
+                  <span className="text-xs font-medium text-emerald-600 tabular-nums">
+                    {formatCurrency(totalAssets)}
                   </span>
                 </div>
-              ))}
-            </div>
+                <div className="flex items-center justify-between py-0.5">
+                  <span className="text-xs text-slate-600">Total Liabilities</span>
+                  <span className="text-xs font-medium text-red-600 tabular-nums">
+                    -{formatCurrency(totalLiabilities)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between py-1 mt-1 border-t border-slate-100">
+                  <span className="text-xs font-semibold text-slate-700">Net Wealth</span>
+                  <span className="text-xs font-bold text-purple-600 tabular-nums">
+                    {formatCurrency(netWealth)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between py-0.5 mt-1">
+                  <span className="text-xs text-slate-500">Liquid / Illiquid</span>
+                  <span className="text-xs text-slate-500 tabular-nums">
+                    {totalAssets > 0
+                      ? `${Math.round((liquidAssets / totalAssets) * 100)}% / ${Math.round((illiquidAssets / totalAssets) * 100)}%`
+                      : '—'}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
+
         {state.transactions.length > 0 && (
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
             <TransactionList transactions={state.transactions} />
@@ -363,7 +525,7 @@ export default function DashboardPage() {
             >
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50">
-                  <th className="text-left py-2 px-3 font-semibold text-slate-600 sticky left-0 z-10 bg-slate-50 w-[140px] min-w-[140px]">
+                  <th className="text-left py-2 px-3 font-semibold text-slate-600 sticky left-0 z-10 bg-slate-50 w-[200px] min-w-[200px]">
                     Item
                   </th>
                   <th className="text-left py-2 px-2 font-semibold text-slate-600 w-[110px] min-w-[110px]">
@@ -633,7 +795,7 @@ export default function DashboardPage() {
                 </tr>
               </tbody>
 
-              {/* ── Summary: Net, SOFT, Total ── */}
+              {/* ── Summary: Net, Total ── */}
               <tbody>
                 <tr className="border-b border-slate-200 bg-yellow-50 font-bold">
                   <td className="py-1.5 px-3 text-slate-900 sticky left-0 z-10 bg-yellow-50">
@@ -647,21 +809,6 @@ export default function DashboardPage() {
                       className={`py-1.5 px-2 text-right tabular-nums bg-yellow-50 ${s.runningBalance >= 0 ? 'text-slate-900' : 'text-red-700'}`}
                     >
                       {formatCurrency(s.runningBalance)}
-                    </td>
-                  ))}
-                </tr>
-                <tr className="border-b border-slate-200 bg-green-50 font-bold">
-                  <td className="py-1.5 px-3 text-slate-900 sticky left-0 z-10 bg-green-50">
-                    SOFT
-                  </td>
-                  <td className="py-1.5 px-2 bg-green-50" />
-                  <td className="py-1.5 px-2 bg-green-50" />
-                  {snapshots.map((s) => (
-                    <td
-                      key={s.month}
-                      className="py-1.5 px-2 text-right tabular-nums text-slate-700 bg-green-50"
-                    >
-                      {formatCurrency(softCommitment)}
                     </td>
                   ))}
                 </tr>
@@ -696,44 +843,6 @@ export default function DashboardPage() {
             Balance sheet, investments, carry, and long-term projections ({projections[0]?.year}–
             {projections[projections.length - 1]?.year})
           </p>
-        </div>
-
-        {/* Stat Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatCard
-            title="Net Worth"
-            value={formatCurrency(netWealth)}
-            subtitle={`Age ${currentYear?.age}`}
-            color="purple"
-          />
-          <StatCard
-            title="Total Assets"
-            value={formatCurrency(totalAssets)}
-            subtitle={`${state.assets.length} positions`}
-            color="green"
-          />
-          <StatCard
-            title="Total Liabilities"
-            value={formatCurrency(totalLiabilities)}
-            subtitle={`${state.liabilities.length} obligations`}
-            color="amber"
-          />
-          <StatCard
-            title="Liquid / Illiquid"
-            value={
-              totalAssets > 0
-                ? `${Math.round((liquidAssets / totalAssets) * 100)}% / ${Math.round((illiquidAssets / totalAssets) * 100)}%`
-                : '—'
-            }
-            subtitle={`${formatCurrency(liquidAssets)} accessible`}
-            color="blue"
-          />
-        </div>
-
-        {/* Net Worth Chart */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Net Worth Over Time</h2>
-          <WealthChart projections={projections} />
         </div>
 
         {/* Balance Sheet */}

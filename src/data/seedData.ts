@@ -127,31 +127,13 @@ export const seedData: FinanceState = {
 
     // Holidays
     {
-      id: 'exp-holidays-easter',
+      id: 'exp-holidays',
       name: 'Holidays',
-      amount: 3000,
-      frequency: 'annual',
+      amount: 5667,
+      frequency: 'termly',
       category: 'holiday',
-      paymentMonths: [4],
-      notes: 'Easter / spring holiday',
-    },
-    {
-      id: 'exp-holidays-summer',
-      name: 'Holidays',
-      amount: 6000,
-      frequency: 'annual',
-      category: 'holiday',
-      paymentMonths: [8],
-      notes: 'Summer holiday',
-    },
-    {
-      id: 'exp-holidays-winter',
-      name: 'Holidays',
-      amount: 8000,
-      frequency: 'annual',
-      category: 'holiday',
-      paymentMonths: [12],
-      notes: 'Christmas / winter holiday',
+      paymentMonths: [4, 8, 12],
+      notes: 'Easter £3k, Summer £6k, Winter £8k — £17k/yr averaged across 3 payments',
     },
 
     // Groceries
