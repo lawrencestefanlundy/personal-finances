@@ -44,16 +44,30 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(financeReducer, emptyState);
   const [loading, setLoading] = useState(true);
 
+  const [error, setError] = useState<string | null>(null);
+
   // Hydrate from API on mount
   useEffect(() => {
     fetch('/api/state')
-      .then((res) => res.json())
-      .then((data: FinanceState) => {
-        dispatch({ type: 'IMPORT_DATA', payload: data });
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`API returned ${res.status}: ${res.statusText}`);
+        }
+        return res.json();
+      })
+      .then((data) => {
+        // Guard: only import if the response looks like valid state (has arrays)
+        if (data && Array.isArray(data.cashPositions)) {
+          dispatch({ type: 'IMPORT_DATA', payload: data as FinanceState });
+        } else {
+          console.error('API returned unexpected shape:', data);
+          setError('Server returned invalid data. Please try refreshing.');
+        }
         setLoading(false);
       })
       .catch((err) => {
         console.error('Failed to load state from API:', err);
+        setError('Failed to connect to the server. Please try refreshing.');
         setLoading(false);
       });
   }, []);
@@ -76,6 +90,18 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto" />
             <p className="text-slate-500 mt-3 text-sm">Loading financial data...</p>
+          </div>
+        </div>
+      ) : error ? (
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <p className="text-red-600 font-medium">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-3 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
+            >
+              Retry
+            </button>
           </div>
         </div>
       ) : (

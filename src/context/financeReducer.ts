@@ -219,8 +219,22 @@ export function financeReducer(state: FinanceState, action: FinanceAction): Fina
         settings: { ...state.settings, ...action.payload },
       });
 
-    case 'IMPORT_DATA':
-      return updateTimestamp(action.payload);
+    case 'IMPORT_DATA': {
+      const d = action.payload;
+      return updateTimestamp({
+        cashPositions: Array.isArray(d.cashPositions) ? d.cashPositions : [],
+        incomeStreams: Array.isArray(d.incomeStreams) ? d.incomeStreams : [],
+        expenses: Array.isArray(d.expenses) ? d.expenses : [],
+        assets: Array.isArray(d.assets) ? d.assets : [],
+        liabilities: Array.isArray(d.liabilities) ? d.liabilities : [],
+        transactions: Array.isArray(d.transactions) ? d.transactions : [],
+        carryPositions: Array.isArray(d.carryPositions) ? d.carryPositions : [],
+        scenarios: Array.isArray(d.scenarios) ? d.scenarios : [],
+        activeScenarioId: d.activeScenarioId ?? null,
+        settings: d.settings ?? state.settings,
+        lastModified: d.lastModified ?? '',
+      });
+    }
 
     case 'RESET_DATA':
       return updateTimestamp(action.payload);
