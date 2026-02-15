@@ -406,16 +406,16 @@ export default function DashboardPage() {
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
           <h2 className="text-lg font-semibold text-slate-900 mb-4">Monthly Forecast</h2>
           <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
+            <table className="w-max text-sm">
               <thead>
                 <tr className="border-b border-slate-200">
-                  <th className="text-left py-2 px-3 font-semibold text-slate-600 sticky left-0 bg-white min-w-[200px]">
+                  <th className="text-left py-2 px-3 font-semibold text-slate-600 sticky left-0 z-10 bg-white z-10 w-[200px] min-w-[200px] max-w-[200px]">
                     Item
                   </th>
                   {snapshots.map((s) => (
                     <th
                       key={s.month}
-                      className="text-right py-2 px-3 font-semibold text-slate-600 min-w-[90px]"
+                      className="text-right py-2 px-3 font-semibold text-slate-600 w-[100px] min-w-[100px]"
                     >
                       {formatMonth(s.month)}
                     </th>
@@ -428,7 +428,7 @@ export default function DashboardPage() {
                   className="bg-slate-50 cursor-pointer hover:bg-slate-100"
                   onClick={() => toggleSection('cash')}
                 >
-                  <td className="py-2 px-3 font-bold text-slate-700 sticky left-0 bg-slate-50">
+                  <td className="py-2 px-3 font-bold text-slate-700 sticky left-0 z-10 bg-slate-50">
                     <div className="flex items-center gap-2">
                       {chevron(!!expanded['cash'])}
                       <span>Cash Positions</span>
@@ -446,7 +446,7 @@ export default function DashboardPage() {
                 {expanded['cash'] &&
                   state.cashPositions.map((cp) => (
                     <tr key={cp.id} className="border-b border-slate-50 hover:bg-slate-50 group">
-                      <td className="py-2 px-3 text-slate-900 sticky left-0 bg-white pl-8">
+                      <td className="py-2 px-3 text-slate-900 sticky left-0 z-10 bg-white pl-8">
                         <div className="flex items-center gap-2">
                           <ProviderLogo provider={cp.provider} size={18} />
                           <span>{cp.name}</span>
@@ -473,10 +473,10 @@ export default function DashboardPage() {
 
                 {/* Earnings */}
                 <tr
-                  className="bg-emerald-50 cursor-pointer hover:bg-emerald-100"
+                  className="bg-slate-50 cursor-pointer hover:bg-slate-100"
                   onClick={() => toggleSection('earnings')}
                 >
-                  <td className="py-2 px-3 font-bold text-emerald-700 sticky left-0 bg-emerald-50">
+                  <td className="py-2 px-3 font-bold text-slate-700 sticky left-0 z-10 bg-slate-50">
                     <div className="flex items-center gap-2">
                       {chevron(!!expanded['earnings'])}
                       <span>Earnings</span>
@@ -486,7 +486,7 @@ export default function DashboardPage() {
                           setEditingIncome(undefined);
                           setPanelType('income');
                         }}
-                        className="p-0.5 rounded hover:bg-emerald-100 text-emerald-600 ml-auto"
+                        className="p-0.5 rounded hover:bg-slate-200 text-slate-500 ml-auto"
                         title="Add Income Stream"
                       >
                         <PlusIcon />
@@ -512,7 +512,7 @@ export default function DashboardPage() {
                       key={stream.id}
                       className="border-b border-slate-50 hover:bg-slate-50 group"
                     >
-                      <td className="py-2 px-3 text-slate-900 sticky left-0 bg-white pl-8">
+                      <td className="py-2 px-3 text-slate-900 sticky left-0 z-10 bg-white pl-8">
                         <div className="flex items-center gap-2">
                           <ProviderLogo provider={stream.provider} size={18} />
                           <span>{stream.name}</span>
@@ -569,7 +569,7 @@ export default function DashboardPage() {
                         className="bg-slate-50 cursor-pointer hover:bg-slate-100"
                         onClick={() => toggleSection(sectionKey)}
                       >
-                        <td className="py-2 px-3 font-bold text-slate-700 sticky left-0 bg-slate-50">
+                        <td className="py-2 px-3 font-bold text-slate-700 sticky left-0 z-10 bg-slate-50">
                           <div className="flex items-center gap-2">
                             {chevron(!!isExpanded)}
                             <span>{meta?.label || category}</span>
@@ -610,7 +610,7 @@ export default function DashboardPage() {
                             key={expense.id}
                             className="border-b border-slate-50 hover:bg-slate-50 group"
                           >
-                            <td className="py-2 px-3 text-slate-900 sticky left-0 bg-white pl-8">
+                            <td className="py-2 px-3 text-slate-900 sticky left-0 z-10 bg-white pl-8">
                               <div className="flex items-center gap-2">
                                 <ProviderLogo provider={expense.provider} size={18} />
                                 <span>
@@ -667,18 +667,24 @@ export default function DashboardPage() {
                 })}
 
                 {/* Total Expenses */}
-                <tr className="border-b border-slate-200 bg-red-50 font-semibold">
-                  <td className="py-2 px-3 text-red-800 sticky left-0 bg-red-50">Total Expenses</td>
+                <tr className="border-t border-slate-300 font-semibold">
+                  <td className="py-2 px-3 text-slate-900 sticky left-0 z-10 bg-white">
+                    Total Expenses
+                  </td>
                   {snapshots.map((s) => (
-                    <td key={s.month} className="py-2 px-3 text-right text-red-700">
-                      {formatCurrency(s.totalExpenses)}
+                    <td key={s.month} className="py-2 px-3 text-right text-red-600">
+                      {s.totalExpenses > 0 ? (
+                        formatCurrency(s.totalExpenses)
+                      ) : (
+                        <span className="text-slate-200">-</span>
+                      )}
                     </td>
                   ))}
                 </tr>
 
                 {/* Net Cash Flow */}
-                <tr className="border-b border-slate-200 bg-blue-50 font-bold">
-                  <td className="py-3 px-3 text-blue-900 sticky left-0 bg-blue-50">
+                <tr className="border-t border-slate-300 font-bold">
+                  <td className="py-3 px-3 text-slate-900 sticky left-0 z-10 bg-white">
                     Net Cash Flow
                   </td>
                   {snapshots.map((s) => (
@@ -692,8 +698,8 @@ export default function DashboardPage() {
                 </tr>
 
                 {/* Running Balance */}
-                <tr className="bg-slate-100 font-bold">
-                  <td className="py-3 px-3 text-slate-900 sticky left-0 bg-slate-100">
+                <tr className="border-t border-slate-300 font-bold bg-slate-50">
+                  <td className="py-3 px-3 text-slate-900 sticky left-0 z-10 bg-slate-50">
                     Running Balance
                   </td>
                   {snapshots.map((s) => (
