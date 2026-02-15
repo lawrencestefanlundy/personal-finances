@@ -46,17 +46,21 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
 
   const [error, setError] = useState<string | null>(null);
 
-  // Hydrate from API on mount
+  // Hydrate from API on mount (with retry for deployment transitions)
   useEffect(() => {
-    fetch('/api/state')
-      .then((res) => {
+    let cancelled = false;
+    const MAX_RETRIES = 3;
+    const RETRY_DELAY = 2000; // ms
+
+    async function loadState(attempt: number) {
+      try {
+        const res = await fetch('/api/state');
         if (!res.ok) {
           throw new Error(`API returned ${res.status}: ${res.statusText}`);
         }
-        return res.json();
-      })
-      .then((data) => {
-        // Guard: only import if the response looks like valid state (has arrays)
+        const data = await res.json();
+        if (cancelled) return;
+
         if (data && Array.isArray(data.cashPositions)) {
           dispatch({ type: 'IMPORT_DATA', payload: data as FinanceState });
         } else {
@@ -64,12 +68,24 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
           setError('Server returned invalid data. Please try refreshing.');
         }
         setLoading(false);
-      })
-      .catch((err) => {
-        console.error('Failed to load state from API:', err);
-        setError('Failed to connect to the server. Please try refreshing.');
-        setLoading(false);
-      });
+      } catch (err) {
+        if (cancelled) return;
+        console.error(`Failed to load state (attempt ${attempt}/${MAX_RETRIES}):`, err);
+
+        if (attempt < MAX_RETRIES) {
+          await new Promise((r) => setTimeout(r, RETRY_DELAY));
+          if (!cancelled) loadState(attempt + 1);
+        } else {
+          setError('Failed to connect to the server. Please try refreshing.');
+          setLoading(false);
+        }
+      }
+    }
+
+    loadState(1);
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Wrap dispatch to also sync to API (skip the initial IMPORT_DATA from hydration)
