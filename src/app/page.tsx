@@ -30,7 +30,6 @@ import {
 } from '@/lib/investmentFormatters';
 import WealthChart from '@/components/charts/WealthChart';
 import LiabilityChart from '@/components/charts/LiabilityChart';
-import AssetBreakdown from '@/components/charts/AssetBreakdown';
 import EditableCell from '@/components/EditableCell';
 import { PencilIcon, TrashIcon, PlusIcon } from '@/components/ui/Icons';
 import SlidePanel from '@/components/ui/SlidePanel';
@@ -44,7 +43,6 @@ import CarryPositionForm from '@/components/forms/CarryPositionForm';
 import PortfolioCompanyForm from '@/components/forms/PortfolioCompanyForm';
 import ProviderLogo from '@/components/ui/ProviderLogo';
 import TransactionList from '@/components/TransactionList';
-import AngelReliefTracker from '@/components/AngelReliefTracker';
 
 const CARRY_MULTIPLES = [2.0, 3.0, 5.0];
 
@@ -85,7 +83,13 @@ export default function DashboardPage() {
   const netWealth = currentYear?.netWealth ?? 0;
 
   const liquidCash = state.cashPositions
-    .filter((cp) => cp.category === 'cash' || cp.category === 'savings' || cp.category === 'crypto')
+    .filter(
+      (cp) =>
+        cp.category === 'cash' ||
+        cp.category === 'savings' ||
+        cp.category === 'isa' ||
+        cp.category === 'crypto',
+    )
     .reduce((sum, cp) => sum + cp.balance, 0);
 
   // ─── Asset computations ─────────────────────────────────────────────────────
@@ -311,7 +315,7 @@ export default function DashboardPage() {
           <StatCard
             title="Liquid Cash"
             value={formatCurrency(liquidCash)}
-            subtitle="Cash + savings + crypto"
+            subtitle="Cash + savings + ISA + crypto"
             color="green"
           />
         </div>
@@ -765,12 +769,6 @@ export default function DashboardPage() {
           <WealthChart projections={projections} />
         </div>
 
-        {/* Asset Breakdown Chart */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Asset Breakdown Over Time</h2>
-          <AssetBreakdown projections={projections} assets={state.assets} />
-        </div>
-
         {/* Balance Sheet */}
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
           <div className="flex items-center justify-between mb-4">
@@ -1168,10 +1166,12 @@ export default function DashboardPage() {
                               <span
                                 className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${asset.taxScheme === 'SEIS' ? 'bg-emerald-50 text-emerald-700' : 'bg-violet-50 text-violet-700'}`}
                               >
-                                {asset.taxScheme}
+                                {asset.taxScheme} Eligible
                               </span>
                             ) : (
-                              <span className="text-slate-300 text-xs">—</span>
+                              <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-500">
+                                Not Eligible
+                              </span>
                             )}
                           </td>
                           <td className="py-2 px-3 text-center text-xs text-slate-500">
@@ -1290,9 +1290,6 @@ export default function DashboardPage() {
             </div>
           </div>
         )}
-
-        {/* EIS/SEIS Relief Tracker */}
-        {angelAssets.length > 0 && <AngelReliefTracker angelAssets={angelAssets} />}
 
         {/* ── Carry Positions ── */}
         {state.carryPositions.length > 0 && (

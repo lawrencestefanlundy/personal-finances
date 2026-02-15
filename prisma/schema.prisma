@@ -67,6 +67,7 @@ model Asset {
   status           String?  // active, exited, written_off
   taxScheme        String?  // SEIS, EIS
   platform         String?  // odin, direct, feedforward
+  emailUpdates     String?  // JSON array of {subject, from, date, snippet}
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }

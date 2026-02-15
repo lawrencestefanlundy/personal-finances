@@ -79,6 +79,7 @@ export default function AssetForm({ existing, onClose }: AssetFormProps) {
         status: status as 'active' | 'exited' | 'written_off',
         ...(taxScheme ? { taxScheme: taxScheme as 'SEIS' | 'EIS' } : {}),
         ...(platform.trim() ? { platform: platform.trim() } : {}),
+        ...(existing?.emailUpdates ? { emailUpdates: existing.emailUpdates } : {}),
       } : {}),
     };
 
