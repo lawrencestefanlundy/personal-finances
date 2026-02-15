@@ -21,7 +21,7 @@ import {
   computeTotalPersonalCarryAtMultiple,
 } from '@/lib/carryCalculations';
 import { formatCurrency, formatMonth, formatPercent } from '@/lib/formatters';
-import { expenseCategories, assetCategories } from '@/data/categories';
+import { assetCategories } from '@/data/categories';
 import {
   formatCostBasis,
   formatMoic,
@@ -29,7 +29,6 @@ import {
   statusStyles,
 } from '@/lib/investmentFormatters';
 import WealthChart from '@/components/charts/WealthChart';
-import EditableCell from '@/components/EditableCell';
 import { PencilIcon, TrashIcon, PlusIcon } from '@/components/ui/Icons';
 import SlidePanel from '@/components/ui/SlidePanel';
 import DeleteConfirmation from '@/components/ui/DeleteConfirmation';
@@ -141,31 +140,6 @@ export default function DashboardPage() {
     () => computeTotalPersonalCarryAtMultiple(state.carryPositions, 5.0),
     [state.carryPositions],
   );
-
-  // ─── Cash Flow expense grouping ────────────────────────────────────────────
-  const expensesByCategory = useMemo(() => {
-    const groups: Record<string, typeof state.expenses> = {};
-    for (const expense of state.expenses) {
-      if (!groups[expense.category]) groups[expense.category] = [];
-      groups[expense.category].push(expense);
-    }
-    return groups;
-  }, [state.expenses]);
-
-  const categorySubtotals = useMemo(() => {
-    const result: Record<string, Record<string, number>> = {};
-    for (const [category, expenses] of Object.entries(expensesByCategory)) {
-      result[category] = {};
-      for (const s of snapshots) {
-        let total = 0;
-        for (const expense of expenses) {
-          total += s.expenseBreakdown[expense.id] || 0;
-        }
-        result[category][s.month] = total;
-      }
-    }
-    return result;
-  }, [expensesByCategory, snapshots]);
 
   // ─── Collapsible state ──────────────────────────────────────────────────────
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -384,100 +358,101 @@ export default function DashboardPage() {
         </div>
 
         {/* Monthly Forecast Table */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Monthly Forecast</h2>
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-max text-sm">
+            <table
+              className="w-full text-sm"
+              style={{ minWidth: `${200 + snapshots.length * 100}px` }}
+            >
               <thead>
-                <tr className="border-b border-slate-200">
-                  <th className="text-left py-2 px-3 font-semibold text-slate-600 sticky left-0 z-10 bg-white z-10 w-[200px] min-w-[200px] max-w-[200px]">
+                <tr className="border-b border-slate-200 bg-slate-50">
+                  <th className="text-left py-2.5 px-4 font-semibold text-slate-600 sticky left-0 z-10 bg-slate-50 w-[200px]">
                     Item
                   </th>
                   {snapshots.map((s) => (
                     <th
                       key={s.month}
-                      className="text-right py-2 px-3 font-semibold text-slate-600 w-[100px] min-w-[100px]"
+                      className="text-right py-2.5 px-3 font-semibold text-slate-600 whitespace-nowrap"
                     >
                       {formatMonth(s.month)}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody>
-                {/* Cash Positions */}
-                <tr
-                  className="bg-slate-50 cursor-pointer hover:bg-slate-100"
-                  onClick={() => toggleSection('cash')}
-                >
-                  <td className="py-2 px-3 font-bold text-slate-700 sticky left-0 z-10 bg-slate-50">
-                    <div className="flex items-center gap-2">
-                      {chevron(!!expanded['cash'])}
-                      <span>Cash Positions</span>
-                    </div>
-                  </td>
-                  <td className="py-2 px-3 text-right font-semibold text-slate-700">
-                    {formatCurrency(state.cashPositions.reduce((s, cp) => s + cp.balance, 0))}
-                  </td>
-                  {snapshots.slice(1).map((s) => (
-                    <td key={s.month} className="py-2 px-3 text-right text-slate-300">
-                      -
-                    </td>
-                  ))}
-                </tr>
-                {expanded['cash'] &&
-                  state.cashPositions.map((cp) => (
-                    <tr key={cp.id} className="border-b border-slate-50 hover:bg-slate-50 group">
-                      <td className="py-2 px-3 text-slate-900 sticky left-0 z-10 bg-white pl-8">
-                        <div className="flex items-center gap-2">
-                          <ProviderLogo provider={cp.provider} size={18} />
-                          <span>{cp.name}</span>
-                        </div>
-                      </td>
-                      <td className="py-2 px-3 text-right text-slate-900">
-                        <EditableCell
-                          value={cp.balance}
-                          onSave={(value) =>
-                            dispatch({
-                              type: 'UPDATE_CASH_POSITION',
-                              payload: { ...cp, balance: value },
-                            })
-                          }
-                        />
-                      </td>
-                      {snapshots.slice(1).map((s) => (
-                        <td key={s.month} className="py-2 px-3 text-right text-slate-300">
-                          -
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
 
-                {/* Earnings */}
-                <tr
-                  className="bg-slate-50 cursor-pointer hover:bg-slate-100"
-                  onClick={() => toggleSection('earnings')}
-                >
-                  <td className="py-2 px-3 font-bold text-slate-700 sticky left-0 z-10 bg-slate-50">
+              {/* ── Earnings ── */}
+              <tbody>
+                <tr className="border-b border-slate-100">
+                  <td
+                    className="py-2 px-4 font-bold text-slate-800 sticky left-0 z-10 bg-white"
+                    colSpan={snapshots.length + 1}
+                  >
                     <div className="flex items-center gap-2">
-                      {chevron(!!expanded['earnings'])}
                       <span>Earnings</span>
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
+                        onClick={() => {
                           setEditingIncome(undefined);
                           setPanelType('income');
                         }}
-                        className="p-0.5 rounded hover:bg-slate-200 text-slate-500 ml-auto"
+                        className="p-0.5 rounded hover:bg-slate-100 text-slate-400"
                         title="Add Income Stream"
                       >
-                        <PlusIcon />
+                        <PlusIcon className="w-3.5 h-3.5" />
                       </button>
                     </div>
+                  </td>
+                </tr>
+                {state.incomeStreams.map((stream) => (
+                  <tr key={stream.id} className="border-b border-slate-50 hover:bg-slate-50 group">
+                    <td className="py-1.5 px-4 text-slate-700 sticky left-0 z-10 bg-white">
+                      <div className="flex items-center gap-2">
+                        <ProviderLogo provider={stream.provider} size={16} />
+                        <span>{stream.name}</span>
+                        <div className="flex gap-0.5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => {
+                              setEditingIncome(stream);
+                              setPanelType('income');
+                            }}
+                            className="p-0.5 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
+                            title="Edit"
+                          >
+                            <PencilIcon />
+                          </button>
+                          <button
+                            onClick={() =>
+                              setDeleteTarget({ id: stream.id, name: stream.name, type: 'income' })
+                            }
+                            className="p-0.5 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
+                            title="Delete"
+                          >
+                            <TrashIcon />
+                          </button>
+                        </div>
+                      </div>
+                    </td>
+                    {snapshots.map((s) => {
+                      const amount = s.incomeBreakdown[stream.id] || 0;
+                      return (
+                        <td key={s.month} className="py-1.5 px-3 text-right tabular-nums">
+                          {amount > 0 ? (
+                            <span className="text-emerald-600">{formatCurrency(amount)}</span>
+                          ) : (
+                            <span className="text-slate-200">-</span>
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+                <tr className="border-b border-slate-200 bg-slate-50 font-semibold">
+                  <td className="py-2 px-4 text-slate-800 sticky left-0 z-10 bg-slate-50">
+                    Total Earnings
                   </td>
                   {snapshots.map((s) => (
                     <td
                       key={s.month}
-                      className="py-2 px-3 text-right font-semibold text-emerald-700"
+                      className="py-2 px-3 text-right tabular-nums text-emerald-700"
                     >
                       {s.totalIncome > 0 ? (
                         formatCurrency(s.totalIncome)
@@ -487,173 +462,83 @@ export default function DashboardPage() {
                     </td>
                   ))}
                 </tr>
-                {expanded['earnings'] &&
-                  state.incomeStreams.map((stream) => (
-                    <tr
-                      key={stream.id}
-                      className="border-b border-slate-50 hover:bg-slate-50 group"
-                    >
-                      <td className="py-2 px-3 text-slate-900 sticky left-0 z-10 bg-white pl-8">
-                        <div className="flex items-center gap-2">
-                          <ProviderLogo provider={stream.provider} size={18} />
-                          <span>{stream.name}</span>
-                          <div className="flex gap-0.5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button
-                              onClick={() => {
-                                setEditingIncome(stream);
-                                setPanelType('income');
-                              }}
-                              className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
-                              title="Edit"
-                            >
-                              <PencilIcon />
-                            </button>
-                            <button
-                              onClick={() =>
-                                setDeleteTarget({
-                                  id: stream.id,
-                                  name: stream.name,
-                                  type: 'income',
-                                })
-                              }
-                              className="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
-                              title="Delete"
-                            >
-                              <TrashIcon />
-                            </button>
-                          </div>
-                        </div>
-                      </td>
-                      {snapshots.map((s) => {
-                        const amount = s.incomeBreakdown[stream.id] || 0;
-                        return (
-                          <td key={s.month} className="py-2 px-3 text-right">
-                            {amount > 0 ? (
-                              <span className="text-emerald-600">{formatCurrency(amount)}</span>
-                            ) : (
-                              <span className="text-slate-200">-</span>
-                            )}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
+              </tbody>
 
-                {/* Expense Categories */}
-                {Object.entries(expensesByCategory).map(([category, expenses], catIdx) => {
-                  const meta = expenseCategories[category as keyof typeof expenseCategories];
-                  const sectionKey = `expense-${category}`;
-                  const isExpanded = expanded[sectionKey];
-                  return (
-                    <tbody key={category}>
-                      <tr
-                        className="bg-slate-50 cursor-pointer hover:bg-slate-100"
-                        onClick={() => toggleSection(sectionKey)}
+              {/* ── Expenses ── */}
+              <tbody>
+                <tr className="border-b border-slate-100">
+                  <td
+                    className="py-2 px-4 font-bold text-slate-800 sticky left-0 z-10 bg-white"
+                    colSpan={snapshots.length + 1}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span>Expenses</span>
+                      <button
+                        onClick={() => {
+                          setEditingExpense(undefined);
+                          setPanelType('expense');
+                        }}
+                        className="p-0.5 rounded hover:bg-slate-100 text-slate-400"
+                        title="Add Expense"
                       >
-                        <td className="py-2 px-3 font-bold text-slate-700 sticky left-0 z-10 bg-slate-50">
-                          <div className="flex items-center gap-2">
-                            {chevron(!!isExpanded)}
-                            <span>{meta?.label || category}</span>
-                            {catIdx === 0 && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setEditingExpense(undefined);
-                                  setPanelType('expense');
-                                }}
-                                className="p-0.5 rounded hover:bg-slate-200 text-slate-500 ml-auto"
-                                title="Add Expense"
-                              >
-                                <PlusIcon />
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                        {snapshots.map((s) => {
-                          const subtotal = categorySubtotals[category]?.[s.month] || 0;
-                          return (
-                            <td
-                              key={s.month}
-                              className="py-2 px-3 text-right font-medium text-slate-700"
-                            >
-                              {subtotal > 0 ? (
-                                formatCurrency(subtotal)
-                              ) : (
-                                <span className="text-slate-200">-</span>
-                              )}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                      {isExpanded &&
-                        expenses.map((expense) => (
-                          <tr
-                            key={expense.id}
-                            className="border-b border-slate-50 hover:bg-slate-50 group"
+                        <PlusIcon className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                {state.expenses.map((expense) => (
+                  <tr key={expense.id} className="border-b border-slate-50 hover:bg-slate-50 group">
+                    <td className="py-1.5 px-4 text-slate-700 sticky left-0 z-10 bg-white">
+                      <div className="flex items-center gap-2">
+                        <ProviderLogo provider={expense.provider} size={16} />
+                        <span>{expense.name}</span>
+                        <div className="flex gap-0.5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => {
+                              setEditingExpense(expense);
+                              setPanelType('expense');
+                            }}
+                            className="p-0.5 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
+                            title="Edit"
                           >
-                            <td className="py-2 px-3 text-slate-900 sticky left-0 z-10 bg-white pl-8">
-                              <div className="flex items-center gap-2">
-                                <ProviderLogo provider={expense.provider} size={18} />
-                                <span>
-                                  {expense.name}
-                                  {expense.provider && (
-                                    <span className="text-slate-400 text-xs ml-1">
-                                      ({expense.provider})
-                                    </span>
-                                  )}
-                                </span>
-                                <div className="flex gap-0.5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <button
-                                    onClick={() => {
-                                      setEditingExpense(expense);
-                                      setPanelType('expense');
-                                    }}
-                                    className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
-                                    title="Edit"
-                                  >
-                                    <PencilIcon />
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      setDeleteTarget({
-                                        id: expense.id,
-                                        name: expense.name,
-                                        type: 'expense',
-                                      })
-                                    }
-                                    className="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
-                                    title="Delete"
-                                  >
-                                    <TrashIcon />
-                                  </button>
-                                </div>
-                              </div>
-                            </td>
-                            {snapshots.map((s) => {
-                              const amount = s.expenseBreakdown[expense.id] || 0;
-                              return (
-                                <td key={s.month} className="py-2 px-3 text-right">
-                                  {amount > 0 ? (
-                                    <span className="text-red-600">{formatCurrency(amount)}</span>
-                                  ) : (
-                                    <span className="text-slate-200">-</span>
-                                  )}
-                                </td>
-                              );
-                            })}
-                          </tr>
-                        ))}
-                    </tbody>
-                  );
-                })}
-
-                {/* Total Expenses */}
-                <tr className="border-t border-slate-300 font-semibold">
-                  <td className="py-2 px-3 text-slate-900 sticky left-0 z-10 bg-white">
+                            <PencilIcon />
+                          </button>
+                          <button
+                            onClick={() =>
+                              setDeleteTarget({
+                                id: expense.id,
+                                name: expense.name,
+                                type: 'expense',
+                              })
+                            }
+                            className="p-0.5 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
+                            title="Delete"
+                          >
+                            <TrashIcon />
+                          </button>
+                        </div>
+                      </div>
+                    </td>
+                    {snapshots.map((s) => {
+                      const amount = s.expenseBreakdown[expense.id] || 0;
+                      return (
+                        <td key={s.month} className="py-1.5 px-3 text-right tabular-nums">
+                          {amount > 0 ? (
+                            <span className="text-slate-700">{formatCurrency(amount)}</span>
+                          ) : (
+                            <span className="text-slate-200">-</span>
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+                <tr className="border-b border-slate-200 bg-slate-50 font-semibold">
+                  <td className="py-2 px-4 text-slate-800 sticky left-0 z-10 bg-slate-50">
                     Total Expenses
                   </td>
                   {snapshots.map((s) => (
-                    <td key={s.month} className="py-2 px-3 text-right text-red-600">
+                    <td key={s.month} className="py-2 px-3 text-right tabular-nums text-red-600">
                       {s.totalExpenses > 0 ? (
                         formatCurrency(s.totalExpenses)
                       ) : (
@@ -662,31 +547,31 @@ export default function DashboardPage() {
                     </td>
                   ))}
                 </tr>
+              </tbody>
 
-                {/* Net Cash Flow */}
-                <tr className="border-t border-slate-300 font-bold">
-                  <td className="py-3 px-3 text-slate-900 sticky left-0 z-10 bg-white">
+              {/* ── Summary ── */}
+              <tbody>
+                <tr className="border-b border-slate-200 font-bold">
+                  <td className="py-2.5 px-4 text-slate-900 sticky left-0 z-10 bg-white">
                     Net Cash Flow
                   </td>
                   {snapshots.map((s) => (
                     <td
                       key={s.month}
-                      className={`py-3 px-3 text-right ${s.netCashFlow >= 0 ? 'text-emerald-700' : 'text-red-700'}`}
+                      className={`py-2.5 px-3 text-right tabular-nums ${s.netCashFlow >= 0 ? 'text-emerald-700' : 'text-red-700'}`}
                     >
                       {formatCurrency(s.netCashFlow)}
                     </td>
                   ))}
                 </tr>
-
-                {/* Running Balance */}
-                <tr className="border-t border-slate-300 font-bold bg-slate-50">
-                  <td className="py-3 px-3 text-slate-900 sticky left-0 z-10 bg-slate-50">
+                <tr className="font-bold bg-slate-50">
+                  <td className="py-2.5 px-4 text-slate-900 sticky left-0 z-10 bg-slate-50">
                     Running Balance
                   </td>
                   {snapshots.map((s) => (
                     <td
                       key={s.month}
-                      className={`py-3 px-3 text-right ${s.runningBalance >= 0 ? 'text-slate-900' : 'text-red-700'}`}
+                      className={`py-2.5 px-3 text-right tabular-nums ${s.runningBalance >= 0 ? 'text-slate-900' : 'text-red-700'}`}
                     >
                       {formatCurrency(s.runningBalance)}
                     </td>
