@@ -72,8 +72,7 @@ export default function DashboardPage() {
   const { state, dispatch } = useFinance();
 
   // ─── Cash Flow ──────────────────────────────────────────────────────────────
-  const [showMonths, setShowMonths] = useState(12);
-  const snapshots = useMemo(() => computeMonthlySnapshots(state, showMonths), [state, showMonths]);
+  const snapshots = useMemo(() => computeMonthlySnapshots(state, 12), [state]);
 
   // ─── Projections ────────────────────────────────────────────────────────────
   const projections = useMemo(() => computeYearlyProjections(state), [state]);
@@ -339,21 +338,6 @@ export default function DashboardPage() {
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Cash Flow</h1>
             <p className="text-sm text-slate-500 mt-1">Income, expenses, and running balance</p>
-          </div>
-          <div className="flex gap-2">
-            {[6, 12, 24, 50].map((n) => (
-              <button
-                key={n}
-                onClick={() => setShowMonths(n)}
-                className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-                  showMonths === n
-                    ? 'bg-slate-900 text-white'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                {n}m
-              </button>
-            ))}
           </div>
         </div>
 
