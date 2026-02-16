@@ -389,27 +389,6 @@ export default function DashboardPage() {
     setDeleteTarget(null);
   };
 
-  const handleReorder = (carryPositionId: string, companyId: string, direction: 'up' | 'down') => {
-    const cp = state.carryPositions.find((c) => c.id === carryPositionId);
-    if (!cp) return;
-    const companies = [...cp.portfolioCompanies];
-    const idx = companies.findIndex((c) => c.id === companyId);
-    if (idx < 0) return;
-    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
-    if (swapIdx < 0 || swapIdx >= companies.length) return;
-    // Swap displayOrder values
-    const orderA = companies[idx].displayOrder ?? idx;
-    const orderB = companies[swapIdx].displayOrder ?? swapIdx;
-    companies[idx] = { ...companies[idx], displayOrder: orderB };
-    companies[swapIdx] = { ...companies[swapIdx], displayOrder: orderA };
-    // Re-sort by displayOrder
-    companies.sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0));
-    dispatch({
-      type: 'UPDATE_CARRY_POSITION',
-      payload: { ...cp, portfolioCompanies: companies },
-    });
-  };
-
   const chevron = (isExpanded: boolean) => (
     <svg
       className={`w-3.5 h-3.5 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
@@ -1471,7 +1450,6 @@ export default function DashboardPage() {
                 onDeleteFund={() =>
                   setDeleteTarget({ id: cp.id, name: cp.fundName, type: 'carryFund' })
                 }
-                onReorder={(companyId, direction) => handleReorder(cp.id, companyId, direction)}
               />
             ))}
           </>
@@ -1554,15 +1532,92 @@ interface FundSectionProps {
   carryPosition: CarryPosition;
   onEditFund: () => void;
   onDeleteFund: () => void;
-  onReorder: (companyId: string, direction: 'up' | 'down') => void;
 }
 
-function FundSection({ carryPosition, onEditFund, onDeleteFund, onReorder }: FundSectionProps) {
+type FundSortKey =
+  | 'name'
+  | 'date'
+  | 'geography'
+  | 'industry'
+  | 'ownership'
+  | 'cost'
+  | 'fairValue'
+  | 'return'
+  | 'moic'
+  | 'irr'
+  | 'status';
+
+function FundSection({ carryPosition, onEditFund, onDeleteFund }: FundSectionProps) {
   const scenarios = useMemo(
     () => computeCarryScenarios(carryPosition, CARRY_MULTIPLES),
     [carryPosition],
   );
   const metrics = useMemo(() => computePortfolioMetrics(carryPosition), [carryPosition]);
+
+  const [fundSortKey, setFundSortKey] = useState<FundSortKey>('name');
+  const [fundSortDir, setFundSortDir] = useState<'asc' | 'desc'>('asc');
+
+  const handleFundSort = (key: FundSortKey) => {
+    if (fundSortKey === key) {
+      setFundSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setFundSortKey(key);
+      setFundSortDir(
+        key === 'name' || key === 'geography' || key === 'industry' || key === 'status'
+          ? 'asc'
+          : 'desc',
+      );
+    }
+  };
+
+  const fundSortIndicator = (key: FundSortKey) =>
+    fundSortKey === key ? (fundSortDir === 'asc' ? ' ▲' : ' ▼') : '';
+
+  const sortedCompanies = (() => {
+    const dir = fundSortDir === 'asc' ? 1 : -1;
+    return [...carryPosition.portfolioCompanies].sort((a, b) => {
+      const statusOrder: Record<string, number> = {
+        active: 0,
+        marked_up: 1,
+        exited: 2,
+        written_off: 3,
+      };
+      switch (fundSortKey) {
+        case 'name':
+          return dir * a.name.localeCompare(b.name);
+        case 'date':
+          return dir * (a.investmentDate ?? '').localeCompare(b.investmentDate ?? '');
+        case 'geography':
+          return dir * (a.geography ?? '').localeCompare(b.geography ?? '');
+        case 'industry':
+          return dir * (a.industry ?? '').localeCompare(b.industry ?? '');
+        case 'ownership':
+          return dir * ((a.ownershipPercent ?? 0) - (b.ownershipPercent ?? 0));
+        case 'cost':
+          return dir * (a.investedAmount - b.investedAmount);
+        case 'fairValue':
+          return dir * (a.currentValuation - b.currentValuation);
+        case 'return': {
+          const retA =
+            a.currentValuation + (a.proceeds ?? 0) + (a.cashIncome ?? 0) - a.investedAmount;
+          const retB =
+            b.currentValuation + (b.proceeds ?? 0) + (b.cashIncome ?? 0) - b.investedAmount;
+          return dir * (retA - retB);
+        }
+        case 'moic': {
+          const moicA = a.investedAmount > 0 ? a.currentValuation / a.investedAmount : 0;
+          const moicB = b.investedAmount > 0 ? b.currentValuation / b.investedAmount : 0;
+          return dir * (moicA - moicB);
+        }
+        case 'irr':
+          return dir * ((a.irr ?? 0) - (b.irr ?? 0));
+        case 'status':
+          return dir * ((statusOrder[a.status] ?? 0) - (statusOrder[b.status] ?? 0));
+        default:
+          return 0;
+      }
+    });
+  })();
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
@@ -1646,22 +1701,76 @@ function FundSection({ carryPosition, onEditFund, onDeleteFund, onReorder }: Fun
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-200">
-                  <th className="w-10 py-2 px-1"></th>
-                  <th className="text-left py-2 px-3 font-semibold text-slate-600">Name</th>
-                  <th className="text-center py-2 px-3 font-semibold text-slate-600">Date</th>
-                  <th className="text-left py-2 px-3 font-semibold text-slate-600">Geography</th>
-                  <th className="text-left py-2 px-3 font-semibold text-slate-600">Industry</th>
-                  <th className="text-right py-2 px-3 font-semibold text-slate-600">Ownership</th>
-                  <th className="text-right py-2 px-3 font-semibold text-slate-600">Cost</th>
-                  <th className="text-right py-2 px-3 font-semibold text-slate-600">Fair Value</th>
-                  <th className="text-right py-2 px-3 font-semibold text-slate-600">Return</th>
-                  <th className="text-right py-2 px-3 font-semibold text-slate-600">MOIC</th>
-                  <th className="text-right py-2 px-3 font-semibold text-slate-600">IRR</th>
-                  <th className="text-center py-2 px-3 font-semibold text-slate-600">Status</th>
+                  <th
+                    className="text-left py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                    onClick={() => handleFundSort('name')}
+                  >
+                    Name{fundSortIndicator('name')}
+                  </th>
+                  <th
+                    className="text-center py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                    onClick={() => handleFundSort('date')}
+                  >
+                    Date{fundSortIndicator('date')}
+                  </th>
+                  <th
+                    className="text-left py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                    onClick={() => handleFundSort('geography')}
+                  >
+                    Geography{fundSortIndicator('geography')}
+                  </th>
+                  <th
+                    className="text-left py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                    onClick={() => handleFundSort('industry')}
+                  >
+                    Industry{fundSortIndicator('industry')}
+                  </th>
+                  <th
+                    className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                    onClick={() => handleFundSort('ownership')}
+                  >
+                    Ownership{fundSortIndicator('ownership')}
+                  </th>
+                  <th
+                    className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                    onClick={() => handleFundSort('cost')}
+                  >
+                    Cost{fundSortIndicator('cost')}
+                  </th>
+                  <th
+                    className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                    onClick={() => handleFundSort('fairValue')}
+                  >
+                    Fair Value{fundSortIndicator('fairValue')}
+                  </th>
+                  <th
+                    className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                    onClick={() => handleFundSort('return')}
+                  >
+                    Return{fundSortIndicator('return')}
+                  </th>
+                  <th
+                    className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                    onClick={() => handleFundSort('moic')}
+                  >
+                    MOIC{fundSortIndicator('moic')}
+                  </th>
+                  <th
+                    className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                    onClick={() => handleFundSort('irr')}
+                  >
+                    IRR{fundSortIndicator('irr')}
+                  </th>
+                  <th
+                    className="text-center py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                    onClick={() => handleFundSort('status')}
+                  >
+                    Status{fundSortIndicator('status')}
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {carryPosition.portfolioCompanies.map((company, idx) => {
+                {sortedCompanies.map((company) => {
                   const moic =
                     company.investedAmount > 0
                       ? company.currentValuation / company.investedAmount
@@ -1670,49 +1779,11 @@ function FundSection({ carryPosition, onEditFund, onDeleteFund, onReorder }: Fun
                   const totalReturn =
                     company.currentValuation + totalCashRealised - company.investedAmount;
                   const statusMeta = STATUS_LABELS[company.status] ?? STATUS_LABELS.active;
-                  const isFirst = idx === 0;
-                  const isLast = idx === carryPosition.portfolioCompanies.length - 1;
                   return (
                     <tr
                       key={company.id}
                       className="border-b border-slate-50 hover:bg-slate-50 group"
                     >
-                      <td className="py-1 px-1 text-center">
-                        <div className="flex flex-col items-center gap-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={() => onReorder(company.id, 'up')}
-                            disabled={isFirst}
-                            className="p-0.5 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-200 disabled:opacity-20 disabled:cursor-not-allowed"
-                            title="Move up"
-                          >
-                            <svg
-                              className="w-3 h-3"
-                              viewBox="0 0 12 12"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                            >
-                              <path d="M2 8L6 4L10 8" />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={() => onReorder(company.id, 'down')}
-                            disabled={isLast}
-                            className="p-0.5 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-200 disabled:opacity-20 disabled:cursor-not-allowed"
-                            title="Move down"
-                          >
-                            <svg
-                              className="w-3 h-3"
-                              viewBox="0 0 12 12"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                            >
-                              <path d="M2 4L6 8L10 4" />
-                            </svg>
-                          </button>
-                        </div>
-                      </td>
                       <td className="py-2 px-3 font-medium text-slate-900">
                         <div>
                           <span>{company.name}</span>
@@ -1775,7 +1846,6 @@ function FundSection({ carryPosition, onEditFund, onDeleteFund, onReorder }: Fun
                   );
                 })}
                 <tr className="bg-slate-50 font-semibold">
-                  <td className="py-2 px-1"></td>
                   <td className="py-2 px-3 text-slate-900">Total</td>
                   <td className="py-2 px-3" colSpan={4}></td>
                   <td className="py-2 px-3 text-right text-slate-900">
