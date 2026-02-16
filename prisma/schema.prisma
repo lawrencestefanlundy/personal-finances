@@ -72,9 +72,13 @@ model Asset {
   fxRate           Float?   // historical XE rate used (foreign currency to GBP)
   instrument       String?  // safe, equity, options, advance_subscription
   investmentDate   String?  // ISO date
+  exitDate         String?  // ISO date
+  exitMethod       String?  // write_off, secondary, acquisition, ipo
   status           String?  // active, exited, written_off
   taxScheme        String?  // SEIS, EIS
-  platform         String?  // odin, direct, feedforward
+  platform         String?  // odin, direct, feedforward, vauban, seedlegals
+  geography        String?  // UK, US, Switzerland, etc.
+  industry         String?  // sector/industry description
   emailUpdates     String?  // JSON array of {subject, from, date, snippet}
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
@@ -133,10 +137,20 @@ model CarryPosition {
 model PortfolioCompany {
   id               String        @id
   name             String
+  legalEntity      String?
   investedAmount   Float
   currentValuation Float
   ownershipPercent Float
   status           String        // active, exited, written_off, marked_up
+  investmentDate   String?       // MMM-YY e.g. "Apr-20"
+  exitDate         String?       // MMM-YY e.g. "Jun-25"
+  holdingPeriod    Float?        // years
+  exitMethod       String?       // secondary, write_off, ipo, acquisition
+  geography        String?
+  industry         String?
+  proceeds         Float?        // cash proceeds/repayments
+  cashIncome       Float?        // dividends/interest received
+  irr              Float?        // gross IRR as decimal (e.g. 0.2863 = 28.63%)
   notes            String?
   carryPositionId  String
   carryPosition    CarryPosition @relation(fields: [carryPositionId], references: [id], onDelete: Cascade)

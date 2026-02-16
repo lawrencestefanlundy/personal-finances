@@ -101,9 +101,13 @@ export interface Asset {
   fxRate?: number; // historical XE rate used for conversion (foreign currency → GBP)
   instrument?: string; // safe, equity, options, advance_subscription
   investmentDate?: string; // ISO date
+  exitDate?: string; // ISO date
+  exitMethod?: string; // write_off, secondary, acquisition, ipo
   status?: 'active' | 'exited' | 'written_off';
   taxScheme?: 'SEIS' | 'EIS';
-  platform?: string; // odin, direct, feedforward
+  platform?: string; // odin, direct, feedforward, vauban, seedlegals
+  geography?: string;
+  industry?: string;
   emailUpdates?: string; // JSON string of EmailUpdate[]
 }
 
@@ -174,10 +178,20 @@ export type PortfolioCompanyStatus = 'active' | 'exited' | 'written_off' | 'mark
 export interface PortfolioCompany {
   id: string;
   name: string;
-  investedAmount: number; // fund's investment in this company
-  currentValuation: number; // current estimated valuation of holding
-  ownershipPercent: number; // fund's ownership % (decimal, e.g. 0.15 = 15%)
+  legalEntity?: string;
+  investedAmount: number; // fund's investment in this company (EUR)
+  currentValuation: number; // current fair value of holding (EUR)
+  ownershipPercent: number; // fund's fully-diluted ownership % (decimal, e.g. 0.15 = 15%)
   status: PortfolioCompanyStatus;
+  investmentDate?: string; // MMM-YY e.g. "Apr-20"
+  exitDate?: string; // MMM-YY e.g. "Jun-25"
+  holdingPeriod?: number; // years
+  exitMethod?: string; // secondary, write_off, ipo, acquisition
+  geography?: string;
+  industry?: string;
+  proceeds?: number; // cash proceeds/repayments (EUR)
+  cashIncome?: number; // dividends/interest received (EUR)
+  irr?: number; // gross IRR as decimal (e.g. 0.2863 = 28.63%)
   notes?: string;
 }
 
