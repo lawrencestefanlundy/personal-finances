@@ -586,7 +586,7 @@ export const seedData: FinanceState = {
     {
       id: 'asset-angel-nevermined',
       name: 'Nevermined',
-      currentValue: 21064,
+      currentValue: 34984,
       annualGrowthRate: 0,
       category: 'angel',
       isLiquid: false,
@@ -597,7 +597,7 @@ export const seedData: FinanceState = {
       fxRate: 0.7986,
       investmentDate: '2022-02-14',
       notes:
-        'Swiss AG. CHF 25,000. 211 shares (0.15% post-dilution). Nov 2024 SHA Addendum: €12M pre-money / €15M post-money (€3M raised). Co-investor share price €118.71. Current value: 211 × €118.71 × 0.84091 EUR/GBP = £21,064. Agentic commerce focus.',
+        'Swiss AG. CHF 25,000. 211 shares (0.15% post-dilution). Seed: €12M pre-money / €15M post-money, co-investor price €118.71/share. Nov 2024 upround: new shares at USD $209/share (~$3.5M raised, resolved at AGM 26 Nov 2024). Current value: 211 × $209 × 0.7934 USD/GBP = £34,984 (1.75x MOIC). Agentic commerce focus.',
       emailUpdates:
         '[{"subject":"Nevermined AG - Invitation to the Annual General Meeting of Shareholders","from":"Don Gossen <don@nevermined.ai>","date":"2025-06-04","snippet":"Annual general meeting of shareholders invitation."},{"subject":"Cheers to 2025 and Hello to 2026: The Year of Agentic Commerce","from":"Don Gossen <don@nevermined.ai>","date":"2025-12-31","snippet":"Reflecting on 2025 progress and outlining plans for agentic commerce."}]',
     },
