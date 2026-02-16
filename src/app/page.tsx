@@ -36,6 +36,7 @@ import CarryPositionForm from '@/components/forms/CarryPositionForm';
 import PortfolioCompanyForm from '@/components/forms/PortfolioCompanyForm';
 import ProviderLogo from '@/components/ui/ProviderLogo';
 import TransactionList from '@/components/TransactionList';
+import { useEurGbpRate } from '@/hooks/useEurGbpRate';
 
 const CARRY_MULTIPLES = [2.0, 3.0, 5.0];
 
@@ -113,7 +114,6 @@ export default function DashboardPage() {
   // ─── Projections ────────────────────────────────────────────────────────────
   const projections = useMemo(() => computeYearlyProjections(state), [state]);
   const currentYear = projections[0];
-  const netWealth = currentYear?.netWealth ?? 0;
 
   const liquidCash = state.cashPositions
     .filter(
@@ -125,11 +125,24 @@ export default function DashboardPage() {
     )
     .reduce((sum, cp) => sum + cp.balance, 0);
 
+  // ─── FX Rate ───────────────────────────────────────────────────────────────
+  const eurGbp = useEurGbpRate();
+
+  // ─── Carry positions valued in GBP ────────────────────────────────────────
+  const carryValuationGBP = useMemo(() => {
+    return state.carryPositions.reduce((sum, cp) => {
+      const fundEUR = cp.portfolioCompanies.reduce((s, c) => s + c.currentValuation, 0);
+      return sum + fundEUR * eurGbp.rate;
+    }, 0);
+  }, [state.carryPositions, eurGbp.rate]);
+
   // ─── Asset computations ─────────────────────────────────────────────────────
-  const totalAssets = state.assets.reduce((sum, a) => sum + a.currentValue, 0);
+  const baseAssets = state.assets.reduce((sum, a) => sum + a.currentValue, 0);
+  const totalAssets = baseAssets + carryValuationGBP;
   const totalLiabilities = state.liabilities
     .filter((l) => l.type !== 'student_loan')
     .reduce((sum, l) => sum + l.currentBalance, 0);
+  const netWealth = totalAssets - totalLiabilities;
   const liquidAssets = state.assets
     .filter((a) => a.isLiquid)
     .reduce((sum, a) => sum + a.currentValue, 0);
@@ -477,7 +490,10 @@ export default function DashboardPage() {
                 <p className="text-2xl font-bold mt-1 text-emerald-600">
                   {formatCurrency(totalAssets)}
                 </p>
-                <p className="text-xs text-slate-400 mt-1">{state.assets.length} positions</p>
+                <p className="text-xs text-slate-400 mt-1">
+                  {state.assets.length} positions
+                  {state.carryPositions.length > 0 && ` + ${state.carryPositions.length} carry`}
+                </p>
               </div>
               <span className="text-slate-400">{chevron(!!expanded['summary-assets'])}</span>
             </div>
@@ -512,6 +528,21 @@ export default function DashboardPage() {
                     </span>
                   </div>
                 )}
+                {state.carryPositions.map((cp) => {
+                  const fundEUR = cp.portfolioCompanies.reduce((s, c) => s + c.currentValuation, 0);
+                  return (
+                    <div key={cp.id} className="flex items-center justify-between py-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <ProviderLogo provider={cp.provider} size={14} />
+                        <span className="text-xs text-slate-600">{cp.fundName}</span>
+                        <span className="text-[10px] text-indigo-500">Carry</span>
+                      </div>
+                      <span className="text-xs font-medium text-slate-700 tabular-nums">
+                        {formatCurrency(fundEUR * eurGbp.rate)}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -575,6 +606,18 @@ export default function DashboardPage() {
             {expanded['summary-netwealth'] && (
               <div className="px-6 pb-4 pt-0 border-t border-slate-100 space-y-1">
                 <div className="flex items-center justify-between py-0.5">
+                  <span className="text-xs text-slate-600">Assets (excl. carry)</span>
+                  <span className="text-xs font-medium text-emerald-600 tabular-nums">
+                    {formatCurrency(baseAssets)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between py-0.5">
+                  <span className="text-xs text-slate-600">Carry Positions (EUR→GBP)</span>
+                  <span className="text-xs font-medium text-indigo-600 tabular-nums">
+                    {formatCurrency(carryValuationGBP)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between py-0.5">
                   <span className="text-xs text-slate-600">Total Assets</span>
                   <span className="text-xs font-medium text-emerald-600 tabular-nums">
                     {formatCurrency(totalAssets)}
@@ -598,6 +641,14 @@ export default function DashboardPage() {
                     {totalAssets > 0
                       ? `${Math.round((liquidAssets / totalAssets) * 100)}% / ${Math.round((illiquidAssets / totalAssets) * 100)}%`
                       : '—'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between py-0.5">
+                  <span className="text-xs text-slate-400">EUR/GBP</span>
+                  <span className="text-xs text-slate-400 tabular-nums">
+                    {eurGbp.rate.toFixed(4)}
+                    {eurGbp.date && ` (${eurGbp.date})`}
+                    {eurGbp.source === 'fallback' && ' ⚠ fallback'}
                   </span>
                 </div>
               </div>
@@ -932,8 +983,16 @@ export default function DashboardPage() {
 
         {/* Balance Sheet */}
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-          <div className="mb-4">
+          <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-slate-900">Balance Sheet</h2>
+            {carryValuationGBP > 0 && (
+              <span className="text-[10px] text-slate-400">
+                EUR/GBP {eurGbp.rate.toFixed(4)}
+                {eurGbp.source === 'ecb' && ' (ECB live)'}
+                {eurGbp.source === 'ecb-cached' && ' (ECB cached)'}
+                {eurGbp.source === 'fallback' && ' ⚠ fallback'}
+              </span>
+            )}
           </div>
           <div className="space-y-1">
             <div className="flex items-center justify-between py-2 px-3 bg-emerald-50 rounded-t-lg">
@@ -1014,6 +1073,30 @@ export default function DashboardPage() {
                 </span>
               </div>
             )}
+            {state.carryPositions.map((cp) => {
+              const fundEUR = cp.portfolioCompanies.reduce((s, c) => s + c.currentValuation, 0);
+              const fundGBP = fundEUR * eurGbp.rate;
+              return (
+                <div
+                  key={cp.id}
+                  className="flex items-center justify-between py-2 px-3 hover:bg-slate-50"
+                >
+                  <div className="flex items-center gap-2">
+                    <ProviderLogo provider={cp.provider} size={16} />
+                    <span className="text-sm text-slate-700">{cp.fundName}</span>
+                    <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700">
+                      Carry
+                    </span>
+                    <span className="text-[10px] text-slate-400">
+                      {formatEUR(fundEUR)} @{eurGbp.rate.toFixed(4)}
+                    </span>
+                  </div>
+                  <span className="text-sm font-medium text-slate-900">
+                    {formatCurrency(fundGBP)}
+                  </span>
+                </div>
+              );
+            })}
 
             {/* Liabilities */}
             <div className="flex items-center justify-between py-2 px-3 bg-red-50 mt-4 rounded-t-lg">
@@ -1443,6 +1526,7 @@ export default function DashboardPage() {
               <FundSection
                 key={cp.id}
                 carryPosition={cp}
+                eurGbpRate={eurGbp.rate}
                 onEditFund={() => {
                   setEditingFund(cp);
                   setPanelType('carryFund');
@@ -1530,6 +1614,7 @@ export default function DashboardPage() {
 
 interface FundSectionProps {
   carryPosition: CarryPosition;
+  eurGbpRate: number;
   onEditFund: () => void;
   onDeleteFund: () => void;
 }
@@ -1547,7 +1632,7 @@ type FundSortKey =
   | 'irr'
   | 'status';
 
-function FundSection({ carryPosition, onEditFund, onDeleteFund }: FundSectionProps) {
+function FundSection({ carryPosition, eurGbpRate, onEditFund, onDeleteFund }: FundSectionProps) {
   const scenarios = useMemo(
     () => computeCarryScenarios(carryPosition, CARRY_MULTIPLES),
     [carryPosition],
@@ -1651,14 +1736,16 @@ function FundSection({ carryPosition, onEditFund, onDeleteFund }: FundSectionPro
         <div>
           <p className="text-xs text-slate-500">Fund Size</p>
           <p className="text-sm font-semibold text-slate-900">
-            {formatEUR(carryPosition.fundSize)}
+            {formatCurrency(carryPosition.fundSize * eurGbpRate)}
           </p>
+          <p className="text-[10px] text-slate-400">{formatEUR(carryPosition.fundSize)}</p>
         </div>
         <div>
           <p className="text-xs text-slate-500">Committed</p>
           <p className="text-sm font-semibold text-slate-900">
-            {formatEUR(carryPosition.committedCapital)}
+            {formatCurrency(carryPosition.committedCapital * eurGbpRate)}
           </p>
+          <p className="text-[10px] text-slate-400">{formatEUR(carryPosition.committedCapital)}</p>
         </div>
         <div>
           <p className="text-xs text-slate-500">Carry %</p>
@@ -1685,7 +1772,10 @@ function FundSection({ carryPosition, onEditFund, onDeleteFund }: FundSectionPro
         {scenarios.map((sc) => (
           <div key={sc.multiple}>
             <p className="text-xs text-slate-500">Carry @{sc.multiple.toFixed(0)}x</p>
-            <p className="text-sm font-bold text-emerald-700">{formatEUR(sc.personalCarry)}</p>
+            <p className="text-sm font-bold text-emerald-700">
+              {formatCurrency(sc.personalCarry * eurGbpRate)}
+            </p>
+            <p className="text-[10px] text-slate-400">{formatEUR(sc.personalCarry)}</p>
           </div>
         ))}
       </div>
