@@ -191,6 +191,41 @@ export default function DashboardPage() {
     'all' | 'active' | 'written_off' | 'exited'
   >('all');
 
+  type AngelSortKey =
+    | 'name'
+    | 'instrument'
+    | 'date'
+    | 'geography'
+    | 'industry'
+    | 'cost'
+    | 'gbpValue'
+    | 'moic'
+    | 'taxRelief'
+    | 'status';
+  const [angelSortKey, setAngelSortKey] = useState<AngelSortKey>('status');
+  const [angelSortDir, setAngelSortDir] = useState<'asc' | 'desc'>('asc');
+
+  const handleAngelSort = (key: AngelSortKey) => {
+    if (angelSortKey === key) {
+      setAngelSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setAngelSortKey(key);
+      setAngelSortDir(
+        key === 'name' ||
+          key === 'instrument' ||
+          key === 'geography' ||
+          key === 'industry' ||
+          key === 'status' ||
+          key === 'taxRelief'
+          ? 'asc'
+          : 'desc',
+      );
+    }
+  };
+
+  const angelSortIndicator = (key: AngelSortKey) =>
+    angelSortKey === key ? (angelSortDir === 'asc' ? ' ▲' : ' ▼') : '';
+
   const filteredAngelAssets = (() => {
     const filtered =
       angelStatusFilter === 'all'
@@ -200,17 +235,44 @@ export default function DashboardPage() {
             return a.status === angelStatusFilter;
           });
 
-    // Sort: active first (by MOIC desc), then exited, then written_off
-    const statusOrder: Record<string, number> = { active: 0, exited: 1, written_off: 2 };
+    const dir = angelSortDir === 'asc' ? 1 : -1;
     return [...filtered].sort((a, b) => {
-      const aStatus = a.status || 'active';
-      const bStatus = b.status || 'active';
-      const orderDiff = (statusOrder[aStatus] ?? 0) - (statusOrder[bStatus] ?? 0);
-      if (orderDiff !== 0) return orderDiff;
-      // Within same status group, sort by MOIC descending
-      const aMoic = a.costBasisGBP && a.costBasisGBP > 0 ? a.currentValue / a.costBasisGBP : 0;
-      const bMoic = b.costBasisGBP && b.costBasisGBP > 0 ? b.currentValue / b.costBasisGBP : 0;
-      return bMoic - aMoic;
+      switch (angelSortKey) {
+        case 'name':
+          return dir * a.name.localeCompare(b.name);
+        case 'instrument':
+          return dir * (a.instrument ?? '').localeCompare(b.instrument ?? '');
+        case 'date':
+          return dir * (a.investmentDate ?? '').localeCompare(b.investmentDate ?? '');
+        case 'geography':
+          return dir * (a.geography ?? '').localeCompare(b.geography ?? '');
+        case 'industry':
+          return dir * (a.industry ?? '').localeCompare(b.industry ?? '');
+        case 'cost':
+          return dir * ((a.costBasis ?? 0) - (b.costBasis ?? 0));
+        case 'gbpValue':
+          return (
+            dir * ((a.costBasisGBP ?? a.costBasis ?? 0) - (b.costBasisGBP ?? b.costBasis ?? 0))
+          );
+        case 'moic': {
+          const aMoic = a.costBasisGBP && a.costBasisGBP > 0 ? a.currentValue / a.costBasisGBP : 0;
+          const bMoic = b.costBasisGBP && b.costBasisGBP > 0 ? b.currentValue / b.costBasisGBP : 0;
+          return dir * (aMoic - bMoic);
+        }
+        case 'taxRelief':
+          return dir * (a.taxScheme ?? '').localeCompare(b.taxScheme ?? '');
+        case 'status': {
+          const statusOrder: Record<string, number> = { active: 0, exited: 1, written_off: 2 };
+          const orderDiff =
+            (statusOrder[a.status || 'active'] ?? 0) - (statusOrder[b.status || 'active'] ?? 0);
+          if (orderDiff !== 0) return dir * orderDiff;
+          const aMoic = a.costBasisGBP && a.costBasisGBP > 0 ? a.currentValue / a.costBasisGBP : 0;
+          const bMoic = b.costBasisGBP && b.costBasisGBP > 0 ? b.currentValue / b.costBasisGBP : 0;
+          return -(aMoic - bMoic);
+        }
+        default:
+          return 0;
+      }
     });
   })();
 
@@ -825,26 +887,12 @@ export default function DashboardPage() {
       <section id="assets" className="scroll-mt-20 space-y-8">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Assets</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Balance sheet, investments, carry, and long-term projections ({projections[0]?.year}–
-            {projections[projections.length - 1]?.year})
-          </p>
         </div>
 
         {/* Balance Sheet */}
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-          <div className="flex items-center justify-between mb-4">
+          <div className="mb-4">
             <h2 className="text-lg font-semibold text-slate-900">Balance Sheet</h2>
-            <button
-              onClick={() => {
-                setEditingAsset(undefined);
-                setPanelType('asset');
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-            >
-              <PlusIcon className="w-4 h-4" />
-              Add Asset
-            </button>
           </div>
           <div className="space-y-1">
             <div className="flex items-center justify-between py-2 px-3 bg-emerald-50 rounded-t-lg">
@@ -852,52 +900,79 @@ export default function DashboardPage() {
               <span className="font-bold text-emerald-800">{formatCurrency(totalAssets)}</span>
             </div>
 
-            {state.assets.map((asset) => {
-              const meta = assetCategories[asset.category as keyof typeof assetCategories];
-              return (
-                <div
-                  key={asset.id}
-                  className="flex items-center justify-between py-2 px-3 hover:bg-slate-50 group"
-                >
-                  <div className="flex items-center gap-2">
-                    <ProviderLogo provider={asset.provider} size={16} />
-                    <span className="text-sm text-slate-700">{asset.name}</span>
-                    <span
-                      className="inline-block px-2 py-0.5 rounded-full text-xs font-medium"
-                      style={{ backgroundColor: meta?.bgColor, color: meta?.color }}
-                    >
-                      {meta?.label ?? asset.category}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-slate-900">
-                      {formatCurrency(asset.currentValue)}
-                    </span>
-                    <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => {
-                          setEditingAsset(asset);
-                          setPanelType('asset');
-                        }}
-                        className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
-                        title="Edit"
+            {state.assets
+              .filter((a) => a.category !== 'angel')
+              .map((asset) => {
+                const meta = assetCategories[asset.category as keyof typeof assetCategories];
+                return (
+                  <div
+                    key={asset.id}
+                    className="flex items-center justify-between py-2 px-3 hover:bg-slate-50 group"
+                  >
+                    <div className="flex items-center gap-2">
+                      <ProviderLogo provider={asset.provider} size={16} />
+                      <span className="text-sm text-slate-700">{asset.name}</span>
+                      <span
+                        className="inline-block px-2 py-0.5 rounded-full text-xs font-medium"
+                        style={{ backgroundColor: meta?.bgColor, color: meta?.color }}
                       >
-                        <PencilIcon />
-                      </button>
-                      <button
-                        onClick={() =>
-                          setDeleteTarget({ id: asset.id, name: asset.name, type: 'asset' })
-                        }
-                        className="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
-                        title="Delete"
-                      >
-                        <TrashIcon />
-                      </button>
+                        {meta?.label ?? asset.category}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-slate-900">
+                        {formatCurrency(asset.currentValue)}
+                      </span>
+                      <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => {
+                            setEditingAsset(asset);
+                            setPanelType('asset');
+                          }}
+                          className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
+                          title="Edit"
+                        >
+                          <PencilIcon />
+                        </button>
+                        <button
+                          onClick={() =>
+                            setDeleteTarget({ id: asset.id, name: asset.name, type: 'asset' })
+                          }
+                          className="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
+                          title="Delete"
+                        >
+                          <TrashIcon />
+                        </button>
+                      </div>
                     </div>
                   </div>
+                );
+              })}
+            {angelAssets.length > 0 && (
+              <div className="flex items-center justify-between py-2 px-3 hover:bg-slate-50">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="inline-block w-3.5 h-3.5 rounded-full"
+                    style={{ backgroundColor: assetCategories.angel?.color }}
+                  />
+                  <span className="text-sm text-slate-700">
+                    Angel Investments ({angelAssets.length})
+                  </span>
+                  <span
+                    className="inline-block px-2 py-0.5 rounded-full text-xs font-medium"
+                    style={{
+                      backgroundColor: assetCategories.angel?.bgColor,
+                      color: assetCategories.angel?.color,
+                    }}
+                  >
+                    Angel
+                  </span>
                 </div>
-              );
-            })}
+                <span className="text-sm font-medium text-slate-900">
+                  {formatCurrency(angelTotal)}
+                </span>
+              </div>
+            )}
 
             {/* Liabilities */}
             <div className="flex items-center justify-between py-2 px-3 bg-red-50 mt-4 rounded-t-lg">
@@ -1042,20 +1117,66 @@ export default function DashboardPage() {
               <table className="min-w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-200">
-                    <th className="text-left py-2 px-3 font-semibold text-slate-600">Name</th>
-                    <th className="text-left py-2 px-3 font-semibold text-slate-600">Instrument</th>
-                    <th className="text-center py-2 px-3 font-semibold text-slate-600">Date</th>
-                    <th className="text-left py-2 px-3 font-semibold text-slate-600">Geography</th>
-                    <th className="text-left py-2 px-3 font-semibold text-slate-600">Industry</th>
-                    <th className="text-right py-2 px-3 font-semibold text-slate-600">
-                      Original Investment
+                    <th
+                      className="text-left py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                      onClick={() => handleAngelSort('name')}
+                    >
+                      Name{angelSortIndicator('name')}
                     </th>
-                    <th className="text-right py-2 px-3 font-semibold text-slate-600">GBP Value</th>
-                    <th className="text-right py-2 px-3 font-semibold text-slate-600">MOIC</th>
-                    <th className="text-center py-2 px-3 font-semibold text-slate-600">
-                      Tax Relief
+                    <th
+                      className="text-left py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                      onClick={() => handleAngelSort('instrument')}
+                    >
+                      Instrument{angelSortIndicator('instrument')}
                     </th>
-                    <th className="text-center py-2 px-3 font-semibold text-slate-600">Status</th>
+                    <th
+                      className="text-center py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                      onClick={() => handleAngelSort('date')}
+                    >
+                      Date{angelSortIndicator('date')}
+                    </th>
+                    <th
+                      className="text-left py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                      onClick={() => handleAngelSort('geography')}
+                    >
+                      Geography{angelSortIndicator('geography')}
+                    </th>
+                    <th
+                      className="text-left py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                      onClick={() => handleAngelSort('industry')}
+                    >
+                      Industry{angelSortIndicator('industry')}
+                    </th>
+                    <th
+                      className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                      onClick={() => handleAngelSort('cost')}
+                    >
+                      Original Investment{angelSortIndicator('cost')}
+                    </th>
+                    <th
+                      className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                      onClick={() => handleAngelSort('gbpValue')}
+                    >
+                      GBP Value{angelSortIndicator('gbpValue')}
+                    </th>
+                    <th
+                      className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                      onClick={() => handleAngelSort('moic')}
+                    >
+                      MOIC{angelSortIndicator('moic')}
+                    </th>
+                    <th
+                      className="text-center py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                      onClick={() => handleAngelSort('taxRelief')}
+                    >
+                      Tax Relief{angelSortIndicator('taxRelief')}
+                    </th>
+                    <th
+                      className="text-center py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                      onClick={() => handleAngelSort('status')}
+                    >
+                      Status{angelSortIndicator('status')}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1372,59 +1493,12 @@ interface FundSectionProps {
   onDeleteFund: () => void;
 }
 
-type SortKey = 'name' | 'invested' | 'currentVal' | 'ownership' | 'moic' | 'irr' | 'status';
-type SortDir = 'asc' | 'desc';
-
 function FundSection({ carryPosition, onEditFund, onDeleteFund }: FundSectionProps) {
   const scenarios = useMemo(
     () => computeCarryScenarios(carryPosition, CARRY_MULTIPLES),
     [carryPosition],
   );
   const metrics = useMemo(() => computePortfolioMetrics(carryPosition), [carryPosition]);
-
-  const [sortKey, setSortKey] = useState<SortKey>('name');
-  const [sortDir, setSortDir] = useState<SortDir>('asc');
-
-  const handleSort = (key: SortKey) => {
-    if (sortKey === key) {
-      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
-    } else {
-      setSortKey(key);
-      setSortDir(key === 'name' || key === 'status' ? 'asc' : 'desc');
-    }
-  };
-
-  const sortIndicator = (key: SortKey) =>
-    sortKey === key ? (sortDir === 'asc' ? ' ▲' : ' ▼') : '';
-
-  const sortedCompanies = useMemo(() => {
-    const list = [...carryPosition.portfolioCompanies];
-    const dir = sortDir === 'asc' ? 1 : -1;
-    list.sort((a, b) => {
-      switch (sortKey) {
-        case 'name':
-          return dir * a.name.localeCompare(b.name);
-        case 'invested':
-          return dir * (a.investedAmount - b.investedAmount);
-        case 'currentVal':
-          return dir * (a.currentValuation - b.currentValuation);
-        case 'ownership':
-          return dir * (a.ownershipPercent - b.ownershipPercent);
-        case 'moic': {
-          const moicA = a.investedAmount > 0 ? a.currentValuation / a.investedAmount : 0;
-          const moicB = b.investedAmount > 0 ? b.currentValuation / b.investedAmount : 0;
-          return dir * (moicA - moicB);
-        }
-        case 'irr':
-          return dir * ((a.irr ?? 0) - (b.irr ?? 0));
-        case 'status':
-          return dir * a.status.localeCompare(b.status);
-        default:
-          return 0;
-      }
-    });
-    return list;
-  }, [carryPosition.portfolioCompanies, sortKey, sortDir]);
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
@@ -1498,56 +1572,21 @@ function FundSection({ carryPosition, onEditFund, onDeleteFund }: FundSectionPro
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-200">
-                  <th
-                    className="text-left py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
-                    onClick={() => handleSort('name')}
-                  >
-                    Name{sortIndicator('name')}
-                  </th>
+                  <th className="text-left py-2 px-3 font-semibold text-slate-600">Name</th>
                   <th className="text-center py-2 px-3 font-semibold text-slate-600">Date</th>
                   <th className="text-left py-2 px-3 font-semibold text-slate-600">Geography</th>
                   <th className="text-left py-2 px-3 font-semibold text-slate-600">Industry</th>
-                  <th
-                    className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
-                    onClick={() => handleSort('ownership')}
-                  >
-                    Ownership{sortIndicator('ownership')}
-                  </th>
-                  <th
-                    className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
-                    onClick={() => handleSort('invested')}
-                  >
-                    Cost{sortIndicator('invested')}
-                  </th>
-                  <th
-                    className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
-                    onClick={() => handleSort('currentVal')}
-                  >
-                    Fair Value{sortIndicator('currentVal')}
-                  </th>
+                  <th className="text-right py-2 px-3 font-semibold text-slate-600">Ownership</th>
+                  <th className="text-right py-2 px-3 font-semibold text-slate-600">Cost</th>
+                  <th className="text-right py-2 px-3 font-semibold text-slate-600">Fair Value</th>
                   <th className="text-right py-2 px-3 font-semibold text-slate-600">Return</th>
-                  <th
-                    className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
-                    onClick={() => handleSort('moic')}
-                  >
-                    MOIC{sortIndicator('moic')}
-                  </th>
-                  <th
-                    className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
-                    onClick={() => handleSort('irr')}
-                  >
-                    IRR{sortIndicator('irr')}
-                  </th>
-                  <th
-                    className="text-center py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
-                    onClick={() => handleSort('status')}
-                  >
-                    Status{sortIndicator('status')}
-                  </th>
+                  <th className="text-right py-2 px-3 font-semibold text-slate-600">MOIC</th>
+                  <th className="text-right py-2 px-3 font-semibold text-slate-600">IRR</th>
+                  <th className="text-center py-2 px-3 font-semibold text-slate-600">Status</th>
                 </tr>
               </thead>
               <tbody>
-                {sortedCompanies.map((company) => {
+                {carryPosition.portfolioCompanies.map((company) => {
                   const moic =
                     company.investedAmount > 0
                       ? company.currentValuation / company.investedAmount
