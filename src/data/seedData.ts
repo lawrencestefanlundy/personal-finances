@@ -824,6 +824,7 @@ export const seedData: FinanceState = {
           irr: 1.0253,
           notes:
             'FHE cryptography — 33.01x MOIC, mainnet launched Dec 2025, $ZAMA token sale $550M FDV',
+          displayOrder: 0,
         },
         {
           id: 'pco-molecule',
@@ -840,6 +841,7 @@ export const seedData: FinanceState = {
           cashIncome: 7_252,
           irr: 0.8113,
           notes: 'Fintech for drug discovery — 9.40x MOIC, €7.3K cash income received',
+          displayOrder: 1,
         },
         {
           id: 'pco-neurolabs',
@@ -855,6 +857,7 @@ export const seedData: FinanceState = {
           industry: 'Computer Vision / Synthetic Data',
           irr: 0.1893,
           notes: 'Computer vision / synthetic data — 1.84x MOIC',
+          displayOrder: 2,
         },
         {
           id: 'pco-deepset',
@@ -870,6 +873,7 @@ export const seedData: FinanceState = {
           industry: 'Natural Language Technologies',
           irr: 0.2863,
           notes: 'NLP technologies — 2.42x MOIC',
+          displayOrder: 3,
         },
         {
           id: 'pco-wasp',
@@ -885,6 +889,7 @@ export const seedData: FinanceState = {
           industry: 'Software Development Framework',
           irr: -0.005,
           notes: 'Software dev framework — 0.98x MOIC',
+          displayOrder: 4,
         },
         {
           id: 'pco-fermat',
@@ -900,6 +905,7 @@ export const seedData: FinanceState = {
           industry: 'Productivity Software',
           irr: -0.0225,
           notes: 'AI productivity software — 0.95x MOIC',
+          displayOrder: 5,
         },
         {
           id: 'pco-ilof',
@@ -915,6 +921,7 @@ export const seedData: FinanceState = {
           industry: 'ML Blood Diagnosis',
           irr: 0,
           notes: 'ML blood diagnosis — 1.00x MOIC',
+          displayOrder: 6,
         },
         {
           id: 'pco-otera',
@@ -930,6 +937,7 @@ export const seedData: FinanceState = {
           industry: 'Cognitive Robotic Process Automation',
           irr: 0.4178,
           notes: 'Cognitive RPA (fka DeepOpinion) — 2.71x MOIC',
+          displayOrder: 7,
         },
         {
           id: 'pco-electricsql',
@@ -945,6 +953,7 @@ export const seedData: FinanceState = {
           industry: 'Geodistributed Databases',
           irr: 0.3272,
           notes: 'Geodistributed databases — 2.59x MOIC, 18.29% ownership',
+          displayOrder: 8,
         },
         {
           id: 'pco-hathora',
@@ -961,6 +970,7 @@ export const seedData: FinanceState = {
           irr: 0.2278,
           notes:
             'Voice-AI infra (pivot from gaming) — 1.31x MOIC, $1.5M follow-on Q4, exploring sale',
+          displayOrder: 9,
         },
         {
           id: 'pco-unify',
@@ -976,6 +986,7 @@ export const seedData: FinanceState = {
           industry: 'Machine Learning',
           irr: -0.0483,
           notes: 'Machine learning — 0.85x MOIC',
+          displayOrder: 10,
         },
         {
           id: 'pco-instillai',
@@ -991,6 +1002,7 @@ export const seedData: FinanceState = {
           industry: 'Modern Data Stack for Video Processing',
           irr: -0.2311,
           notes: 'Data pipeline — 0.45x MOIC, written down 50% Q4 2025',
+          displayOrder: 11,
         },
         {
           id: 'pco-semiqon',
@@ -1006,6 +1018,7 @@ export const seedData: FinanceState = {
           industry: 'Quantum Hardware',
           irr: 0,
           notes: 'Quantum hardware — 1.00x MOIC',
+          displayOrder: 12,
         },
         {
           id: 'pco-reach',
@@ -1022,6 +1035,7 @@ export const seedData: FinanceState = {
           irr: -0.0406,
           notes:
             'CV for lab automation — 0.92x MOIC, $100k follow-on, Breakout Ventures led $4M round',
+          displayOrder: 13,
         },
         {
           id: 'pco-emm',
@@ -1037,6 +1051,7 @@ export const seedData: FinanceState = {
           industry: 'FemTech Wearables',
           irr: -0.0055,
           notes: 'FemTech wearables — 0.99x MOIC, $9M seed announced, emerged from stealth',
+          displayOrder: 14,
         },
         {
           id: 'pco-sodadata',
@@ -1052,6 +1067,7 @@ export const seedData: FinanceState = {
           industry: 'AI Monitoring',
           irr: 0,
           notes: 'AI monitoring — 1.00x MOIC, acquired NannyML',
+          displayOrder: 15,
         },
         // ── Fully Realised Investments (10) — Q4 2025 report ──
         {
@@ -1069,6 +1085,7 @@ export const seedData: FinanceState = {
           geography: 'United States & Europe',
           industry: 'Cloud Infrastructure',
           notes: 'Cloud infrastructure — write-off',
+          displayOrder: 16,
         },
         {
           id: 'pco-mobius',
@@ -1087,6 +1104,7 @@ export const seedData: FinanceState = {
           cashIncome: 44_473,
           irr: -0.3819,
           notes: 'Computer vision — partial recovery €44K (0.09x)',
+          displayOrder: 17,
         },
         {
           id: 'pco-kyso',
@@ -1103,6 +1121,7 @@ export const seedData: FinanceState = {
           geography: 'United States / Spain',
           industry: 'Data Science Tooling',
           notes: 'Data science tooling — write-off',
+          displayOrder: 18,
         },
         {
           id: 'pco-nannyml',
@@ -1121,6 +1140,7 @@ export const seedData: FinanceState = {
           proceeds: 1_168_192,
           irr: 0.0686,
           notes: 'AI monitoring — secondary exit 1.23x, acquired by Soda Data',
+          displayOrder: 19,
         },
         {
           id: 'pco-mysticai',
@@ -1137,6 +1157,7 @@ export const seedData: FinanceState = {
           geography: 'United States / United Kingdom',
           industry: 'Serverless ML',
           notes: 'Serverless ML — write-off',
+          displayOrder: 20,
         },
         {
           id: 'pco-codavel',
@@ -1155,6 +1176,7 @@ export const seedData: FinanceState = {
           proceeds: 82_036,
           irr: -0.6383,
           notes: 'CDN — partial recovery €82K (0.16x)',
+          displayOrder: 21,
         },
         {
           id: 'pco-stackers',
@@ -1171,6 +1193,7 @@ export const seedData: FinanceState = {
           geography: 'United States / Netherlands',
           industry: 'Productivity Software',
           notes: 'Productivity software — write-off',
+          displayOrder: 22,
         },
         {
           id: 'pco-samudai',
@@ -1187,6 +1210,7 @@ export const seedData: FinanceState = {
           geography: 'Singapore / India',
           industry: 'DAO Productivity',
           notes: 'DAO productivity — write-off',
+          displayOrder: 23,
         },
         {
           id: 'pco-flipt',
@@ -1205,6 +1229,7 @@ export const seedData: FinanceState = {
           proceeds: 10_302,
           irr: -0.7371,
           notes: 'CI/CD DevTool — partial recovery €10K (0.02x)',
+          displayOrder: 24,
         },
         {
           id: 'pco-wayfare',
@@ -1221,9 +1246,11 @@ export const seedData: FinanceState = {
           geography: 'Denmark',
           industry: 'Modern Data Stack',
           notes: 'Modern data stack — write-off',
+          displayOrder: 25,
         },
       ],
       linkedAssetId: 'asset-lunar1',
+      location: 'Germany',
       notes:
         'Berlin Innovation Ventures 1 GmbH & Co. KG — vintage 2019, 10yr term to Aug 2029. Q4 2025 report (31 Dec 2025). All values in EUR. 26 companies (16 current + 9 write-offs + 1 secondary exit). Cost €23.2M, FMV €52.0M. Gross MOIC 2.30x, TVPI 1.71x, Gross IRR 29%, Net IRR 17%. Hurdle exceeded. 3.763% personal carry share.',
     },
@@ -1252,6 +1279,7 @@ export const seedData: FinanceState = {
           industry: 'Cloud Infrastructure',
           irr: -0.6072,
           notes: 'Cloud infrastructure optimization — new Dec 2025, led $2.7M round',
+          displayOrder: 0,
         },
         {
           id: 'pco-xorq',
@@ -1267,6 +1295,7 @@ export const seedData: FinanceState = {
           industry: 'AI Data Infrastructure',
           irr: -0.0641,
           notes: 'AI data infrastructure (fka LETSQL) — 0.95x MOIC, seeking PMF',
+          displayOrder: 1,
         },
         {
           id: 'pco-embucket',
@@ -1282,6 +1311,7 @@ export const seedData: FinanceState = {
           industry: 'Data Lake Infrastructure',
           irr: -0.0413,
           notes: 'Data lake infrastructure — 0.92x MOIC, pivoted to Snowflake drop-in',
+          displayOrder: 2,
         },
         {
           id: 'pco-lodestar',
@@ -1297,6 +1327,7 @@ export const seedData: FinanceState = {
           industry: 'Space Robotics',
           irr: 0.7856,
           notes: 'Space robotics — 1.82x MOIC, $500k follow-on Q4 2025, US pivot',
+          displayOrder: 3,
         },
         {
           id: 'pco-bruin',
@@ -1312,6 +1343,7 @@ export const seedData: FinanceState = {
           industry: 'Modern Data Stack',
           irr: 0.3007,
           notes: 'Modern data stack — 1.75x MOIC, $385K ARR, 4yr+ runway',
+          displayOrder: 4,
         },
         {
           id: 'pco-hopaero',
@@ -1328,6 +1360,7 @@ export const seedData: FinanceState = {
           irr: -0.0934,
           notes:
             'Ballistic shipping — 0.92x MOIC, Vehicle 0 assembled, SOCOM $3-15M contract invite',
+          displayOrder: 5,
         },
         {
           id: 'pco-axiom',
@@ -1344,6 +1377,7 @@ export const seedData: FinanceState = {
           irr: -0.1134,
           notes:
             'AI biotech — 0.88x MOIC, hit confirmation on AX-A/AX-B, AstraZeneca deal in progress',
+          displayOrder: 6,
         },
         {
           id: 'pco-wnstn',
@@ -1360,6 +1394,7 @@ export const seedData: FinanceState = {
           irr: -0.5316,
           notes:
             'B2B AI for financial sector — 0.47x MOIC, written down 50%, $285K ARR, runway to Apr 2026',
+          displayOrder: 7,
         },
         {
           id: 'pco-zenithon',
@@ -1375,6 +1410,7 @@ export const seedData: FinanceState = {
           industry: 'AI for Physics Simulations',
           irr: -0.0191,
           notes: 'AI for physics simulations / fusion — partnerships with CFS and Realta',
+          displayOrder: 8,
         },
         // ── Fully Realised Investments (1) — Q4 2025 report ──
         {
@@ -1394,9 +1430,11 @@ export const seedData: FinanceState = {
           proceeds: 1_144_033,
           irr: 0.2974,
           notes: 'Generative AI — secondary exit 1.38x',
+          displayOrder: 9,
         },
       ],
       linkedAssetId: 'asset-lunar2',
+      location: 'Luxembourg',
       notes:
         'Lunar Ventures 2 SCSp — vintage 2023, 10yr term to Sep 2033. Q4 2025 report (31 Dec 2025). Final close at €49.3M. All values in EUR. 10 companies (9 current + 1 secondary exit). Cost €8.6M, FMV €8.4M. Gross MOIC 1.11x, TVPI 0.78x, Net IRR -20.3%. DPI 0.09x (Runware). 2% personal carry share, linear vesting Sep 2023-Sep 2027. Hurdle not yet exceeded. Lawrence now Venture Partner.',
     },

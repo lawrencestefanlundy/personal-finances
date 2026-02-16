@@ -7,7 +7,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     const { id } = await params;
     const item = await prisma.carryPosition.findUnique({
       where: { id },
-      include: { portfolioCompanies: true },
+      include: { portfolioCompanies: { orderBy: { displayOrder: 'asc' } } },
     });
     if (!item) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json(item);
@@ -46,7 +46,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
             }
           : undefined,
       },
-      include: { portfolioCompanies: true },
+      include: { portfolioCompanies: { orderBy: { displayOrder: 'asc' } } },
     });
     return NextResponse.json(item);
   } catch (error) {

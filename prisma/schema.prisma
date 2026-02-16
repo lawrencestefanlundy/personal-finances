@@ -126,6 +126,7 @@ model CarryPosition {
   hurdleRate           Float
   personalSharePercent Float
   linkedAssetId        String?
+  location             String?
   notes                String?
   portfolioCompanies   PortfolioCompany[]
   createdAt            DateTime           @default(now())
@@ -152,6 +153,7 @@ model PortfolioCompany {
   cashIncome       Float?        // dividends/interest received
   irr              Float?        // gross IRR as decimal (e.g. 0.2863 = 28.63%)
   notes            String?
+  displayOrder     Int           @default(0)
   carryPositionId  String
   carryPosition    CarryPosition @relation(fields: [carryPositionId], references: [id], onDelete: Cascade)
   createdAt        DateTime      @default(now())

@@ -6,7 +6,7 @@ export async function GET() {
   try {
     const items = await withRetry(() =>
       prisma.carryPosition.findMany({
-        include: { portfolioCompanies: true },
+        include: { portfolioCompanies: { orderBy: { displayOrder: 'asc' } } },
         orderBy: { createdAt: 'asc' },
       }),
     );
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
         ...rest,
         portfolioCompanies: portfolioCompanies?.length ? { create: portfolioCompanies } : undefined,
       },
-      include: { portfolioCompanies: true },
+      include: { portfolioCompanies: { orderBy: { displayOrder: 'asc' } } },
     });
     return NextResponse.json(item, { status: 201 });
   } catch (error) {

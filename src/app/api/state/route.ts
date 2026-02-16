@@ -24,7 +24,7 @@ export async function GET() {
         prisma.liability.findMany({ orderBy: { createdAt: 'asc' } }),
         prisma.transaction.findMany({ orderBy: { date: 'desc' } }),
         prisma.carryPosition.findMany({
-          include: { portfolioCompanies: true },
+          include: { portfolioCompanies: { orderBy: { displayOrder: 'asc' } } },
           orderBy: { createdAt: 'asc' },
         }),
         prisma.scenario.findMany({ orderBy: { createdAt: 'asc' } }),
@@ -226,9 +226,10 @@ export async function POST(request: Request) {
               hurdleRate: cp.hurdleRate,
               personalSharePercent: cp.personalSharePercent,
               linkedAssetId: cp.linkedAssetId ?? null,
+              location: cp.location ?? null,
               notes: cp.notes ?? null,
               portfolioCompanies: {
-                create: (cp.portfolioCompanies ?? []).map((pc) => ({
+                create: (cp.portfolioCompanies ?? []).map((pc, idx) => ({
                   id: pc.id,
                   name: pc.name,
                   legalEntity: pc.legalEntity ?? null,
@@ -246,6 +247,7 @@ export async function POST(request: Request) {
                   cashIncome: pc.cashIncome ?? null,
                   irr: pc.irr ?? null,
                   notes: pc.notes ?? null,
+                  displayOrder: pc.displayOrder ?? idx,
                 })),
               },
             },

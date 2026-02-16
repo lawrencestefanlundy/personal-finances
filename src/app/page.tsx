@@ -348,6 +348,27 @@ export default function DashboardPage() {
     setDeleteTarget(null);
   };
 
+  const handleReorder = (carryPositionId: string, companyId: string, direction: 'up' | 'down') => {
+    const cp = state.carryPositions.find((c) => c.id === carryPositionId);
+    if (!cp) return;
+    const companies = [...cp.portfolioCompanies];
+    const idx = companies.findIndex((c) => c.id === companyId);
+    if (idx < 0) return;
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= companies.length) return;
+    // Swap displayOrder values
+    const orderA = companies[idx].displayOrder ?? idx;
+    const orderB = companies[swapIdx].displayOrder ?? swapIdx;
+    companies[idx] = { ...companies[idx], displayOrder: orderB };
+    companies[swapIdx] = { ...companies[swapIdx], displayOrder: orderA };
+    // Re-sort by displayOrder
+    companies.sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0));
+    dispatch({
+      type: 'UPDATE_CARRY_POSITION',
+      payload: { ...cp, portfolioCompanies: companies },
+    });
+  };
+
   const chevron = (isExpanded: boolean) => (
     <svg
       className={`w-3.5 h-3.5 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
@@ -1409,6 +1430,7 @@ export default function DashboardPage() {
                 onDeleteFund={() =>
                   setDeleteTarget({ id: cp.id, name: cp.fundName, type: 'carryFund' })
                 }
+                onReorder={(companyId, direction) => handleReorder(cp.id, companyId, direction)}
               />
             ))}
           </>
@@ -1491,9 +1513,10 @@ interface FundSectionProps {
   carryPosition: CarryPosition;
   onEditFund: () => void;
   onDeleteFund: () => void;
+  onReorder: (companyId: string, direction: 'up' | 'down') => void;
 }
 
-function FundSection({ carryPosition, onEditFund, onDeleteFund }: FundSectionProps) {
+function FundSection({ carryPosition, onEditFund, onDeleteFund, onReorder }: FundSectionProps) {
   const scenarios = useMemo(
     () => computeCarryScenarios(carryPosition, CARRY_MULTIPLES),
     [carryPosition],
@@ -1528,7 +1551,7 @@ function FundSection({ carryPosition, onEditFund, onDeleteFund }: FundSectionPro
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 p-6 bg-slate-50 border-b border-slate-100">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 p-6 bg-slate-50 border-b border-slate-100">
         <div>
           <p className="text-xs text-slate-500">Fund Size</p>
           <p className="text-sm font-semibold text-slate-900">
@@ -1559,6 +1582,10 @@ function FundSection({ carryPosition, onEditFund, onDeleteFund }: FundSectionPro
             {formatPercent(carryPosition.personalSharePercent)}
           </p>
         </div>
+        <div>
+          <p className="text-xs text-slate-500">Location</p>
+          <p className="text-sm font-semibold text-slate-900">{carryPosition.location ?? '—'}</p>
+        </div>
       </div>
 
       <div className="p-6">
@@ -1572,6 +1599,7 @@ function FundSection({ carryPosition, onEditFund, onDeleteFund }: FundSectionPro
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-200">
+                  <th className="w-10 py-2 px-1"></th>
                   <th className="text-left py-2 px-3 font-semibold text-slate-600">Name</th>
                   <th className="text-center py-2 px-3 font-semibold text-slate-600">Date</th>
                   <th className="text-left py-2 px-3 font-semibold text-slate-600">Geography</th>
@@ -1586,7 +1614,7 @@ function FundSection({ carryPosition, onEditFund, onDeleteFund }: FundSectionPro
                 </tr>
               </thead>
               <tbody>
-                {carryPosition.portfolioCompanies.map((company) => {
+                {carryPosition.portfolioCompanies.map((company, idx) => {
                   const moic =
                     company.investedAmount > 0
                       ? company.currentValuation / company.investedAmount
@@ -1595,8 +1623,49 @@ function FundSection({ carryPosition, onEditFund, onDeleteFund }: FundSectionPro
                   const totalReturn =
                     company.currentValuation + totalCashRealised - company.investedAmount;
                   const statusMeta = STATUS_LABELS[company.status] ?? STATUS_LABELS.active;
+                  const isFirst = idx === 0;
+                  const isLast = idx === carryPosition.portfolioCompanies.length - 1;
                   return (
-                    <tr key={company.id} className="border-b border-slate-50 hover:bg-slate-50">
+                    <tr
+                      key={company.id}
+                      className="border-b border-slate-50 hover:bg-slate-50 group"
+                    >
+                      <td className="py-1 px-1 text-center">
+                        <div className="flex flex-col items-center gap-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => onReorder(company.id, 'up')}
+                            disabled={isFirst}
+                            className="p-0.5 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-200 disabled:opacity-20 disabled:cursor-not-allowed"
+                            title="Move up"
+                          >
+                            <svg
+                              className="w-3 h-3"
+                              viewBox="0 0 12 12"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            >
+                              <path d="M2 8L6 4L10 8" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => onReorder(company.id, 'down')}
+                            disabled={isLast}
+                            className="p-0.5 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-200 disabled:opacity-20 disabled:cursor-not-allowed"
+                            title="Move down"
+                          >
+                            <svg
+                              className="w-3 h-3"
+                              viewBox="0 0 12 12"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            >
+                              <path d="M2 4L6 8L10 4" />
+                            </svg>
+                          </button>
+                        </div>
+                      </td>
                       <td className="py-2 px-3 font-medium text-slate-900">
                         <div>
                           <span>{company.name}</span>
@@ -1661,6 +1730,7 @@ function FundSection({ carryPosition, onEditFund, onDeleteFund }: FundSectionPro
                   );
                 })}
                 <tr className="bg-slate-50 font-semibold">
+                  <td className="py-2 px-1"></td>
                   <td className="py-2 px-3 text-slate-900">Total</td>
                   <td className="py-2 px-3" colSpan={4}></td>
                   <td className="py-2 px-3 text-right text-slate-900">

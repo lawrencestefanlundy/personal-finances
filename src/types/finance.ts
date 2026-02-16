@@ -193,6 +193,7 @@ export interface PortfolioCompany {
   cashIncome?: number; // dividends/interest received (EUR)
   irr?: number; // gross IRR as decimal (e.g. 0.2863 = 28.63%)
   notes?: string;
+  displayOrder?: number; // manual sort order (0-based)
 }
 
 export interface CarryPosition {
@@ -206,6 +207,7 @@ export interface CarryPosition {
   personalSharePercent: number; // personal share of GP carry pool (decimal)
   portfolioCompanies: PortfolioCompany[];
   linkedAssetId?: string; // optional link to corresponding Asset entry
+  location?: string; // fund domicile e.g. 'Germany', 'Luxembourg'
   notes?: string;
 }
 
