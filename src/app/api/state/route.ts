@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { handlePrismaError } from '@/lib/api-utils';
+import { handlePrismaError, withRetry } from '@/lib/api-utils';
 import type { FinanceState } from '@/types/finance';
 
 export async function GET() {
@@ -15,20 +15,22 @@ export async function GET() {
       carryPositions,
       scenarios,
       settingsRows,
-    ] = await Promise.all([
-      prisma.cashPosition.findMany({ orderBy: { createdAt: 'asc' } }),
-      prisma.incomeStream.findMany({ orderBy: { createdAt: 'asc' } }),
-      prisma.expense.findMany({ orderBy: { createdAt: 'asc' } }),
-      prisma.asset.findMany({ orderBy: { createdAt: 'asc' } }),
-      prisma.liability.findMany({ orderBy: { createdAt: 'asc' } }),
-      prisma.transaction.findMany({ orderBy: { date: 'desc' } }),
-      prisma.carryPosition.findMany({
-        include: { portfolioCompanies: true },
-        orderBy: { createdAt: 'asc' },
-      }),
-      prisma.scenario.findMany({ orderBy: { createdAt: 'asc' } }),
-      prisma.settings.findMany(),
-    ]);
+    ] = await withRetry(() =>
+      Promise.all([
+        prisma.cashPosition.findMany({ orderBy: { createdAt: 'asc' } }),
+        prisma.incomeStream.findMany({ orderBy: { createdAt: 'asc' } }),
+        prisma.expense.findMany({ orderBy: { createdAt: 'asc' } }),
+        prisma.asset.findMany({ orderBy: { createdAt: 'asc' } }),
+        prisma.liability.findMany({ orderBy: { createdAt: 'asc' } }),
+        prisma.transaction.findMany({ orderBy: { date: 'desc' } }),
+        prisma.carryPosition.findMany({
+          include: { portfolioCompanies: true },
+          orderBy: { createdAt: 'asc' },
+        }),
+        prisma.scenario.findMany({ orderBy: { createdAt: 'asc' } }),
+        prisma.settings.findMany(),
+      ]),
+    );
 
     // Build settings object from key-value rows
     const settingsMap: Record<string, string> = {};

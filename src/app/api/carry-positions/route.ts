@@ -1,13 +1,15 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { handlePrismaError } from '@/lib/api-utils';
+import { handlePrismaError, withRetry } from '@/lib/api-utils';
 
 export async function GET() {
   try {
-    const items = await prisma.carryPosition.findMany({
-      include: { portfolioCompanies: true },
-      orderBy: { createdAt: 'asc' },
-    });
+    const items = await withRetry(() =>
+      prisma.carryPosition.findMany({
+        include: { portfolioCompanies: true },
+        orderBy: { createdAt: 'asc' },
+      }),
+    );
     return NextResponse.json(items);
   } catch (error) {
     return handlePrismaError(error, 'Failed to fetch carry positions');
