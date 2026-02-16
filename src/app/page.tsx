@@ -46,6 +46,47 @@ const STATUS_LABELS: Record<string, { label: string; color: string; bg: string }
   written_off: { label: 'Written Off', color: '#ef4444', bg: '#fef2f2' },
 };
 
+const GEOGRAPHY_COLORS: Record<string, { bg: string; text: string }> = {
+  'United Kingdom': { bg: '#dbeafe', text: '#1e40af' },
+  'United States': { bg: '#fce7f3', text: '#9d174d' },
+  Germany: { bg: '#fef9c3', text: '#854d0e' },
+  France: { bg: '#ede9fe', text: '#5b21b6' },
+  Switzerland: { bg: '#fecaca', text: '#991b1b' },
+  Finland: { bg: '#e0f2fe', text: '#075985' },
+  Belgium: { bg: '#fef3c7', text: '#92400e' },
+  Portugal: { bg: '#d1fae5', text: '#065f46' },
+  Austria: { bg: '#ffe4e6', text: '#9f1239' },
+  Denmark: { bg: '#cffafe', text: '#155e75' },
+  Singapore: { bg: '#f3e8ff', text: '#6b21a8' },
+  India: { bg: '#ffedd5', text: '#9a3412' },
+  Israel: { bg: '#e0e7ff', text: '#3730a3' },
+  Romania: { bg: '#fce7f3', text: '#831843' },
+  Croatia: { bg: '#ccfbf1', text: '#134e4a' },
+  Spain: { bg: '#fff7ed', text: '#c2410c' },
+  Netherlands: { bg: '#fed7aa', text: '#9a3412' },
+  Europe: { bg: '#e0f2fe', text: '#0369a1' },
+};
+
+function geographyBubble(geo: string | null | undefined) {
+  if (!geo || geo === '—') return <span className="text-xs text-slate-400">—</span>;
+  // Find matching colour by checking if geography starts with or contains a known country
+  const primaryCountry = Object.keys(GEOGRAPHY_COLORS).find(
+    (country) => geo.startsWith(country) || geo.includes(country),
+  );
+  const colors = primaryCountry
+    ? GEOGRAPHY_COLORS[primaryCountry]
+    : { bg: '#f1f5f9', text: '#475569' };
+  return (
+    <span
+      className="inline-block px-2 py-0.5 rounded-full text-xs font-medium max-w-[140px] truncate"
+      style={{ backgroundColor: colors.bg, color: colors.text }}
+      title={geo}
+    >
+      {geo}
+    </span>
+  );
+}
+
 const LIABILITY_TYPE_LABELS: Record<string, string> = {
   mortgage: 'Mortgage',
   student_loan: 'Student Loan',
@@ -1551,7 +1592,7 @@ function FundSection({ carryPosition, onEditFund, onDeleteFund, onReorder }: Fun
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 p-6 bg-slate-50 border-b border-slate-100">
+      <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-9 gap-4 p-6 bg-slate-50 border-b border-slate-100">
         <div>
           <p className="text-xs text-slate-500">Fund Size</p>
           <p className="text-sm font-semibold text-slate-900">
@@ -1586,6 +1627,12 @@ function FundSection({ carryPosition, onEditFund, onDeleteFund, onReorder }: Fun
           <p className="text-xs text-slate-500">Location</p>
           <p className="text-sm font-semibold text-slate-900">{carryPosition.location ?? '—'}</p>
         </div>
+        {scenarios.map((sc) => (
+          <div key={sc.multiple}>
+            <p className="text-xs text-slate-500">Carry @{sc.multiple.toFixed(0)}x</p>
+            <p className="text-sm font-bold text-emerald-700">{formatEUR(sc.personalCarry)}</p>
+          </div>
+        ))}
       </div>
 
       <div className="p-6">
@@ -1684,9 +1731,7 @@ function FundSection({ carryPosition, onEditFund, onDeleteFund, onReorder }: Fun
                           </span>
                         )}
                       </td>
-                      <td className="py-2 px-3 text-xs text-slate-500 max-w-[120px] truncate">
-                        {company.geography ?? '—'}
-                      </td>
+                      <td className="py-2 px-3">{geographyBubble(company.geography)}</td>
                       <td className="py-2 px-3 text-xs text-slate-500 max-w-[140px] truncate">
                         {company.industry ?? '—'}
                       </td>
@@ -1767,48 +1812,6 @@ function FundSection({ carryPosition, onEditFund, onDeleteFund, onReorder }: Fun
             No portfolio companies added yet.
           </p>
         )}
-      </div>
-
-      <div className="p-6 border-t border-slate-100">
-        <h3 className="text-sm font-semibold text-slate-700 mb-3">Carry at Return Multiples</h3>
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-200">
-                <th className="text-left py-2 px-3 font-semibold text-slate-600">Multiple</th>
-                <th className="text-right py-2 px-3 font-semibold text-slate-600">Fund Value</th>
-                <th className="text-right py-2 px-3 font-semibold text-slate-600">Profit</th>
-                <th className="text-right py-2 px-3 font-semibold text-slate-600">
-                  Carry Pool (Total)
-                </th>
-                <th className="text-right py-2 px-3 font-semibold text-emerald-700">
-                  Personal Carry
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {scenarios.map((sc) => (
-                <tr key={sc.multiple} className="border-b border-slate-50 hover:bg-slate-50">
-                  <td className="py-2 px-3 font-medium text-slate-900">
-                    {sc.multiple.toFixed(1)}x
-                  </td>
-                  <td className="py-2 px-3 text-right text-slate-600">
-                    {formatEUR(sc.totalFundValue)}
-                  </td>
-                  <td className="py-2 px-3 text-right text-slate-600">
-                    {formatEUR(sc.totalProfit)}
-                  </td>
-                  <td className="py-2 px-3 text-right text-slate-900">
-                    {formatEUR(sc.totalCarryPool)}
-                  </td>
-                  <td className="py-2 px-3 text-right font-bold text-emerald-700">
-                    {formatEUR(sc.personalCarry)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
       </div>
     </div>
   );
