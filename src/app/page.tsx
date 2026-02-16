@@ -813,21 +813,6 @@ export default function DashboardPage() {
                     </td>
                   ))}
                 </tr>
-                <tr className="bg-emerald-100 font-bold">
-                  <td className="py-1.5 px-3 text-slate-900 sticky left-0 z-10 bg-emerald-100">
-                    Total
-                  </td>
-                  <td className="py-1.5 px-2 bg-emerald-100" />
-                  <td className="py-1.5 px-2 bg-emerald-100" />
-                  {snapshots.map((s) => (
-                    <td
-                      key={s.month}
-                      className={`py-1.5 px-2 text-right tabular-nums bg-emerald-100 ${s.runningBalance + softCommitment >= 0 ? 'text-slate-900' : 'text-red-700'}`}
-                    >
-                      {formatCurrency(s.runningBalance + softCommitment)}
-                    </td>
-                  ))}
-                </tr>
               </tbody>
             </table>
           </div>
@@ -867,190 +852,52 @@ export default function DashboardPage() {
               <span className="font-bold text-emerald-800">{formatCurrency(totalAssets)}</span>
             </div>
 
-            {Object.entries(assetsByCategory).map(([category, assets]) => {
-              const meta = assetCategories[category as keyof typeof assetCategories];
-              const subtotal = assets.reduce((sum, a) => sum + a.currentValue, 0);
-              const sectionKey = `asset-${category}`;
-              const isExpanded = expanded[sectionKey];
+            {state.assets.map((asset) => {
+              const meta = assetCategories[asset.category as keyof typeof assetCategories];
               return (
-                <div key={category}>
-                  <div
-                    className="flex items-center justify-between py-2 px-3 cursor-pointer hover:bg-slate-50"
-                    onClick={() => toggleSection(sectionKey)}
-                  >
-                    <div className="flex items-center gap-2">
-                      {chevron(!!isExpanded)}
-                      <span
-                        className="inline-block px-2 py-0.5 rounded-full text-xs font-medium"
-                        style={{ backgroundColor: meta?.bgColor, color: meta?.color }}
-                      >
-                        {meta?.label ?? category}
-                      </span>
-                      <span className="text-sm text-slate-500">({assets.length})</span>
-                    </div>
-                    <span className="text-sm font-semibold text-slate-900">
-                      {formatCurrency(subtotal)}
+                <div
+                  key={asset.id}
+                  className="flex items-center justify-between py-2 px-3 hover:bg-slate-50 group"
+                >
+                  <div className="flex items-center gap-2">
+                    <ProviderLogo provider={asset.provider} size={16} />
+                    <span className="text-sm text-slate-700">{asset.name}</span>
+                    <span
+                      className="inline-block px-2 py-0.5 rounded-full text-xs font-medium"
+                      style={{ backgroundColor: meta?.bgColor, color: meta?.color }}
+                    >
+                      {meta?.label ?? asset.category}
                     </span>
                   </div>
-                  {isExpanded &&
-                    assets.map((asset) => (
-                      <div
-                        key={asset.id}
-                        className="flex items-center justify-between py-1.5 px-3 pl-10 hover:bg-slate-50 group"
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-slate-900">
+                      {formatCurrency(asset.currentValue)}
+                    </span>
+                    <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => {
+                          setEditingAsset(asset);
+                          setPanelType('asset');
+                        }}
+                        className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
+                        title="Edit"
                       >
-                        <div className="flex items-center gap-2">
-                          <ProviderLogo provider={asset.provider} size={16} />
-                          <span className="text-sm text-slate-700">{asset.name}</span>
-                          <span className="text-xs text-slate-400">
-                            {formatPercent(asset.annualGrowthRate)}
-                          </span>
-                          {asset.unlockYear && (
-                            <span className="text-xs text-slate-400">
-                              unlock {asset.unlockYear}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-slate-900">
-                            {formatCurrency(asset.currentValue)}
-                          </span>
-                          <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button
-                              onClick={() => {
-                                setEditingAsset(asset);
-                                setPanelType('asset');
-                              }}
-                              className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
-                              title="Edit"
-                            >
-                              <PencilIcon />
-                            </button>
-                            <button
-                              onClick={() =>
-                                setDeleteTarget({ id: asset.id, name: asset.name, type: 'asset' })
-                              }
-                              className="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
-                              title="Delete"
-                            >
-                              <TrashIcon />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                        <PencilIcon />
+                      </button>
+                      <button
+                        onClick={() =>
+                          setDeleteTarget({ id: asset.id, name: asset.name, type: 'asset' })
+                        }
+                        className="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
+                        title="Delete"
+                      >
+                        <TrashIcon />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               );
             })}
-
-            {/* Individual fund carry lines */}
-            {fundAssets.map((fund) => (
-              <div
-                key={fund.id}
-                className="flex items-center justify-between py-2 px-3 hover:bg-slate-50 group"
-              >
-                <div className="flex items-center gap-2">
-                  <ProviderLogo provider={fund.provider} size={16} />
-                  <span
-                    className="inline-block px-2 py-0.5 rounded-full text-xs font-medium"
-                    style={{
-                      backgroundColor: assetCategories.fund?.bgColor,
-                      color: assetCategories.fund?.color,
-                    }}
-                  >
-                    {fund.name}
-                  </span>
-                  {fund.unlockYear && (
-                    <span className="text-xs text-slate-400">unlock {fund.unlockYear}</span>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-slate-900">
-                    {formatCurrency(fund.currentValue)}
-                  </span>
-                  <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => {
-                        setEditingAsset(fund);
-                        setPanelType('asset');
-                      }}
-                      className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
-                      title="Edit"
-                    >
-                      <PencilIcon />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-
-            {/* Individual children ISA lines */}
-            {childrenIsaAssets.map((isa) => (
-              <div
-                key={isa.id}
-                className="flex items-center justify-between py-2 px-3 hover:bg-slate-50 group"
-              >
-                <div className="flex items-center gap-2">
-                  <ProviderLogo provider={isa.provider} size={16} />
-                  <span
-                    className="inline-block px-2 py-0.5 rounded-full text-xs font-medium"
-                    style={{
-                      backgroundColor: assetCategories.children_isa?.bgColor,
-                      color: assetCategories.children_isa?.color,
-                    }}
-                  >
-                    {isa.name}
-                  </span>
-                  {isa.endYear && (
-                    <span className="text-xs text-slate-400">matures {isa.endYear}</span>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-slate-900">
-                    {formatCurrency(isa.currentValue)}
-                  </span>
-                  <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => {
-                        setEditingAsset(isa);
-                        setPanelType('asset');
-                      }}
-                      className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
-                      title="Edit"
-                    >
-                      <PencilIcon />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-
-            {/* Angel line */}
-            {angelAssets.length > 0 && (
-              <div
-                className="flex items-center justify-between py-2 px-3 cursor-pointer hover:bg-slate-50"
-                onClick={() => toggleSection('angels')}
-              >
-                <div className="flex items-center gap-2">
-                  {chevron(!!expanded['angels'])}
-                  <span
-                    className="inline-block px-2 py-0.5 rounded-full text-xs font-medium"
-                    style={{
-                      backgroundColor: assetCategories.angel?.bgColor,
-                      color: assetCategories.angel?.color,
-                    }}
-                  >
-                    Angel Investments
-                  </span>
-                  <span className="text-sm text-slate-500">
-                    ({angelAssets.length}) · {activeCount} active · {exitedCount} exited ·{' '}
-                    {writtenOffCount} written off
-                  </span>
-                </div>
-                <span className="text-sm font-semibold text-slate-900">
-                  {formatCurrency(angelTotal)}
-                </span>
-              </div>
-            )}
 
             {/* Liabilities */}
             <div className="flex items-center justify-between py-2 px-3 bg-red-50 mt-4 rounded-t-lg">
@@ -1162,16 +1009,6 @@ export default function DashboardPage() {
                   portfolio MOIC
                 </p>
               </div>
-              <button
-                onClick={() => {
-                  setEditingAsset(undefined);
-                  setPanelType('asset');
-                }}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-              >
-                <PlusIcon className="w-4 h-4" />
-                Add Investment
-              </button>
             </div>
             {/* Status filter pills */}
             <div className="flex items-center gap-2 mb-4">
@@ -1217,9 +1054,6 @@ export default function DashboardPage() {
                       Tax Relief
                     </th>
                     <th className="text-center py-2 px-3 font-semibold text-slate-600">Status</th>
-                    <th className="text-center py-2 px-3 font-semibold text-slate-600 w-20">
-                      Actions
-                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1334,40 +1168,11 @@ export default function DashboardPage() {
                               '—'
                             )}
                           </td>
-                          <td className="py-2 px-3 text-center">
-                            <div className="flex gap-0.5 justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setEditingAsset(asset);
-                                  setPanelType('asset');
-                                }}
-                                className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
-                                title="Edit"
-                              >
-                                <PencilIcon />
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setDeleteTarget({
-                                    id: asset.id,
-                                    name: asset.name,
-                                    type: 'asset',
-                                  });
-                                }}
-                                className="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
-                                title="Delete"
-                              >
-                                <TrashIcon />
-                              </button>
-                            </div>
-                          </td>
                         </tr>
                         {isAngelExpanded && hasEmails && (
                           <tr>
                             <td
-                              colSpan={9}
+                              colSpan={8}
                               className="bg-slate-50 px-6 py-3 border-b border-slate-100"
                             >
                               <div className="max-h-64 overflow-y-auto space-y-2">
@@ -1453,16 +1258,6 @@ export default function DashboardPage() {
           <>
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-slate-900">Carry Positions</h2>
-              <button
-                onClick={() => {
-                  setEditingFund(undefined);
-                  setPanelType('carryFund');
-                }}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-              >
-                <PlusIcon className="w-4 h-4" />
-                Add Fund
-              </button>
             </div>
 
             {state.carryPositions.map((cp) => (
@@ -1475,19 +1270,6 @@ export default function DashboardPage() {
                 }}
                 onDeleteFund={() =>
                   setDeleteTarget({ id: cp.id, name: cp.fundName, type: 'carryFund' })
-                }
-                onEditCompany={(company) => {
-                  setCompanyContext(cp);
-                  setEditingCompany(company);
-                  setPanelType('carryCompany');
-                }}
-                onDeleteCompany={(company) =>
-                  setDeleteTarget({
-                    id: company.id,
-                    name: company.name,
-                    type: 'carryCompany',
-                    extra: cp,
-                  })
                 }
               />
             ))}
@@ -1571,76 +1353,59 @@ interface FundSectionProps {
   carryPosition: CarryPosition;
   onEditFund: () => void;
   onDeleteFund: () => void;
-  onEditCompany: (company: PortfolioCompany) => void;
-  onDeleteCompany: (company: PortfolioCompany) => void;
 }
 
-function FundSection({
-  carryPosition,
-  onEditFund,
-  onDeleteFund,
-  onEditCompany,
-  onDeleteCompany,
-}: FundSectionProps) {
+type SortKey = 'name' | 'invested' | 'currentVal' | 'ownership' | 'moic' | 'status';
+type SortDir = 'asc' | 'desc';
+
+function FundSection({ carryPosition, onEditFund, onDeleteFund }: FundSectionProps) {
   const scenarios = useMemo(
     () => computeCarryScenarios(carryPosition, CARRY_MULTIPLES),
     [carryPosition],
   );
   const metrics = useMemo(() => computePortfolioMetrics(carryPosition), [carryPosition]);
 
-  const [nameFilter, setNameFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [moicFilter, setMoicFilter] = useState<string>('all');
-  const [investedFilter, setInvestedFilter] = useState<string>('all');
-  const [currentValFilter, setCurrentValFilter] = useState<string>('all');
-  const [ownershipFilter, setOwnershipFilter] = useState<string>('all');
+  const [sortKey, setSortKey] = useState<SortKey>('name');
+  const [sortDir, setSortDir] = useState<SortDir>('asc');
 
-  const filteredCompanies = useMemo(() => {
-    return carryPosition.portfolioCompanies.filter((company) => {
-      if (nameFilter && !company.name.toLowerCase().includes(nameFilter.toLowerCase()))
-        return false;
-      if (statusFilter !== 'all' && company.status !== statusFilter) return false;
-      if (moicFilter !== 'all') {
-        const moic =
-          company.investedAmount > 0 ? company.currentValuation / company.investedAmount : 0;
-        if (moicFilter === 'above1' && moic < 1) return false;
-        if (moicFilter === 'below1' && moic >= 1) return false;
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDir(key === 'name' || key === 'status' ? 'asc' : 'desc');
+    }
+  };
+
+  const sortIndicator = (key: SortKey) =>
+    sortKey === key ? (sortDir === 'asc' ? ' ▲' : ' ▼') : '';
+
+  const sortedCompanies = useMemo(() => {
+    const list = [...carryPosition.portfolioCompanies];
+    const dir = sortDir === 'asc' ? 1 : -1;
+    list.sort((a, b) => {
+      switch (sortKey) {
+        case 'name':
+          return dir * a.name.localeCompare(b.name);
+        case 'invested':
+          return dir * (a.investedAmount - b.investedAmount);
+        case 'currentVal':
+          return dir * (a.currentValuation - b.currentValuation);
+        case 'ownership':
+          return dir * (a.ownershipPercent - b.ownershipPercent);
+        case 'moic': {
+          const moicA = a.investedAmount > 0 ? a.currentValuation / a.investedAmount : 0;
+          const moicB = b.investedAmount > 0 ? b.currentValuation / b.investedAmount : 0;
+          return dir * (moicA - moicB);
+        }
+        case 'status':
+          return dir * a.status.localeCompare(b.status);
+        default:
+          return 0;
       }
-      if (investedFilter !== 'all') {
-        if (investedFilter === 'above500k' && company.investedAmount < 500000) return false;
-        if (investedFilter === 'above100k' && company.investedAmount < 100000) return false;
-        if (investedFilter === 'below100k' && company.investedAmount >= 100000) return false;
-      }
-      if (currentValFilter !== 'all') {
-        if (currentValFilter === 'above500k' && company.currentValuation < 500000) return false;
-        if (currentValFilter === 'above100k' && company.currentValuation < 100000) return false;
-        if (currentValFilter === 'below100k' && company.currentValuation >= 100000) return false;
-      }
-      if (ownershipFilter !== 'all') {
-        const pct = company.ownershipPercent * 100;
-        if (ownershipFilter === 'above5' && pct < 5) return false;
-        if (ownershipFilter === 'above1' && pct < 1) return false;
-        if (ownershipFilter === 'below1' && pct >= 1) return false;
-      }
-      return true;
     });
-  }, [
-    carryPosition.portfolioCompanies,
-    nameFilter,
-    statusFilter,
-    moicFilter,
-    investedFilter,
-    currentValFilter,
-    ownershipFilter,
-  ]);
-
-  const hasActiveFilters =
-    nameFilter !== '' ||
-    statusFilter !== 'all' ||
-    moicFilter !== 'all' ||
-    investedFilter !== 'all' ||
-    currentValFilter !== 'all' ||
-    ownershipFilter !== 'all';
+    return list;
+  }, [carryPosition.portfolioCompanies, sortKey, sortDir]);
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
@@ -1707,11 +1472,6 @@ function FundSection({
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-semibold text-slate-700">
             Portfolio Companies ({carryPosition.portfolioCompanies.length})
-            {hasActiveFilters && (
-              <span className="ml-1 text-slate-400 font-normal">
-                — showing {filteredCompanies.length}
-              </span>
-            )}
           </h3>
         </div>
         {carryPosition.portfolioCompanies.length > 0 ? (
@@ -1719,118 +1479,53 @@ function FundSection({
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-200">
-                  <th className="text-left py-2 px-3 font-semibold text-slate-600">Name</th>
-                  <th className="text-right py-2 px-3 font-semibold text-slate-600">Invested</th>
-                  <th className="text-right py-2 px-3 font-semibold text-slate-600">Current Val</th>
-                  <th className="text-right py-2 px-3 font-semibold text-slate-600">Ownership</th>
-                  <th className="text-right py-2 px-3 font-semibold text-slate-600">MOIC</th>
-                  <th className="text-center py-2 px-3 font-semibold text-slate-600">Status</th>
-                  <th className="text-center py-2 px-3 font-semibold text-slate-600 w-20">
-                    Actions
+                  <th
+                    className="text-left py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                    onClick={() => handleSort('name')}
+                  >
+                    Name{sortIndicator('name')}
                   </th>
-                </tr>
-                <tr className="border-b border-slate-100 bg-slate-50/50">
-                  <th className="py-1.5 px-3">
-                    <input
-                      type="text"
-                      placeholder="Filter..."
-                      value={nameFilter}
-                      onChange={(e) => setNameFilter(e.target.value)}
-                      className="w-full text-xs font-normal px-2 py-1 border border-slate-200 rounded bg-white text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
-                    />
+                  <th
+                    className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                    onClick={() => handleSort('invested')}
+                  >
+                    Invested{sortIndicator('invested')}
                   </th>
-                  <th className="py-1.5 px-3">
-                    <select
-                      value={investedFilter}
-                      onChange={(e) => setInvestedFilter(e.target.value)}
-                      className="w-full text-xs font-normal px-1 py-1 border border-slate-200 rounded bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-400"
-                    >
-                      <option value="all">All</option>
-                      <option value="above500k">&ge; €500k</option>
-                      <option value="above100k">&ge; €100k</option>
-                      <option value="below100k">&lt; €100k</option>
-                    </select>
+                  <th
+                    className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                    onClick={() => handleSort('currentVal')}
+                  >
+                    Current Val{sortIndicator('currentVal')}
                   </th>
-                  <th className="py-1.5 px-3">
-                    <select
-                      value={currentValFilter}
-                      onChange={(e) => setCurrentValFilter(e.target.value)}
-                      className="w-full text-xs font-normal px-1 py-1 border border-slate-200 rounded bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-400"
-                    >
-                      <option value="all">All</option>
-                      <option value="above500k">&ge; €500k</option>
-                      <option value="above100k">&ge; €100k</option>
-                      <option value="below100k">&lt; €100k</option>
-                    </select>
+                  <th
+                    className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                    onClick={() => handleSort('ownership')}
+                  >
+                    Ownership{sortIndicator('ownership')}
                   </th>
-                  <th className="py-1.5 px-3">
-                    <select
-                      value={ownershipFilter}
-                      onChange={(e) => setOwnershipFilter(e.target.value)}
-                      className="w-full text-xs font-normal px-1 py-1 border border-slate-200 rounded bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-400"
-                    >
-                      <option value="all">All</option>
-                      <option value="above5">&ge; 5%</option>
-                      <option value="above1">&ge; 1%</option>
-                      <option value="below1">&lt; 1%</option>
-                    </select>
+                  <th
+                    className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                    onClick={() => handleSort('moic')}
+                  >
+                    MOIC{sortIndicator('moic')}
                   </th>
-                  <th className="py-1.5 px-3">
-                    <select
-                      value={moicFilter}
-                      onChange={(e) => setMoicFilter(e.target.value)}
-                      className="w-full text-xs font-normal px-1 py-1 border border-slate-200 rounded bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-400"
-                    >
-                      <option value="all">All</option>
-                      <option value="above1">&ge; 1x</option>
-                      <option value="below1">&lt; 1x</option>
-                    </select>
-                  </th>
-                  <th className="py-1.5 px-3">
-                    <select
-                      value={statusFilter}
-                      onChange={(e) => setStatusFilter(e.target.value)}
-                      className="w-full text-xs font-normal px-1 py-1 border border-slate-200 rounded bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-400"
-                    >
-                      <option value="all">All</option>
-                      <option value="active">Active</option>
-                      <option value="marked_up">Marked Up</option>
-                      <option value="exited">Exited</option>
-                      <option value="written_off">Written Off</option>
-                    </select>
-                  </th>
-                  <th className="py-1.5 px-3">
-                    {hasActiveFilters && (
-                      <button
-                        onClick={() => {
-                          setNameFilter('');
-                          setStatusFilter('all');
-                          setMoicFilter('all');
-                          setInvestedFilter('all');
-                          setCurrentValFilter('all');
-                          setOwnershipFilter('all');
-                        }}
-                        className="text-xs text-blue-600 hover:text-blue-800"
-                        title="Clear filters"
-                      >
-                        Clear
-                      </button>
-                    )}
+                  <th
+                    className="text-center py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                    onClick={() => handleSort('status')}
+                  >
+                    Status{sortIndicator('status')}
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {filteredCompanies.map((company) => {
+                {sortedCompanies.map((company) => {
                   const moic =
                     company.investedAmount > 0
                       ? company.currentValuation / company.investedAmount
                       : 0;
                   const statusMeta = STATUS_LABELS[company.status] ?? STATUS_LABELS.active;
                   return (
-                    <tr
-                      key={company.id}
-                      className="border-b border-slate-50 hover:bg-slate-50 group"
-                    >
+                    <tr key={company.id} className="border-b border-slate-50 hover:bg-slate-50">
                       <td className="py-2 px-3 font-medium text-slate-900">{company.name}</td>
                       <td className="py-2 px-3 text-right text-slate-600">
                         {formatEUR(company.investedAmount)}
@@ -1854,24 +1549,6 @@ function FundSection({
                           {statusMeta.label}
                         </span>
                       </td>
-                      <td className="py-2 px-3 text-center">
-                        <div className="flex gap-0.5 justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={() => onEditCompany(company)}
-                            className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
-                            title="Edit"
-                          >
-                            <PencilIcon />
-                          </button>
-                          <button
-                            onClick={() => onDeleteCompany(company)}
-                            className="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
-                            title="Delete"
-                          >
-                            <TrashIcon />
-                          </button>
-                        </div>
-                      </td>
                     </tr>
                   );
                 })}
@@ -1891,7 +1568,7 @@ function FundSection({
                       {metrics.portfolioMOIC.toFixed(1)}x
                     </span>
                   </td>
-                  <td colSpan={2} className="py-2 px-3"></td>
+                  <td className="py-2 px-3"></td>
                 </tr>
               </tbody>
             </table>
