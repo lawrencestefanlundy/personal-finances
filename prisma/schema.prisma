@@ -68,6 +68,8 @@ model Asset {
   provider         String?
   costBasis        Float?
   costCurrency     String?  // GBP, USD, EUR, CHF
+  costBasisGBP     Float?   // cost basis converted to GBP at historical XE rate
+  fxRate           Float?   // historical XE rate used (foreign currency to GBP)
   instrument       String?  // safe, equity, options, advance_subscription
   investmentDate   String?  // ISO date
   status           String?  // active, exited, written_off

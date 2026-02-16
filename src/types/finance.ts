@@ -97,6 +97,8 @@ export interface Asset {
   // Investment-specific fields (angel category)
   costBasis?: number;
   costCurrency?: string; // GBP, USD, EUR, CHF
+  costBasisGBP?: number; // cost basis converted to GBP at historical XE rate
+  fxRate?: number; // historical XE rate used for conversion (foreign currency → GBP)
   instrument?: string; // safe, equity, options, advance_subscription
   investmentDate?: string; // ISO date
   status?: 'active' | 'exited' | 'written_off';

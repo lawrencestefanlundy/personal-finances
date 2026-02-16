@@ -164,6 +164,8 @@ export async function POST(request: Request) {
             provider: a.provider ?? null,
             costBasis: a.costBasis ?? null,
             costCurrency: a.costCurrency ?? null,
+            costBasisGBP: a.costBasisGBP ?? null,
+            fxRate: a.fxRate ?? null,
             instrument: a.instrument ?? null,
             investmentDate: a.investmentDate ?? null,
             status: a.status ?? null,

@@ -13,16 +13,10 @@ import {
   CarryPosition,
   PortfolioCompany,
 } from '@/types/finance';
-import StatCard from '@/components/StatCard';
 import { computeMonthlySnapshots } from '@/lib/calculations';
 import { computeYearlyProjections } from '@/lib/projections';
-import {
-  computeCarryScenarios,
-  computePortfolioMetrics,
-  computeTotalPersonalCarryAtMultiple,
-} from '@/lib/carryCalculations';
+import { computeCarryScenarios, computePortfolioMetrics } from '@/lib/carryCalculations';
 import { formatCurrency, formatEUR, formatMonth, formatPercent } from '@/lib/formatters';
-import { useEurGbpRate } from '@/hooks/useEurGbpRate';
 import { assetCategories, expenseCategories } from '@/data/categories';
 import {
   formatCostBasis,
@@ -71,7 +65,6 @@ type PanelType =
 
 export default function DashboardPage() {
   const { state, dispatch } = useFinance();
-  const fx = useEurGbpRate();
 
   // ─── Cash Flow ──────────────────────────────────────────────────────────────
   const snapshots = useMemo(() => computeMonthlySnapshots(state, 26), [state]);
@@ -138,7 +131,12 @@ export default function DashboardPage() {
   const assetsByCategory = useMemo(() => {
     const groups: Record<string, Asset[]> = {};
     for (const asset of state.assets) {
-      if (asset.category === 'angel' || asset.category === 'fund') continue;
+      if (
+        asset.category === 'angel' ||
+        asset.category === 'fund' ||
+        asset.category === 'children_isa'
+      )
+        continue;
       if (!groups[asset.category]) groups[asset.category] = [];
       groups[asset.category].push(asset);
     }
@@ -147,8 +145,13 @@ export default function DashboardPage() {
 
   const angelAssets = state.assets.filter((a) => a.category === 'angel');
   const fundAssets = state.assets.filter((a) => a.category === 'fund');
+  const childrenIsaAssets = state.assets.filter((a) => a.category === 'children_isa');
   const angelTotal = angelAssets.reduce((sum, a) => sum + a.currentValue, 0);
   const angelCostTotal = angelAssets.reduce((sum, a) => sum + (a.costBasis ?? 0), 0);
+  const angelCostTotalGBP = angelAssets.reduce(
+    (sum, a) => sum + (a.costBasisGBP ?? a.costBasis ?? 0),
+    0,
+  );
   const activeCount = angelAssets.filter((a) => a.status === 'active' || !a.status).length;
   const exitedCount = angelAssets.filter((a) => a.status === 'exited').length;
   const writtenOffCount = angelAssets.filter((a) => a.status === 'written_off').length;
@@ -161,20 +164,6 @@ export default function DashboardPage() {
     }
     return groups;
   }, [state.liabilities]);
-
-  // ─── Carry computations ─────────────────────────────────────────────────────
-  const totalCarryAt2x = useMemo(
-    () => computeTotalPersonalCarryAtMultiple(state.carryPositions, 2.0),
-    [state.carryPositions],
-  );
-  const totalCarryAt3x = useMemo(
-    () => computeTotalPersonalCarryAtMultiple(state.carryPositions, 3.0),
-    [state.carryPositions],
-  );
-  const totalCarryAt5x = useMemo(
-    () => computeTotalPersonalCarryAtMultiple(state.carryPositions, 5.0),
-    [state.carryPositions],
-  );
 
   // ─── Collapsible state ──────────────────────────────────────────────────────
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -364,38 +353,19 @@ export default function DashboardPage() {
             </div>
             {expanded['summary-assets'] && (
               <div className="px-6 pb-4 pt-0 border-t border-slate-100 space-y-1">
-                {Object.entries(assetsByCategory).map(([category, assets]) => {
-                  const meta = assetCategories[category as keyof typeof assetCategories];
-                  const subtotal = assets.reduce((sum, a) => sum + a.currentValue, 0);
-                  return (
-                    <div key={category} className="flex items-center justify-between py-0.5">
+                {state.assets
+                  .filter((a) => a.category !== 'angel')
+                  .map((asset) => (
+                    <div key={asset.id} className="flex items-center justify-between py-0.5">
                       <div className="flex items-center gap-1.5">
-                        <span
-                          className="inline-block w-2 h-2 rounded-full"
-                          style={{ backgroundColor: meta?.color }}
-                        />
-                        <span className="text-xs text-slate-600">{meta?.label ?? category}</span>
+                        <ProviderLogo provider={asset.provider} size={14} />
+                        <span className="text-xs text-slate-600">{asset.name}</span>
                       </div>
                       <span className="text-xs font-medium text-slate-700 tabular-nums">
-                        {formatCurrency(subtotal)}
+                        {formatCurrency(asset.currentValue)}
                       </span>
                     </div>
-                  );
-                })}
-                {fundAssets.length > 0 && (
-                  <div className="flex items-center justify-between py-0.5">
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        className="inline-block w-2 h-2 rounded-full"
-                        style={{ backgroundColor: assetCategories.fund?.color }}
-                      />
-                      <span className="text-xs text-slate-600">Fund Carry</span>
-                    </div>
-                    <span className="text-xs font-medium text-slate-700 tabular-nums">
-                      {formatCurrency(fundAssets.reduce((sum, a) => sum + a.currentValue, 0))}
-                    </span>
-                  </div>
-                )}
+                  ))}
                 {angelAssets.length > 0 && (
                   <div className="flex items-center justify-between py-0.5">
                     <div className="flex items-center gap-1.5">
@@ -403,7 +373,9 @@ export default function DashboardPage() {
                         className="inline-block w-2 h-2 rounded-full"
                         style={{ backgroundColor: assetCategories.angel?.color }}
                       />
-                      <span className="text-xs text-slate-600">Angel</span>
+                      <span className="text-xs text-slate-600">
+                        Angel Investments ({angelAssets.length})
+                      </span>
                     </div>
                     <span className="text-xs font-medium text-slate-700 tabular-nums">
                       {formatCurrency(angelTotal)}
@@ -943,14 +915,14 @@ export default function DashboardPage() {
               );
             })}
 
-            {/* Fund carry line */}
-            {fundAssets.length > 0 && (
+            {/* Individual fund carry lines */}
+            {fundAssets.map((fund) => (
               <div
-                className="flex items-center justify-between py-2 px-3 cursor-pointer hover:bg-slate-50"
-                onClick={() => toggleSection('funds')}
+                key={fund.id}
+                className="flex items-center justify-between py-2 px-3 hover:bg-slate-50 group"
               >
                 <div className="flex items-center gap-2">
-                  {chevron(!!expanded['funds'])}
+                  <ProviderLogo provider={fund.provider} size={16} />
                   <span
                     className="inline-block px-2 py-0.5 rounded-full text-xs font-medium"
                     style={{
@@ -958,50 +930,72 @@ export default function DashboardPage() {
                       color: assetCategories.fund?.color,
                     }}
                   >
-                    Fund Carry
+                    {fund.name}
                   </span>
-                  <span className="text-sm text-slate-500">({fundAssets.length})</span>
+                  {fund.unlockYear && (
+                    <span className="text-xs text-slate-400">unlock {fund.unlockYear}</span>
+                  )}
                 </div>
-                <span className="text-sm font-semibold text-slate-900">
-                  {formatCurrency(fundAssets.reduce((sum, a) => sum + a.currentValue, 0))}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-slate-900">
+                    {formatCurrency(fund.currentValue)}
+                  </span>
+                  <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => {
+                        setEditingAsset(fund);
+                        setPanelType('asset');
+                      }}
+                      className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
+                      title="Edit"
+                    >
+                      <PencilIcon />
+                    </button>
+                  </div>
+                </div>
               </div>
-            )}
-            {expanded['funds'] &&
-              fundAssets.map((fund) => (
-                <div
-                  key={fund.id}
-                  className="flex items-center justify-between py-1.5 px-3 pl-10 hover:bg-slate-50 group"
-                >
-                  <div className="flex items-center gap-2">
-                    <ProviderLogo provider={fund.provider} size={16} />
-                    <span className="text-sm text-slate-700">{fund.name}</span>
-                    <span className="text-xs text-slate-400">
-                      {formatPercent(fund.annualGrowthRate)}
-                    </span>
-                    {fund.unlockYear && (
-                      <span className="text-xs text-slate-400">unlock {fund.unlockYear}</span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-slate-900">
-                      {formatCurrency(fund.currentValue)}
-                    </span>
-                    <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => {
-                          setEditingAsset(fund);
-                          setPanelType('asset');
-                        }}
-                        className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
-                        title="Edit"
-                      >
-                        <PencilIcon />
-                      </button>
-                    </div>
+            ))}
+
+            {/* Individual children ISA lines */}
+            {childrenIsaAssets.map((isa) => (
+              <div
+                key={isa.id}
+                className="flex items-center justify-between py-2 px-3 hover:bg-slate-50 group"
+              >
+                <div className="flex items-center gap-2">
+                  <ProviderLogo provider={isa.provider} size={16} />
+                  <span
+                    className="inline-block px-2 py-0.5 rounded-full text-xs font-medium"
+                    style={{
+                      backgroundColor: assetCategories.children_isa?.bgColor,
+                      color: assetCategories.children_isa?.color,
+                    }}
+                  >
+                    {isa.name}
+                  </span>
+                  {isa.endYear && (
+                    <span className="text-xs text-slate-400">matures {isa.endYear}</span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-slate-900">
+                    {formatCurrency(isa.currentValue)}
+                  </span>
+                  <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => {
+                        setEditingAsset(isa);
+                        setPanelType('asset');
+                      }}
+                      className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
+                      title="Edit"
+                    >
+                      <PencilIcon />
+                    </button>
                   </div>
                 </div>
-              ))}
+              </div>
+            ))}
 
             {/* Angel line */}
             {angelAssets.length > 0 && (
@@ -1018,7 +1012,7 @@ export default function DashboardPage() {
                       color: assetCategories.angel?.color,
                     }}
                   >
-                    Angel
+                    Angel Investments
                   </span>
                   <span className="text-sm text-slate-500">
                     ({angelAssets.length}) · {activeCount} active · {exitedCount} exited ·{' '}
@@ -1136,8 +1130,8 @@ export default function DashboardPage() {
               <div>
                 <h2 className="text-lg font-semibold text-slate-900">Angel Investments</h2>
                 <p className="text-sm text-slate-500 mt-0.5">
-                  {formatCurrency(angelCostTotal)} deployed ·{' '}
-                  {angelCostTotal > 0 ? `${(angelTotal / angelCostTotal).toFixed(2)}x` : '—'}{' '}
+                  {formatCurrency(angelCostTotalGBP)} deployed (GBP) ·{' '}
+                  {angelCostTotalGBP > 0 ? `${(angelTotal / angelCostTotalGBP).toFixed(2)}x` : '—'}{' '}
                   portfolio MOIC
                 </p>
               </div>
@@ -1158,17 +1152,15 @@ export default function DashboardPage() {
                   <tr className="border-b border-slate-200">
                     <th className="text-left py-2 px-3 font-semibold text-slate-600">Name</th>
                     <th className="text-left py-2 px-3 font-semibold text-slate-600">Instrument</th>
+                    <th className="text-center py-2 px-3 font-semibold text-slate-600">Date</th>
                     <th className="text-right py-2 px-3 font-semibold text-slate-600">
-                      Cost Basis
+                      Original Investment
                     </th>
-                    <th className="text-right py-2 px-3 font-semibold text-slate-600">
-                      Current Value
-                    </th>
+                    <th className="text-right py-2 px-3 font-semibold text-slate-600">GBP Value</th>
                     <th className="text-right py-2 px-3 font-semibold text-slate-600">MOIC</th>
                     <th className="text-center py-2 px-3 font-semibold text-slate-600">
                       Tax Relief
                     </th>
-                    <th className="text-center py-2 px-3 font-semibold text-slate-600">Date</th>
                     <th className="text-center py-2 px-3 font-semibold text-slate-600">Status</th>
                     <th className="text-center py-2 px-3 font-semibold text-slate-600 w-20">
                       Actions
@@ -1220,23 +1212,43 @@ export default function DashboardPage() {
                               '—'
                             )}
                           </td>
+                          <td className="py-2 px-3 text-center text-xs text-slate-500">
+                            {asset.investmentDate
+                              ? new Date(asset.investmentDate).toLocaleDateString('en-GB', {
+                                  month: 'short',
+                                  year: 'numeric',
+                                })
+                              : '—'}
+                          </td>
                           <td className="py-2 px-3 text-right text-slate-600">
                             {formatCostBasis(asset.costBasis, asset.costCurrency)}
                           </td>
                           <td className="py-2 px-3 text-right text-slate-900">
-                            {formatCurrency(asset.currentValue)}
+                            {asset.costBasisGBP != null && asset.costBasisGBP > 0
+                              ? formatCurrency(asset.costBasisGBP)
+                              : asset.costBasis != null && asset.costBasis > 0
+                                ? formatCurrency(asset.costBasis)
+                                : '—'}
+                            {asset.fxRate != null && (
+                              <span className="block text-[10px] text-slate-400">
+                                @{asset.fxRate.toFixed(4)}
+                              </span>
+                            )}
                           </td>
                           <td className="py-2 px-3 text-right">
                             <span
                               className={
-                                asset.costBasis &&
-                                asset.costBasis > 0 &&
-                                asset.currentValue / asset.costBasis >= 1
+                                asset.costBasisGBP &&
+                                asset.costBasisGBP > 0 &&
+                                asset.currentValue / asset.costBasisGBP >= 1
                                   ? 'text-emerald-600 font-medium'
                                   : 'text-red-500 font-medium'
                               }
                             >
-                              {formatMoic(asset.currentValue, asset.costBasis)}
+                              {formatMoic(
+                                asset.currentValue,
+                                asset.costBasisGBP ?? asset.costBasis,
+                              )}
                             </span>
                           </td>
                           <td className="py-2 px-3 text-center">
@@ -1251,14 +1263,6 @@ export default function DashboardPage() {
                                 Not Eligible
                               </span>
                             )}
-                          </td>
-                          <td className="py-2 px-3 text-center text-xs text-slate-500">
-                            {asset.investmentDate
-                              ? new Date(asset.investmentDate).toLocaleDateString('en-GB', {
-                                  month: 'short',
-                                  year: 'numeric',
-                                })
-                              : '—'}
                           </td>
                           <td className="py-2 px-3 text-center">
                             {asset.status ? (
@@ -1344,24 +1348,25 @@ export default function DashboardPage() {
                   <tr className="bg-slate-50 font-semibold">
                     <td className="py-2 px-3 text-slate-900">Total</td>
                     <td className="py-2 px-3"></td>
-                    <td className="py-2 px-3 text-right text-slate-600">
-                      {formatCostBasis(angelCostTotal, 'GBP')}
-                    </td>
+                    <td className="py-2 px-3"></td>
+                    <td className="py-2 px-3 text-right text-slate-600">—</td>
                     <td className="py-2 px-3 text-right text-slate-900">
-                      {formatCurrency(angelTotal)}
+                      {formatCurrency(angelCostTotalGBP)}
                     </td>
                     <td className="py-2 px-3 text-right font-medium">
                       <span
                         className={
-                          angelCostTotal > 0 && angelTotal / angelCostTotal >= 1
+                          angelCostTotalGBP > 0 && angelTotal / angelCostTotalGBP >= 1
                             ? 'text-emerald-600'
                             : 'text-red-500'
                         }
                       >
-                        {angelCostTotal > 0 ? `${(angelTotal / angelCostTotal).toFixed(2)}x` : '—'}
+                        {angelCostTotalGBP > 0
+                          ? `${(angelTotal / angelCostTotalGBP).toFixed(2)}x`
+                          : '—'}
                       </span>
                     </td>
-                    <td colSpan={4} className="py-2 px-3"></td>
+                    <td colSpan={3} className="py-2 px-3"></td>
                   </tr>
                 </tbody>
               </table>
@@ -1386,27 +1391,6 @@ export default function DashboardPage() {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <StatCard
-                title="Personal Carry @2x"
-                value={formatCurrency(totalCarryAt2x * fx.rate)}
-                subtitle={`${formatEUR(totalCarryAt2x)} · ECB ${fx.rate.toFixed(4)}${fx.date ? ` (${fx.date})` : ''}`}
-                color="blue"
-              />
-              <StatCard
-                title="Personal Carry @3x"
-                value={formatCurrency(totalCarryAt3x * fx.rate)}
-                subtitle={`${formatEUR(totalCarryAt3x)} · ECB ${fx.rate.toFixed(4)}${fx.date ? ` (${fx.date})` : ''}`}
-                color="green"
-              />
-              <StatCard
-                title="Personal Carry @5x"
-                value={formatCurrency(totalCarryAt5x * fx.rate)}
-                subtitle={`${formatEUR(totalCarryAt5x)} · ECB ${fx.rate.toFixed(4)}${fx.date ? ` (${fx.date})` : ''}`}
-                color="purple"
-              />
-            </div>
-
             {state.carryPositions.map((cp) => (
               <FundSection
                 key={cp.id}
@@ -1418,11 +1402,6 @@ export default function DashboardPage() {
                 onDeleteFund={() =>
                   setDeleteTarget({ id: cp.id, name: cp.fundName, type: 'carryFund' })
                 }
-                onAddCompany={() => {
-                  setCompanyContext(cp);
-                  setEditingCompany(undefined);
-                  setPanelType('carryCompany');
-                }}
                 onEditCompany={(company) => {
                   setCompanyContext(cp);
                   setEditingCompany(company);
@@ -1438,64 +1417,6 @@ export default function DashboardPage() {
                 }
               />
             ))}
-
-            {/* Combined Carry Summary */}
-            {state.carryPositions.length > 1 && (
-              <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-                <h2 className="text-lg font-semibold text-slate-900 mb-4">
-                  Combined Carry Summary
-                </h2>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-slate-200">
-                        <th className="text-left py-2 px-3 font-semibold text-slate-600">
-                          Multiple
-                        </th>
-                        {state.carryPositions.map((cp) => (
-                          <th
-                            key={cp.id}
-                            className="text-right py-2 px-3 font-semibold text-slate-600"
-                          >
-                            {cp.fundName}
-                          </th>
-                        ))}
-                        <th className="text-right py-2 px-3 font-semibold text-slate-900">
-                          Total Personal (GBP)
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {CARRY_MULTIPLES.map((m) => {
-                        const perFund = state.carryPositions.map((cp) => {
-                          const scenarios = computeCarryScenarios(cp, [m]);
-                          return scenarios[0];
-                        });
-                        const totalPersonalEur = perFund.reduce(
-                          (s, sc) => s + (sc?.personalCarry ?? 0),
-                          0,
-                        );
-                        return (
-                          <tr key={m} className="border-b border-slate-50 hover:bg-slate-50">
-                            <td className="py-2 px-3 font-medium text-slate-900">
-                              {m.toFixed(1)}x
-                            </td>
-                            {perFund.map((sc, i) => (
-                              <td key={i} className="py-2 px-3 text-right text-slate-600">
-                                {formatEUR(sc?.personalCarry ?? 0)}
-                              </td>
-                            ))}
-                            <td className="py-2 px-3 text-right font-bold text-emerald-700">
-                              {formatCurrency(totalPersonalEur * fx.rate)}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
           </>
         )}
       </section>
@@ -1576,7 +1497,6 @@ interface FundSectionProps {
   carryPosition: CarryPosition;
   onEditFund: () => void;
   onDeleteFund: () => void;
-  onAddCompany: () => void;
   onEditCompany: (company: PortfolioCompany) => void;
   onDeleteCompany: (company: PortfolioCompany) => void;
 }
@@ -1585,7 +1505,6 @@ function FundSection({
   carryPosition,
   onEditFund,
   onDeleteFund,
-  onAddCompany,
   onEditCompany,
   onDeleteCompany,
 }: FundSectionProps) {
@@ -1598,6 +1517,9 @@ function FundSection({
   const [nameFilter, setNameFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [moicFilter, setMoicFilter] = useState<string>('all');
+  const [investedFilter, setInvestedFilter] = useState<string>('all');
+  const [currentValFilter, setCurrentValFilter] = useState<string>('all');
+  const [ownershipFilter, setOwnershipFilter] = useState<string>('all');
 
   const filteredCompanies = useMemo(() => {
     return carryPosition.portfolioCompanies.filter((company) => {
@@ -1610,11 +1532,41 @@ function FundSection({
         if (moicFilter === 'above1' && moic < 1) return false;
         if (moicFilter === 'below1' && moic >= 1) return false;
       }
+      if (investedFilter !== 'all') {
+        if (investedFilter === 'above500k' && company.investedAmount < 500000) return false;
+        if (investedFilter === 'above100k' && company.investedAmount < 100000) return false;
+        if (investedFilter === 'below100k' && company.investedAmount >= 100000) return false;
+      }
+      if (currentValFilter !== 'all') {
+        if (currentValFilter === 'above500k' && company.currentValuation < 500000) return false;
+        if (currentValFilter === 'above100k' && company.currentValuation < 100000) return false;
+        if (currentValFilter === 'below100k' && company.currentValuation >= 100000) return false;
+      }
+      if (ownershipFilter !== 'all') {
+        const pct = company.ownershipPercent * 100;
+        if (ownershipFilter === 'above5' && pct < 5) return false;
+        if (ownershipFilter === 'above1' && pct < 1) return false;
+        if (ownershipFilter === 'below1' && pct >= 1) return false;
+      }
       return true;
     });
-  }, [carryPosition.portfolioCompanies, nameFilter, statusFilter, moicFilter]);
+  }, [
+    carryPosition.portfolioCompanies,
+    nameFilter,
+    statusFilter,
+    moicFilter,
+    investedFilter,
+    currentValFilter,
+    ownershipFilter,
+  ]);
 
-  const hasActiveFilters = nameFilter !== '' || statusFilter !== 'all' || moicFilter !== 'all';
+  const hasActiveFilters =
+    nameFilter !== '' ||
+    statusFilter !== 'all' ||
+    moicFilter !== 'all' ||
+    investedFilter !== 'all' ||
+    currentValFilter !== 'all' ||
+    ownershipFilter !== 'all';
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
@@ -1687,13 +1639,6 @@ function FundSection({
               </span>
             )}
           </h3>
-          <button
-            onClick={onAddCompany}
-            className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-slate-100 text-slate-600 rounded hover:bg-slate-200 transition-colors"
-          >
-            <PlusIcon className="w-3.5 h-3.5" />
-            Add Company
-          </button>
         </div>
         {carryPosition.portfolioCompanies.length > 0 ? (
           <div className="overflow-x-auto">
@@ -1720,9 +1665,42 @@ function FundSection({
                       className="w-full text-xs font-normal px-2 py-1 border border-slate-200 rounded bg-white text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
                     />
                   </th>
-                  <th className="py-1.5 px-3" />
-                  <th className="py-1.5 px-3" />
-                  <th className="py-1.5 px-3" />
+                  <th className="py-1.5 px-3">
+                    <select
+                      value={investedFilter}
+                      onChange={(e) => setInvestedFilter(e.target.value)}
+                      className="w-full text-xs font-normal px-1 py-1 border border-slate-200 rounded bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                    >
+                      <option value="all">All</option>
+                      <option value="above500k">&ge; €500k</option>
+                      <option value="above100k">&ge; €100k</option>
+                      <option value="below100k">&lt; €100k</option>
+                    </select>
+                  </th>
+                  <th className="py-1.5 px-3">
+                    <select
+                      value={currentValFilter}
+                      onChange={(e) => setCurrentValFilter(e.target.value)}
+                      className="w-full text-xs font-normal px-1 py-1 border border-slate-200 rounded bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                    >
+                      <option value="all">All</option>
+                      <option value="above500k">&ge; €500k</option>
+                      <option value="above100k">&ge; €100k</option>
+                      <option value="below100k">&lt; €100k</option>
+                    </select>
+                  </th>
+                  <th className="py-1.5 px-3">
+                    <select
+                      value={ownershipFilter}
+                      onChange={(e) => setOwnershipFilter(e.target.value)}
+                      className="w-full text-xs font-normal px-1 py-1 border border-slate-200 rounded bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                    >
+                      <option value="all">All</option>
+                      <option value="above5">&ge; 5%</option>
+                      <option value="above1">&ge; 1%</option>
+                      <option value="below1">&lt; 1%</option>
+                    </select>
+                  </th>
                   <th className="py-1.5 px-3">
                     <select
                       value={moicFilter}
@@ -1754,6 +1732,9 @@ function FundSection({
                           setNameFilter('');
                           setStatusFilter('all');
                           setMoicFilter('all');
+                          setInvestedFilter('all');
+                          setCurrentValFilter('all');
+                          setOwnershipFilter('all');
                         }}
                         className="text-xs text-blue-600 hover:text-blue-800"
                         title="Clear filters"
