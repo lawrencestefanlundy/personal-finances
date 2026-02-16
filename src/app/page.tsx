@@ -147,7 +147,6 @@ export default function DashboardPage() {
   const fundAssets = state.assets.filter((a) => a.category === 'fund');
   const childrenIsaAssets = state.assets.filter((a) => a.category === 'children_isa');
   const angelTotal = angelAssets.reduce((sum, a) => sum + a.currentValue, 0);
-  const angelCostTotal = angelAssets.reduce((sum, a) => sum + (a.costBasis ?? 0), 0);
   const angelCostTotalGBP = angelAssets.reduce(
     (sum, a) => sum + (a.costBasisGBP ?? a.costBasis ?? 0),
     0,
@@ -186,6 +185,34 @@ export default function DashboardPage() {
     }
     return map;
   }, [state.assets]);
+
+  // Angel filter + sort state
+  const [angelStatusFilter, setAngelStatusFilter] = useState<
+    'all' | 'active' | 'written_off' | 'exited'
+  >('all');
+
+  const filteredAngelAssets = (() => {
+    const filtered =
+      angelStatusFilter === 'all'
+        ? angelAssets
+        : angelAssets.filter((a) => {
+            if (angelStatusFilter === 'active') return a.status === 'active' || !a.status;
+            return a.status === angelStatusFilter;
+          });
+
+    // Sort: active first (by MOIC desc), then exited, then written_off
+    const statusOrder: Record<string, number> = { active: 0, exited: 1, written_off: 2 };
+    return [...filtered].sort((a, b) => {
+      const aStatus = a.status || 'active';
+      const bStatus = b.status || 'active';
+      const orderDiff = (statusOrder[aStatus] ?? 0) - (statusOrder[bStatus] ?? 0);
+      if (orderDiff !== 0) return orderDiff;
+      // Within same status group, sort by MOIC descending
+      const aMoic = a.costBasisGBP && a.costBasisGBP > 0 ? a.currentValue / a.costBasisGBP : 0;
+      const bMoic = b.costBasisGBP && b.costBasisGBP > 0 ? b.currentValue / b.costBasisGBP : 0;
+      return bMoic - aMoic;
+    });
+  })();
 
   // ─── CRUD state ─────────────────────────────────────────────────────────────
   const [panelType, setPanelType] = useState<PanelType>(null);
@@ -1146,6 +1173,34 @@ export default function DashboardPage() {
                 Add Investment
               </button>
             </div>
+            {/* Status filter pills */}
+            <div className="flex items-center gap-2 mb-4">
+              {(
+                [
+                  { key: 'all', label: 'All', count: angelAssets.length },
+                  { key: 'active', label: 'Active', count: activeCount },
+                  { key: 'exited', label: 'Exited', count: exitedCount },
+                  { key: 'written_off', label: 'Written Off', count: writtenOffCount },
+                ] as const
+              ).map((f) => (
+                <button
+                  key={f.key}
+                  onClick={() => setAngelStatusFilter(f.key)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors ${
+                    angelStatusFilter === f.key
+                      ? 'bg-slate-900 text-white border-slate-900'
+                      : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'
+                  }`}
+                >
+                  {f.label}{' '}
+                  <span
+                    className={angelStatusFilter === f.key ? 'text-slate-300' : 'text-slate-400'}
+                  >
+                    {f.count}
+                  </span>
+                </button>
+              ))}
+            </div>
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
                 <thead>
@@ -1168,7 +1223,7 @@ export default function DashboardPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {angelAssets.map((asset) => {
+                  {filteredAngelAssets.map((asset) => {
                     const emails = parsedEmailUpdates[asset.id];
                     const hasEmails = emails && emails.length > 0;
                     const isAngelExpanded = expandedAngel === asset.id;
@@ -1345,29 +1400,48 @@ export default function DashboardPage() {
                       </React.Fragment>
                     );
                   })}
-                  <tr className="bg-slate-50 font-semibold">
-                    <td className="py-2 px-3 text-slate-900">Total</td>
-                    <td className="py-2 px-3"></td>
-                    <td className="py-2 px-3"></td>
-                    <td className="py-2 px-3 text-right text-slate-600">—</td>
-                    <td className="py-2 px-3 text-right text-slate-900">
-                      {formatCurrency(angelCostTotalGBP)}
-                    </td>
-                    <td className="py-2 px-3 text-right font-medium">
-                      <span
-                        className={
-                          angelCostTotalGBP > 0 && angelTotal / angelCostTotalGBP >= 1
-                            ? 'text-emerald-600'
-                            : 'text-red-500'
-                        }
-                      >
-                        {angelCostTotalGBP > 0
-                          ? `${(angelTotal / angelCostTotalGBP).toFixed(2)}x`
-                          : '—'}
-                      </span>
-                    </td>
-                    <td colSpan={3} className="py-2 px-3"></td>
-                  </tr>
+                  {(() => {
+                    const filteredCostGBP = filteredAngelAssets.reduce(
+                      (sum, a) => sum + (a.costBasisGBP ?? a.costBasis ?? 0),
+                      0,
+                    );
+                    const filteredTotal = filteredAngelAssets.reduce(
+                      (sum, a) => sum + a.currentValue,
+                      0,
+                    );
+                    return (
+                      <tr className="bg-slate-50 font-semibold">
+                        <td className="py-2 px-3 text-slate-900">
+                          Total
+                          {angelStatusFilter !== 'all' && (
+                            <span className="ml-1 text-xs font-normal text-slate-400">
+                              ({filteredAngelAssets.length} of {angelAssets.length})
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-2 px-3"></td>
+                        <td className="py-2 px-3"></td>
+                        <td className="py-2 px-3 text-right text-slate-600">—</td>
+                        <td className="py-2 px-3 text-right text-slate-900">
+                          {formatCurrency(filteredCostGBP)}
+                        </td>
+                        <td className="py-2 px-3 text-right font-medium">
+                          <span
+                            className={
+                              filteredCostGBP > 0 && filteredTotal / filteredCostGBP >= 1
+                                ? 'text-emerald-600'
+                                : 'text-red-500'
+                            }
+                          >
+                            {filteredCostGBP > 0
+                              ? `${(filteredTotal / filteredCostGBP).toFixed(2)}x`
+                              : '—'}
+                          </span>
+                        </td>
+                        <td colSpan={3} className="py-2 px-3"></td>
+                      </tr>
+                    );
+                  })()}
                 </tbody>
               </table>
             </div>
