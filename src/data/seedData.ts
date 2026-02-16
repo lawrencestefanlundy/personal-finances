@@ -431,7 +431,7 @@ export const seedData: FinanceState = {
     },
     {
       id: 'asset-insigai',
-      name: 'Insig AI (Options)',
+      name: 'Insig AI',
       currentValue: 0,
       annualGrowthRate: 0,
       category: 'angel',
@@ -444,8 +444,7 @@ export const seedData: FinanceState = {
       geography: 'United Kingdom',
       industry: 'AI / NLP',
       notes:
-        '1.5M options at 50p exercise. Vesting: 1M Apr 2026, 500K Apr 2027. Exercise deadline Oct 2028. Share price ~22.5p (Feb 2026) — out of the money.',
-      provider: 'Insig AI',
+        '1.5M options. Strike price: 50p. Current share price: ~22.5p (Feb 2026) — out of the money. Vesting: 1M Apr 2026, 500K Apr 2027. Exercise deadline Oct 2028.',
       emailUpdates:
         '[{"subject":"FW: Project Capital","from":"Richard Bernstein <rb@crystalamber.com>","date":"2025-08-06","snippet":"Inside information - appreciate thoughts on this section."},{"subject":"AIM Submission","from":"Richard Bernstein <rb@crystalamber.com>","date":"2025-08-20","snippet":"Detailed submission. Pressing for a response. Lawyers working on it."},{"subject":"AIM Submission","from":"Lawrence Lundy","date":"2025-08-27","snippet":"See email from company email. Formal submission update."}]',
     },
