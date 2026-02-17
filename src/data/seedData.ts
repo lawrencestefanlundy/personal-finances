@@ -466,6 +466,10 @@ export const seedData: FinanceState = {
       annualGrowthRate: 0.02,
       category: 'property',
       isLiquid: false,
+      purchasePrice: 1305000,
+      purchaseDate: '2022-06',
+      propertyAddress: '4 King Henrys Road, Lewes',
+      propertyRegion: 'lewes',
     },
     {
       id: 'asset-angel-bluejay',

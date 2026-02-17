@@ -37,6 +37,7 @@ import PortfolioCompanyForm from '@/components/forms/PortfolioCompanyForm';
 import ProviderLogo from '@/components/ui/ProviderLogo';
 import TransactionList from '@/components/TransactionList';
 import VehicleValuationCard from '@/components/VehicleValuationCard';
+import PropertyValuationCard from '@/components/PropertyValuationCard';
 import { useEurGbpRate } from '@/hooks/useEurGbpRate';
 
 const CARRY_MULTIPLES = [2.0, 3.0, 5.0];
@@ -1055,6 +1056,13 @@ export default function DashboardPage() {
                         <VehicleValuationCard asset={asset} />
                       </div>
                     )}
+                    {asset.category === 'property' &&
+                      asset.purchasePrice &&
+                      asset.propertyRegion && (
+                        <div className="px-3 pb-2">
+                          <PropertyValuationCard asset={asset} />
+                        </div>
+                      )}
                   </div>
                 );
               })}

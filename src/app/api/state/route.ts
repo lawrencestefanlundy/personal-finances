@@ -181,6 +181,11 @@ export async function POST(request: Request) {
             registration: a.registration ?? null,
             mileage: a.mileage ?? null,
             vehicleData: a.vehicleData ?? null,
+            purchasePrice: a.purchasePrice ?? null,
+            purchaseDate: a.purchaseDate ?? null,
+            propertyAddress: a.propertyAddress ?? null,
+            propertyRegion: a.propertyRegion ?? null,
+            propertyData: a.propertyData ?? null,
           })),
         });
       }
