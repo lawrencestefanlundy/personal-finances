@@ -109,6 +109,32 @@ export interface Asset {
   geography?: string;
   industry?: string;
   emailUpdates?: string; // JSON string of EmailUpdate[]
+  // Vehicle-specific fields (vehicle category)
+  registration?: string; // e.g. GY17STZ
+  vehicleData?: string; // JSON string of VehicleData
+}
+
+// === VEHICLE DATA (from DVLA + market valuation) ===
+export interface VehicleData {
+  // DVLA fields
+  make?: string;
+  colour?: string;
+  yearOfManufacture?: number;
+  engineCapacity?: number;
+  fuelType?: string;
+  co2Emissions?: number;
+  taxStatus?: string;
+  taxDueDate?: string;
+  motStatus?: string;
+  motExpiryDate?: string;
+  dateOfLastV5CIssued?: string;
+  // Valuation fields
+  valuationLow?: number;
+  valuationMid?: number;
+  valuationHigh?: number;
+  valuationSource?: string;
+  valuationDate?: string;
+  mileageEstimate?: number;
 }
 
 // === LIABILITIES ===

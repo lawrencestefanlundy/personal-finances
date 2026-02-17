@@ -36,6 +36,7 @@ import CarryPositionForm from '@/components/forms/CarryPositionForm';
 import PortfolioCompanyForm from '@/components/forms/PortfolioCompanyForm';
 import ProviderLogo from '@/components/ui/ProviderLogo';
 import TransactionList from '@/components/TransactionList';
+import VehicleValuationCard from '@/components/VehicleValuationCard';
 import { useEurGbpRate } from '@/hooks/useEurGbpRate';
 
 const CARRY_MULTIPLES = [2.0, 3.0, 5.0];
@@ -1005,46 +1006,55 @@ export default function DashboardPage() {
               .map((asset) => {
                 const meta = assetCategories[asset.category as keyof typeof assetCategories];
                 return (
-                  <div
-                    key={asset.id}
-                    className="flex items-center justify-between py-2 px-3 hover:bg-slate-50 group"
-                  >
-                    <div className="flex items-center gap-2">
-                      <ProviderLogo provider={asset.provider} size={16} />
-                      <span className="text-sm text-slate-700">{asset.name}</span>
-                      <span
-                        className="inline-block px-2 py-0.5 rounded-full text-xs font-medium"
-                        style={{ backgroundColor: meta?.bgColor, color: meta?.color }}
-                      >
-                        {meta?.label ?? asset.category}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-slate-900">
-                        {formatCurrency(asset.currentValue)}
-                      </span>
-                      <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => {
-                            setEditingAsset(asset);
-                            setPanelType('asset');
-                          }}
-                          className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
-                          title="Edit"
+                  <div key={asset.id}>
+                    <div className="flex items-center justify-between py-2 px-3 hover:bg-slate-50 group">
+                      <div className="flex items-center gap-2">
+                        <ProviderLogo provider={asset.provider} size={16} />
+                        <span className="text-sm text-slate-700">{asset.name}</span>
+                        <span
+                          className="inline-block px-2 py-0.5 rounded-full text-xs font-medium"
+                          style={{ backgroundColor: meta?.bgColor, color: meta?.color }}
                         >
-                          <PencilIcon />
-                        </button>
-                        <button
-                          onClick={() =>
-                            setDeleteTarget({ id: asset.id, name: asset.name, type: 'asset' })
-                          }
-                          className="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
-                          title="Delete"
-                        >
-                          <TrashIcon />
-                        </button>
+                          {meta?.label ?? asset.category}
+                        </span>
+                        {asset.registration && (
+                          <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                            {asset.registration}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-slate-900">
+                          {formatCurrency(asset.currentValue)}
+                        </span>
+                        <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => {
+                              setEditingAsset(asset);
+                              setPanelType('asset');
+                            }}
+                            className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
+                            title="Edit"
+                          >
+                            <PencilIcon />
+                          </button>
+                          <button
+                            onClick={() =>
+                              setDeleteTarget({ id: asset.id, name: asset.name, type: 'asset' })
+                            }
+                            className="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
+                            title="Delete"
+                          >
+                            <TrashIcon />
+                          </button>
+                        </div>
                       </div>
                     </div>
+                    {asset.category === 'vehicle' && asset.registration && (
+                      <div className="px-3 pb-2">
+                        <VehicleValuationCard asset={asset} />
+                      </div>
+                    )}
                   </div>
                 );
               })}

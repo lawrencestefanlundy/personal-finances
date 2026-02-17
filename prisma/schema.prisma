@@ -80,6 +80,8 @@ model Asset {
   geography        String?  // UK, US, Switzerland, etc.
   industry         String?  // sector/industry description
   emailUpdates     String?  // JSON array of {subject, from, date, snippet}
+  registration     String?  // vehicle registration number (e.g. GY17STZ)
+  vehicleData      String?  // JSON: DVLA + valuation data
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 

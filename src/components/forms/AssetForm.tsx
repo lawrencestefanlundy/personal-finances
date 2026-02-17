@@ -34,6 +34,8 @@ export default function AssetForm({ existing, onClose }: AssetFormProps) {
   const [status, setStatus] = useState(existing?.status ?? 'active');
   const [taxScheme, setTaxScheme] = useState(existing?.taxScheme ?? '');
   const [platform, setPlatform] = useState(existing?.platform ?? '');
+  // Vehicle-specific fields
+  const [registration, setRegistration] = useState(existing?.registration ?? '');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const inputClass =
@@ -81,6 +83,14 @@ export default function AssetForm({ existing, onClose }: AssetFormProps) {
             ...(taxScheme ? { taxScheme: taxScheme as 'SEIS' | 'EIS' } : {}),
             ...(platform.trim() ? { platform: platform.trim() } : {}),
             ...(existing?.emailUpdates ? { emailUpdates: existing.emailUpdates } : {}),
+          }
+        : {}),
+      ...(category === 'vehicle'
+        ? {
+            ...(registration.trim()
+              ? { registration: registration.trim().toUpperCase().replace(/\s/g, '') }
+              : {}),
+            ...(existing?.vehicleData ? { vehicleData: existing.vehicleData } : {}),
           }
         : {}),
     };
@@ -179,6 +189,19 @@ export default function AssetForm({ existing, onClose }: AssetFormProps) {
           Liquid asset
         </label>
       </div>
+
+      {/* Vehicle-specific fields — shown only for vehicle category */}
+      {category === 'vehicle' && (
+        <FormField label="Registration">
+          <input
+            type="text"
+            value={registration}
+            onChange={(e) => setRegistration(e.target.value)}
+            placeholder="e.g. GY17STZ"
+            className={`${inputClass} font-mono uppercase`}
+          />
+        </FormField>
+      )}
 
       {/* Investment-specific fields — shown only for angel category */}
       {category === 'angel' && (
