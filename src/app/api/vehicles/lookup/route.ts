@@ -1,13 +1,15 @@
 import { NextResponse } from 'next/server';
 import { getVehicleValuation } from '@/lib/vehicleValuation';
 
-// In-memory cache: one lookup per registration per hour
+// In-memory cache: keyed by reg+mileage, one hour TTL
 const cache = new Map<string, { data: unknown; fetchedAt: number }>();
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const reg = searchParams.get('registration')?.replace(/\s/g, '').toUpperCase();
+  const mileageParam = searchParams.get('mileage');
+  const mileage = mileageParam ? parseInt(mileageParam, 10) : undefined;
 
   if (!reg) {
     return NextResponse.json(
@@ -16,8 +18,8 @@ export async function GET(request: Request) {
     );
   }
 
-  // Check cache
-  const cached = cache.get(reg);
+  const cacheKey = `${reg}:${mileage ?? 'est'}`;
+  const cached = cache.get(cacheKey);
   if (cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS) {
     return NextResponse.json(cached.data, {
       headers: { 'Cache-Control': 'public, max-age=3600' },
@@ -25,8 +27,8 @@ export async function GET(request: Request) {
   }
 
   try {
-    const data = await getVehicleValuation(reg);
-    cache.set(reg, { data, fetchedAt: Date.now() });
+    const data = await getVehicleValuation(reg, mileage);
+    cache.set(cacheKey, { data, fetchedAt: Date.now() });
 
     return NextResponse.json(data, {
       headers: { 'Cache-Control': 'public, max-age=3600' },

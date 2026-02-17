@@ -179,6 +179,7 @@ export async function POST(request: Request) {
             industry: a.industry ?? null,
             emailUpdates: a.emailUpdates ?? null,
             registration: a.registration ?? null,
+            mileage: a.mileage ?? null,
             vehicleData: a.vehicleData ?? null,
           })),
         });

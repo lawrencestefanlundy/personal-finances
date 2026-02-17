@@ -116,7 +116,10 @@ function estimateMileage(yearOfManufacture: number): number {
  * Returns enriched vehicle data including DVLA details (if API key set)
  * and market valuation based on comparable listings.
  */
-export async function getVehicleValuation(registration: string): Promise<VehicleData> {
+export async function getVehicleValuation(
+  registration: string,
+  actualMileage?: number,
+): Promise<VehicleData> {
   const reg = registration.replace(/\s/g, '').toUpperCase();
   const profile = VEHICLE_PROFILES[reg];
 
@@ -124,7 +127,7 @@ export async function getVehicleValuation(registration: string): Promise<Vehicle
   const dvla = await lookupDvla(reg);
 
   const year = dvla?.yearOfManufacture ?? profile?.year ?? 0;
-  const mileageEstimate = estimateMileage(year);
+  const mileage = actualMileage ?? estimateMileage(year);
 
   let valuationLow = 0;
   let valuationMid = 0;
@@ -133,11 +136,11 @@ export async function getVehicleValuation(registration: string): Promise<Vehicle
 
   if (profile?.comparables.length) {
     // Use real comparable market data
-    const est = estimateFromComparables(profile.comparables, mileageEstimate);
+    const est = estimateFromComparables(profile.comparables, mileage);
     valuationLow = est.low;
     valuationMid = est.mid;
     valuationHigh = est.high;
-    valuationSource = `market-comparables (${profile.comparables.length} listings)`;
+    valuationSource = `market-comparables (${profile.comparables.length} listings${actualMileage ? `, ${actualMileage.toLocaleString()} mi actual` : ''})`;
   } else if (profile) {
     // Fall back to depreciation curve
     const age = new Date().getFullYear() - profile.year;
@@ -168,6 +171,6 @@ export async function getVehicleValuation(registration: string): Promise<Vehicle
     valuationHigh,
     valuationSource,
     valuationDate: new Date().toISOString().split('T')[0],
-    mileageEstimate,
+    mileageEstimate: mileage,
   };
 }

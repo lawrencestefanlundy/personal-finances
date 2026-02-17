@@ -36,6 +36,7 @@ export default function AssetForm({ existing, onClose }: AssetFormProps) {
   const [platform, setPlatform] = useState(existing?.platform ?? '');
   // Vehicle-specific fields
   const [registration, setRegistration] = useState(existing?.registration ?? '');
+  const [mileage, setMileage] = useState(existing?.mileage?.toString() ?? '');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const inputClass =
@@ -90,6 +91,7 @@ export default function AssetForm({ existing, onClose }: AssetFormProps) {
             ...(registration.trim()
               ? { registration: registration.trim().toUpperCase().replace(/\s/g, '') }
               : {}),
+            ...(mileage ? { mileage: Number(mileage) } : {}),
             ...(existing?.vehicleData ? { vehicleData: existing.vehicleData } : {}),
           }
         : {}),
@@ -192,15 +194,26 @@ export default function AssetForm({ existing, onClose }: AssetFormProps) {
 
       {/* Vehicle-specific fields — shown only for vehicle category */}
       {category === 'vehicle' && (
-        <FormField label="Registration">
-          <input
-            type="text"
-            value={registration}
-            onChange={(e) => setRegistration(e.target.value)}
-            placeholder="e.g. GY17STZ"
-            className={`${inputClass} font-mono uppercase`}
-          />
-        </FormField>
+        <div className="grid grid-cols-2 gap-3">
+          <FormField label="Registration">
+            <input
+              type="text"
+              value={registration}
+              onChange={(e) => setRegistration(e.target.value)}
+              placeholder="e.g. GY17STZ"
+              className={`${inputClass} font-mono uppercase`}
+            />
+          </FormField>
+          <FormField label="Mileage">
+            <input
+              type="number"
+              value={mileage}
+              onChange={(e) => setMileage(e.target.value)}
+              placeholder="e.g. 73000"
+              className={inputClass}
+            />
+          </FormField>
+        </div>
       )}
 
       {/* Investment-specific fields — shown only for angel category */}

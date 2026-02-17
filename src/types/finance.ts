@@ -111,6 +111,7 @@ export interface Asset {
   emailUpdates?: string; // JSON string of EmailUpdate[]
   // Vehicle-specific fields (vehicle category)
   registration?: string; // e.g. GY17STZ
+  mileage?: number; // current odometer reading
   vehicleData?: string; // JSON string of VehicleData
 }
 

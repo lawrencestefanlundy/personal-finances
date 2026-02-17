@@ -31,9 +31,9 @@ export default function VehicleValuationCard({ asset }: VehicleValuationCardProp
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(
-        `/api/vehicles/lookup?registration=${encodeURIComponent(registration)}`,
-      );
+      const params = new URLSearchParams({ registration });
+      if (asset.mileage) params.set('mileage', String(asset.mileage));
+      const res = await fetch(`/api/vehicles/lookup?${params}`);
       if (!res.ok) throw new Error(`Lookup failed (${res.status})`);
       const data = (await res.json()) as VehicleData;
       setVehicleData(data);
@@ -191,7 +191,9 @@ export default function VehicleValuationCard({ asset }: VehicleValuationCardProp
             )}
             {vehicleData.mileageEstimate && (
               <span>
-                <span className="text-slate-400">Est. mileage:</span>{' '}
+                <span className="text-slate-400">
+                  {asset.mileage ? 'Mileage:' : 'Est. mileage:'}
+                </span>{' '}
                 {vehicleData.mileageEstimate.toLocaleString()} mi
               </span>
             )}

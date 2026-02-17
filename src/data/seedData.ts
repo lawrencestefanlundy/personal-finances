@@ -451,12 +451,13 @@ export const seedData: FinanceState = {
     {
       id: 'asset-car',
       name: 'Polo Match Edition TSI 90',
-      currentValue: 7000,
+      currentValue: 7550,
       annualGrowthRate: -0.03,
       category: 'vehicle',
       isLiquid: false,
       provider: 'Volkswagen',
       registration: 'GY17STZ',
+      mileage: 73000,
     },
     {
       id: 'asset-house',
