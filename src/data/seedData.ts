@@ -798,6 +798,7 @@ export const seedData: FinanceState = {
       carryPercent: 0.2,
       hurdleRate: 0.08,
       personalSharePercent: 0.03763,
+      fundCloseYear: 2029,
       portfolioCompanies: [
         // ── Current Portfolio (16 companies) — Q4 2025 report (31 Dec 2025) ──
         {
@@ -1253,6 +1254,7 @@ export const seedData: FinanceState = {
       carryPercent: 0.2,
       hurdleRate: 0.08,
       personalSharePercent: 0.02,
+      fundCloseYear: 2033,
       portfolioCompanies: [
         // ── Current Portfolio (9 companies) — Q4 2025 report (31 Dec 2025) ──
         {
@@ -1436,6 +1438,7 @@ export const seedData: FinanceState = {
       carryPercent: 0.2,
       hurdleRate: 0.08,
       personalSharePercent: 0.15,
+      fundCloseYear: 2035,
       portfolioCompanies: [
         {
           id: 'pco-proteins1',

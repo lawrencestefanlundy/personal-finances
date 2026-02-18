@@ -255,6 +255,7 @@ export interface CarryPosition {
   portfolioCompanies: PortfolioCompany[];
   linkedAssetId?: string; // optional link to corresponding Asset entry
   location?: string; // fund domicile e.g. 'Germany', 'Luxembourg'
+  fundCloseYear?: number; // year the fund term ends (e.g. 2035)
   notes?: string;
 }
 

@@ -8,7 +8,6 @@ import {
   Expense,
   ExpenseCategory,
   Asset,
-  EmailUpdate,
   Liability,
   CarryPosition,
   PortfolioCompany,
@@ -223,22 +222,6 @@ export default function DashboardPage() {
   const toggleSection = (key: string) => {
     setExpanded((prev) => ({ ...prev, [key]: !prev[key] }));
   };
-
-  // Angel email expansion state
-  const [expandedAngel, setExpandedAngel] = useState<string | null>(null);
-  const parsedEmailUpdates = useMemo(() => {
-    const map: Record<string, EmailUpdate[]> = {};
-    for (const asset of state.assets) {
-      if (asset.category === 'angel' && asset.emailUpdates) {
-        try {
-          map[asset.id] = JSON.parse(asset.emailUpdates) as EmailUpdate[];
-        } catch {
-          map[asset.id] = [];
-        }
-      }
-    }
-    return map;
-  }, [state.assets]);
 
   // Angel filter + sort state
   type AngelSortKey =
@@ -1394,164 +1377,107 @@ export default function DashboardPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {sortedAngelAssets.map((asset) => {
-                    const emails = parsedEmailUpdates[asset.id];
-                    const hasEmails = emails && emails.length > 0;
-                    const isAngelExpanded = expandedAngel === asset.id;
-                    return (
-                      <React.Fragment key={asset.id}>
-                        <tr
-                          className={`border-b border-slate-50 hover:bg-slate-50 group ${hasEmails ? 'cursor-pointer' : ''}`}
-                          onClick={() =>
-                            hasEmails && setExpandedAngel(isAngelExpanded ? null : asset.id)
-                          }
-                        >
-                          <td className="py-2 px-3 font-medium text-slate-900">
-                            <div className="flex items-center gap-2">
-                              {hasEmails && (
-                                <span className="text-slate-400 flex-shrink-0">
-                                  {chevron(isAngelExpanded)}
-                                </span>
-                              )}
-                              <ProviderLogo provider={asset.provider} size={18} />
-                              <div>
-                                <span>{asset.name}</span>
-                                {asset.platform && (
-                                  <span className="block text-[10px] text-slate-400">
-                                    via {asset.platform}
-                                  </span>
-                                )}
-                                {hasEmails && (
-                                  <span className="ml-1.5 text-xs text-slate-400">
-                                    ({emails.length} emails)
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="py-2 px-3 text-center text-xs text-slate-500 whitespace-nowrap">
-                            {asset.investmentDate
-                              ? new Date(asset.investmentDate).toLocaleDateString('en-GB', {
-                                  month: 'short',
-                                  year: '2-digit',
-                                })
-                              : '—'}
-                            {asset.exitDate && (
+                  {sortedAngelAssets.map((asset) => (
+                    <tr key={asset.id} className="border-b border-slate-50 hover:bg-slate-50 group">
+                      <td className="py-2 px-3 font-medium text-slate-900">
+                        <div className="flex items-center gap-2">
+                          <ProviderLogo provider={asset.provider} size={18} />
+                          <div>
+                            <span>{asset.name}</span>
+                            {asset.platform && (
                               <span className="block text-[10px] text-slate-400">
-                                Exit:{' '}
-                                {new Date(asset.exitDate).toLocaleDateString('en-GB', {
-                                  month: 'short',
-                                  year: '2-digit',
-                                })}
+                                via {asset.platform}
                               </span>
                             )}
-                          </td>
-                          <td className="py-2 px-3">{geographyBubble(asset.geography)}</td>
-                          <td className="py-2 px-3 text-xs text-slate-500 max-w-[140px] truncate">
-                            {asset.industry ?? '—'}
-                          </td>
-                          <td className="py-2 px-3 text-right text-slate-600">
-                            {asset.ownershipPercent != null
-                              ? formatPercent(asset.ownershipPercent)
-                              : '—'}
-                          </td>
-                          <td className="py-2 px-3 text-right text-slate-600">
-                            {(asset.costBasisGBP ?? asset.costBasis ?? 0) > 0
-                              ? formatCurrency(asset.costBasisGBP ?? asset.costBasis ?? 0)
-                              : '—'}
-                          </td>
-                          <td className="py-2 px-3 text-right text-slate-900">
-                            {formatCurrency(asset.currentValue)}
-                          </td>
-                          <td className="py-2 px-3 text-right font-medium">
-                            {(() => {
-                              const costGBP = asset.costBasisGBP ?? asset.costBasis ?? 0;
-                              const totalReturn = asset.currentValue - costGBP;
-                              return (
-                                <span
-                                  className={totalReturn >= 0 ? 'text-emerald-600' : 'text-red-500'}
-                                >
-                                  {formatCurrency(totalReturn)}
-                                </span>
-                              );
-                            })()}
-                          </td>
-                          <td className="py-2 px-3 text-right font-medium">
-                            {(() => {
-                              const costGBP = asset.costBasisGBP ?? asset.costBasis ?? 0;
-                              const moic = costGBP > 0 ? asset.currentValue / costGBP : 0;
-                              return (
-                                <span className={moic >= 1 ? 'text-emerald-600' : 'text-red-600'}>
-                                  {moic.toFixed(2)}x
-                                </span>
-                              );
-                            })()}
-                          </td>
-                          <td className="py-2 px-3 text-right text-xs">
-                            {asset.irr != null ? (
-                              <span
-                                className={asset.irr >= 0 ? 'text-emerald-600' : 'text-red-500'}
-                              >
-                                {(asset.irr * 100).toFixed(1)}%
-                              </span>
-                            ) : (
-                              '—'
-                            )}
-                          </td>
-                          <td className="py-2 px-3 text-center">
-                            {(() => {
-                              const statusMeta =
-                                STATUS_LABELS[asset.status || 'active'] ?? STATUS_LABELS.active;
-                              return (
-                                <span
-                                  className="inline-block px-2 py-0.5 rounded-full text-xs font-medium"
-                                  style={{
-                                    backgroundColor: statusMeta.bg,
-                                    color: statusMeta.color,
-                                  }}
-                                >
-                                  {statusMeta.label}
-                                </span>
-                              );
-                            })()}
-                          </td>
-                        </tr>
-                        {isAngelExpanded && hasEmails && (
-                          <tr>
-                            <td
-                              colSpan={11}
-                              className="bg-slate-50 px-6 py-3 border-b border-slate-100"
-                            >
-                              <div className="max-h-64 overflow-y-auto space-y-2">
-                                {emails.slice(0, 10).map((email, i) => (
-                                  <div
-                                    key={i}
-                                    className="flex gap-3 text-xs border-b border-slate-100 pb-2 last:border-0"
-                                  >
-                                    <div className="flex-shrink-0 w-20 text-slate-400">
-                                      {new Date(email.date).toLocaleDateString('en-GB', {
-                                        day: 'numeric',
-                                        month: 'short',
-                                        year: 'numeric',
-                                      })}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <div className="font-medium text-slate-700 truncate">
-                                        {email.subject}
-                                      </div>
-                                      <div className="text-slate-400 truncate">
-                                        {email.from} — {email.snippet}
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </td>
-                          </tr>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-2 px-3 text-center text-xs text-slate-500 whitespace-nowrap">
+                        {asset.investmentDate
+                          ? new Date(asset.investmentDate).toLocaleDateString('en-GB', {
+                              month: 'short',
+                              year: '2-digit',
+                            })
+                          : '—'}
+                        {asset.exitDate && (
+                          <span className="block text-[10px] text-slate-400">
+                            Exit:{' '}
+                            {new Date(asset.exitDate).toLocaleDateString('en-GB', {
+                              month: 'short',
+                              year: '2-digit',
+                            })}
+                          </span>
                         )}
-                      </React.Fragment>
-                    );
-                  })}
+                      </td>
+                      <td className="py-2 px-3">{geographyBubble(asset.geography)}</td>
+                      <td className="py-2 px-3 text-xs text-slate-500 max-w-[140px] truncate">
+                        {asset.industry ?? '—'}
+                      </td>
+                      <td className="py-2 px-3 text-right text-slate-600">
+                        {asset.ownershipPercent != null
+                          ? formatPercent(asset.ownershipPercent)
+                          : '—'}
+                      </td>
+                      <td className="py-2 px-3 text-right text-slate-600">
+                        {(asset.costBasisGBP ?? asset.costBasis ?? 0) > 0
+                          ? formatCurrency(asset.costBasisGBP ?? asset.costBasis ?? 0)
+                          : '—'}
+                      </td>
+                      <td className="py-2 px-3 text-right text-slate-900">
+                        {formatCurrency(asset.currentValue)}
+                      </td>
+                      <td className="py-2 px-3 text-right font-medium">
+                        {(() => {
+                          const costGBP = asset.costBasisGBP ?? asset.costBasis ?? 0;
+                          const totalReturn = asset.currentValue - costGBP;
+                          return (
+                            <span
+                              className={totalReturn >= 0 ? 'text-emerald-600' : 'text-red-500'}
+                            >
+                              {formatCurrency(totalReturn)}
+                            </span>
+                          );
+                        })()}
+                      </td>
+                      <td className="py-2 px-3 text-right font-medium">
+                        {(() => {
+                          const costGBP = asset.costBasisGBP ?? asset.costBasis ?? 0;
+                          const moic = costGBP > 0 ? asset.currentValue / costGBP : 0;
+                          return (
+                            <span className={moic >= 1 ? 'text-emerald-600' : 'text-red-600'}>
+                              {moic.toFixed(2)}x
+                            </span>
+                          );
+                        })()}
+                      </td>
+                      <td className="py-2 px-3 text-right text-xs">
+                        {asset.irr != null ? (
+                          <span className={asset.irr >= 0 ? 'text-emerald-600' : 'text-red-500'}>
+                            {(asset.irr * 100).toFixed(1)}%
+                          </span>
+                        ) : (
+                          '—'
+                        )}
+                      </td>
+                      <td className="py-2 px-3 text-center">
+                        {(() => {
+                          const statusMeta =
+                            STATUS_LABELS[asset.status || 'active'] ?? STATUS_LABELS.active;
+                          return (
+                            <span
+                              className="inline-block px-2 py-0.5 rounded-full text-xs font-medium"
+                              style={{
+                                backgroundColor: statusMeta.bg,
+                                color: statusMeta.color,
+                              }}
+                            >
+                              {statusMeta.label}
+                            </span>
+                          );
+                        })()}
+                      </td>
+                    </tr>
+                  ))}
                   {(() => {
                     const filteredCostGBP = sortedAngelAssets.reduce(
                       (sum, a) => sum + (a.costBasisGBP ?? a.costBasis ?? 0),
@@ -1812,7 +1738,7 @@ function FundSection({ carryPosition, eurGbpRate, onEditFund, onDeleteFund }: Fu
         </div>
       </div>
 
-      <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-9 gap-4 p-6 bg-slate-50 border-b border-slate-100">
+      <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-10 gap-4 p-6 bg-slate-50 border-b border-slate-100">
         <div>
           <p className="text-xs text-slate-500">Fund Size</p>
           <p className="text-sm font-semibold text-slate-900">
@@ -1848,6 +1774,12 @@ function FundSection({ carryPosition, eurGbpRate, onEditFund, onDeleteFund }: Fu
         <div>
           <p className="text-xs text-slate-500">Location</p>
           <p className="text-sm font-semibold text-slate-900">{carryPosition.location ?? '—'}</p>
+        </div>
+        <div>
+          <p className="text-xs text-slate-500">Fund Close</p>
+          <p className="text-sm font-semibold text-slate-900">
+            {carryPosition.fundCloseYear ?? '—'}
+          </p>
         </div>
         {scenarios.map((sc) => (
           <div key={sc.multiple}>

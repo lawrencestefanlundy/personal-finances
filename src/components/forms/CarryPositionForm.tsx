@@ -29,6 +29,7 @@ export default function CarryPositionForm({ existing, onClose }: CarryPositionFo
   const [personalSharePercent, setPersonalSharePercent] = useState(
     existing ? (existing.personalSharePercent * 100).toString() : '',
   );
+  const [fundCloseYear, setFundCloseYear] = useState(existing?.fundCloseYear?.toString() ?? '');
   const [linkedAssetId, setLinkedAssetId] = useState(existing?.linkedAssetId ?? '');
   const [notes, setNotes] = useState(existing?.notes ?? '');
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -68,6 +69,7 @@ export default function CarryPositionForm({ existing, onClose }: CarryPositionFo
       personalSharePercent: Number(personalSharePercent) / 100,
       portfolioCompanies: existing?.portfolioCompanies ?? [],
       ...(linkedAssetId ? { linkedAssetId } : {}),
+      ...(fundCloseYear ? { fundCloseYear: Number(fundCloseYear) } : {}),
       ...(notes.trim() ? { notes: notes.trim() } : {}),
     };
 
@@ -195,6 +197,17 @@ export default function CarryPositionForm({ existing, onClose }: CarryPositionFo
           </div>
         </FormField>
       </div>
+
+      <FormField label="Fund Close Year">
+        <input
+          type="number"
+          step="1"
+          value={fundCloseYear}
+          onChange={(e) => setFundCloseYear(e.target.value)}
+          placeholder="e.g. 2035"
+          className={inputClass}
+        />
+      </FormField>
 
       <FormField label="Linked Asset">
         <select
