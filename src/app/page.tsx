@@ -14,16 +14,16 @@ import {
   PortfolioCompany,
 } from '@/types/finance';
 import { computeMonthlySnapshots } from '@/lib/calculations';
-import { computeYearlyProjections } from '@/lib/projections';
+import { computeYearlyProjections, projectAssetValue } from '@/lib/projections';
 import { computeCarryScenarios, computePortfolioMetrics } from '@/lib/carryCalculations';
-import { formatCurrency, formatEUR, formatMonth, formatPercent } from '@/lib/formatters';
-import { assetCategories, expenseCategories } from '@/data/categories';
 import {
-  formatCostBasis,
-  formatMoic,
-  instrumentLabels,
-  statusStyles,
-} from '@/lib/investmentFormatters';
+  formatCurrency,
+  formatCompact,
+  formatEUR,
+  formatMonth,
+  formatPercent,
+} from '@/lib/formatters';
+import { assetCategories, expenseCategories } from '@/data/categories';
 import { PencilIcon, TrashIcon, PlusIcon } from '@/components/ui/Icons';
 import SlidePanel from '@/components/ui/SlidePanel';
 import DeleteConfirmation from '@/components/ui/DeleteConfirmation';
@@ -36,6 +36,8 @@ import CarryPositionForm from '@/components/forms/CarryPositionForm';
 import PortfolioCompanyForm from '@/components/forms/PortfolioCompanyForm';
 import ProviderLogo from '@/components/ui/ProviderLogo';
 import TransactionList from '@/components/TransactionList';
+import VehicleValuationCard from '@/components/VehicleValuationCard';
+import PropertyValuationCard from '@/components/PropertyValuationCard';
 import { useEurGbpRate } from '@/hooks/useEurGbpRate';
 
 const CARRY_MULTIPLES = [2.0, 3.0, 5.0];
@@ -248,14 +250,13 @@ export default function DashboardPage() {
 
   type AngelSortKey =
     | 'name'
-    | 'instrument'
     | 'date'
     | 'geography'
     | 'industry'
     | 'cost'
-    | 'gbpValue'
+    | 'fairValue'
+    | 'return'
     | 'moic'
-    | 'taxRelief'
     | 'status';
   const [angelSortKey, setAngelSortKey] = useState<AngelSortKey>('status');
   const [angelSortDir, setAngelSortDir] = useState<'asc' | 'desc'>('asc');
@@ -266,12 +267,7 @@ export default function DashboardPage() {
     } else {
       setAngelSortKey(key);
       setAngelSortDir(
-        key === 'name' ||
-          key === 'instrument' ||
-          key === 'geography' ||
-          key === 'industry' ||
-          key === 'status' ||
-          key === 'taxRelief'
+        key === 'name' || key === 'geography' || key === 'industry' || key === 'status'
           ? 'asc'
           : 'desc',
       );
@@ -295,8 +291,6 @@ export default function DashboardPage() {
       switch (angelSortKey) {
         case 'name':
           return dir * a.name.localeCompare(b.name);
-        case 'instrument':
-          return dir * (a.instrument ?? '').localeCompare(b.instrument ?? '');
         case 'date':
           return dir * (a.investmentDate ?? '').localeCompare(b.investmentDate ?? '');
         case 'geography':
@@ -304,18 +298,21 @@ export default function DashboardPage() {
         case 'industry':
           return dir * (a.industry ?? '').localeCompare(b.industry ?? '');
         case 'cost':
-          return dir * ((a.costBasis ?? 0) - (b.costBasis ?? 0));
-        case 'gbpValue':
           return (
             dir * ((a.costBasisGBP ?? a.costBasis ?? 0) - (b.costBasisGBP ?? b.costBasis ?? 0))
           );
+        case 'fairValue':
+          return dir * (a.currentValue - b.currentValue);
+        case 'return': {
+          const retA = a.currentValue - (a.costBasisGBP ?? a.costBasis ?? 0);
+          const retB = b.currentValue - (b.costBasisGBP ?? b.costBasis ?? 0);
+          return dir * (retA - retB);
+        }
         case 'moic': {
           const aMoic = a.costBasisGBP && a.costBasisGBP > 0 ? a.currentValue / a.costBasisGBP : 0;
           const bMoic = b.costBasisGBP && b.costBasisGBP > 0 ? b.currentValue / b.costBasisGBP : 0;
           return dir * (aMoic - bMoic);
         }
-        case 'taxRelief':
-          return dir * (a.taxScheme ?? '').localeCompare(b.taxScheme ?? '');
         case 'status': {
           const statusOrder: Record<string, number> = { active: 0, exited: 1, written_off: 2 };
           const orderDiff =
@@ -998,109 +995,229 @@ export default function DashboardPage() {
             )}
           </div>
           <div className="space-y-1">
-            <div className="flex items-center justify-between py-2 px-3 bg-emerald-50 rounded-t-lg">
-              <span className="font-bold text-emerald-800">Assets</span>
-              <span className="font-bold text-emerald-800">{formatCurrency(totalAssets)}</span>
-            </div>
+            {(() => {
+              const startYear = parseInt(state.settings.startMonth.split('-')[0]);
+              const projectionYears = Array.from({ length: 10 }, (_, i) => startYear + i);
+              const nonAngelAssets = state.assets.filter((a) => a.category !== 'angel');
+              const totalColCount = 3 + projectionYears.length; // asset + growth + current + years
 
-            {state.assets
-              .filter((a) => a.category !== 'angel')
-              .map((asset) => {
-                const meta = assetCategories[asset.category as keyof typeof assetCategories];
-                return (
-                  <div
-                    key={asset.id}
-                    className="flex items-center justify-between py-2 px-3 hover:bg-slate-50 group"
-                  >
-                    <div className="flex items-center gap-2">
-                      <ProviderLogo provider={asset.provider} size={16} />
-                      <span className="text-sm text-slate-700">{asset.name}</span>
-                      <span
-                        className="inline-block px-2 py-0.5 rounded-full text-xs font-medium"
-                        style={{ backgroundColor: meta?.bgColor, color: meta?.color }}
-                      >
-                        {meta?.label ?? asset.category}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-slate-900">
-                        {formatCurrency(asset.currentValue)}
-                      </span>
-                      <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => {
-                            setEditingAsset(asset);
-                            setPanelType('asset');
-                          }}
-                          className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
-                          title="Edit"
-                        >
-                          <PencilIcon />
-                        </button>
-                        <button
-                          onClick={() =>
-                            setDeleteTarget({ id: asset.id, name: asset.name, type: 'asset' })
-                          }
-                          className="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
-                          title="Delete"
-                        >
-                          <TrashIcon />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            {angelAssets.length > 0 && (
-              <div className="flex items-center justify-between py-2 px-3 hover:bg-slate-50">
-                <div className="flex items-center gap-2">
-                  <span
-                    className="inline-block w-3.5 h-3.5 rounded-full"
-                    style={{ backgroundColor: assetCategories.angel?.color }}
-                  />
-                  <span className="text-sm text-slate-700">
-                    Angel Investments ({angelAssets.length})
-                  </span>
-                  <span
-                    className="inline-block px-2 py-0.5 rounded-full text-xs font-medium"
-                    style={{
-                      backgroundColor: assetCategories.angel?.bgColor,
-                      color: assetCategories.angel?.color,
-                    }}
-                  >
-                    Angel
-                  </span>
-                </div>
-                <span className="text-sm font-medium text-slate-900">
-                  {formatCurrency(angelTotal)}
-                </span>
-              </div>
-            )}
-            {state.carryPositions.map((cp) => {
-              const carryEUR =
-                computeCarryScenarios(cp, [CARRY_BALANCE_SHEET_MULTIPLE])[0]?.personalCarry ?? 0;
-              const carryGBP = carryEUR * eurGbp.rate;
               return (
-                <div
-                  key={cp.id}
-                  className="flex items-center justify-between py-2 px-3 hover:bg-slate-50"
-                >
-                  <div className="flex items-center gap-2">
-                    <ProviderLogo provider={cp.provider} size={16} />
-                    <span className="text-sm text-slate-700">{cp.fundName}</span>
-                    <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700">
-                      Carry @3x
-                    </span>
-                    <span className="text-[10px] text-slate-400">
-                      {formatEUR(carryEUR)} @{eurGbp.rate.toFixed(4)}
-                    </span>
-                  </div>
-                  <span className="text-sm font-medium text-slate-900">
-                    {formatCurrency(carryGBP)}
-                  </span>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[900px]">
+                    <thead>
+                      <tr className="bg-emerald-50 rounded-t-lg">
+                        <th className="text-left py-2 px-3 font-bold text-emerald-800 text-sm sticky left-0 bg-emerald-50 z-10 min-w-[200px]">
+                          Assets
+                        </th>
+                        <th className="text-right py-2 px-2 font-semibold text-emerald-700 text-[11px] w-14">
+                          Growth
+                        </th>
+                        <th className="text-right py-2 px-2 font-bold text-emerald-800 text-sm min-w-[80px]">
+                          Current
+                        </th>
+                        {projectionYears.map((yr) => (
+                          <th
+                            key={yr}
+                            className="text-right py-2 px-2 font-semibold text-emerald-700 text-[11px] min-w-[70px]"
+                          >
+                            {yr}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {nonAngelAssets.map((asset) => {
+                        const meta =
+                          assetCategories[asset.category as keyof typeof assetCategories];
+                        const hasGrowth = asset.annualGrowthRate !== 0;
+                        return (
+                          <React.Fragment key={asset.id}>
+                            <tr className="hover:bg-slate-50 group">
+                              <td className="py-2 px-3 sticky left-0 bg-white group-hover:bg-slate-50 z-10">
+                                <div className="flex items-center gap-2">
+                                  <ProviderLogo provider={asset.provider} size={16} />
+                                  <span className="text-sm text-slate-700">{asset.name}</span>
+                                  <span
+                                    className="inline-block px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap"
+                                    style={{
+                                      backgroundColor: meta?.bgColor,
+                                      color: meta?.color,
+                                    }}
+                                  >
+                                    {meta?.label ?? asset.category}
+                                  </span>
+                                  {asset.registration && (
+                                    <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                                      {asset.registration}
+                                    </span>
+                                  )}
+                                  <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button
+                                      onClick={() => {
+                                        setEditingAsset(asset);
+                                        setPanelType('asset');
+                                      }}
+                                      className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
+                                      title="Edit"
+                                    >
+                                      <PencilIcon />
+                                    </button>
+                                    <button
+                                      onClick={() =>
+                                        setDeleteTarget({
+                                          id: asset.id,
+                                          name: asset.name,
+                                          type: 'asset',
+                                        })
+                                      }
+                                      className="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
+                                      title="Delete"
+                                    >
+                                      <TrashIcon />
+                                    </button>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="text-right py-2 px-2 text-[11px] tabular-nums text-slate-500">
+                                {hasGrowth ? `${(asset.annualGrowthRate * 100).toFixed(1)}%` : '—'}
+                              </td>
+                              <td className="text-right py-2 px-2 text-sm font-medium text-slate-900 tabular-nums">
+                                {formatCurrency(asset.currentValue)}
+                              </td>
+                              {projectionYears.map((yr) => {
+                                const projected = Math.round(
+                                  projectAssetValue(asset, startYear, yr),
+                                );
+                                return (
+                                  <td
+                                    key={yr}
+                                    className="text-right py-2 px-2 text-[11px] tabular-nums text-slate-600"
+                                  >
+                                    {formatCompact(projected)}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                            {asset.category === 'vehicle' && asset.registration && (
+                              <tr>
+                                <td colSpan={totalColCount} className="px-3 pb-2">
+                                  <VehicleValuationCard asset={asset} />
+                                </td>
+                              </tr>
+                            )}
+                            {asset.category === 'property' &&
+                              asset.purchasePrice &&
+                              asset.propertyRegion && (
+                                <tr>
+                                  <td colSpan={totalColCount} className="px-3 pb-2">
+                                    <PropertyValuationCard asset={asset} />
+                                  </td>
+                                </tr>
+                              )}
+                          </React.Fragment>
+                        );
+                      })}
+                      {angelAssets.length > 0 && (
+                        <tr className="hover:bg-slate-50">
+                          <td className="py-2 px-3 sticky left-0 bg-white z-10">
+                            <div className="flex items-center gap-2">
+                              <span
+                                className="inline-block w-3.5 h-3.5 rounded-full"
+                                style={{ backgroundColor: assetCategories.angel?.color }}
+                              />
+                              <span className="text-sm text-slate-700">
+                                Angel Investments ({angelAssets.length})
+                              </span>
+                              <span
+                                className="inline-block px-2 py-0.5 rounded-full text-xs font-medium"
+                                style={{
+                                  backgroundColor: assetCategories.angel?.bgColor,
+                                  color: assetCategories.angel?.color,
+                                }}
+                              >
+                                Angel
+                              </span>
+                            </div>
+                          </td>
+                          <td className="text-right py-2 px-2 text-[11px] text-slate-500">—</td>
+                          <td className="text-right py-2 px-2 text-sm font-medium text-slate-900 tabular-nums">
+                            {formatCurrency(angelTotal)}
+                          </td>
+                          {projectionYears.map((yr) => (
+                            <td
+                              key={yr}
+                              className="text-right py-2 px-2 text-[11px] text-slate-400"
+                            >
+                              —
+                            </td>
+                          ))}
+                        </tr>
+                      )}
+                      {state.carryPositions.map((cp) => {
+                        const carryEUR =
+                          computeCarryScenarios(cp, [CARRY_BALANCE_SHEET_MULTIPLE])[0]
+                            ?.personalCarry ?? 0;
+                        const carryGBP = carryEUR * eurGbp.rate;
+                        return (
+                          <tr key={cp.id} className="hover:bg-slate-50">
+                            <td className="py-2 px-3 sticky left-0 bg-white z-10">
+                              <div className="flex items-center gap-2">
+                                <ProviderLogo provider={cp.provider} size={16} />
+                                <span className="text-sm text-slate-700">{cp.fundName}</span>
+                                <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700">
+                                  Carry @3x
+                                </span>
+                                <span className="text-[10px] text-slate-400">
+                                  {formatEUR(carryEUR)} @{eurGbp.rate.toFixed(4)}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="text-right py-2 px-2 text-[11px] text-slate-500">—</td>
+                            <td className="text-right py-2 px-2 text-sm font-medium text-slate-900 tabular-nums">
+                              {formatCurrency(carryGBP)}
+                            </td>
+                            {projectionYears.map((yr) => (
+                              <td
+                                key={yr}
+                                className="text-right py-2 px-2 text-[11px] text-slate-400"
+                              >
+                                —
+                              </td>
+                            ))}
+                          </tr>
+                        );
+                      })}
+                      {/* Total Assets row */}
+                      <tr className="border-t border-emerald-200 bg-emerald-50/50">
+                        <td className="py-2 px-3 sticky left-0 bg-emerald-50/50 z-10">
+                          <span className="font-bold text-emerald-800 text-sm">Total</span>
+                        </td>
+                        <td />
+                        <td className="text-right py-2 px-2 font-bold text-emerald-800 text-sm tabular-nums">
+                          {formatCurrency(totalAssets)}
+                        </td>
+                        {projectionYears.map((yr) => {
+                          const assetProjectionTotal = nonAngelAssets.reduce(
+                            (sum, asset) =>
+                              sum + Math.round(projectAssetValue(asset, startYear, yr)),
+                            0,
+                          );
+                          const yearTotal = assetProjectionTotal + angelTotal + carryValuationGBP;
+                          return (
+                            <td
+                              key={yr}
+                              className="text-right py-2 px-2 font-bold text-emerald-800 text-[11px] tabular-nums"
+                            >
+                              {formatCompact(yearTotal)}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               );
-            })}
+            })()}
 
             {/* Liabilities */}
             <div className="flex items-center justify-between py-2 px-3 bg-red-50 mt-4 rounded-t-lg">
@@ -1252,12 +1369,6 @@ export default function DashboardPage() {
                       Name{angelSortIndicator('name')}
                     </th>
                     <th
-                      className="text-left py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
-                      onClick={() => handleAngelSort('instrument')}
-                    >
-                      Instrument{angelSortIndicator('instrument')}
-                    </th>
-                    <th
                       className="text-center py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
                       onClick={() => handleAngelSort('date')}
                     >
@@ -1279,25 +1390,25 @@ export default function DashboardPage() {
                       className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
                       onClick={() => handleAngelSort('cost')}
                     >
-                      Original Investment{angelSortIndicator('cost')}
+                      Cost{angelSortIndicator('cost')}
                     </th>
                     <th
                       className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
-                      onClick={() => handleAngelSort('gbpValue')}
+                      onClick={() => handleAngelSort('fairValue')}
                     >
-                      GBP Value{angelSortIndicator('gbpValue')}
+                      Fair Value{angelSortIndicator('fairValue')}
+                    </th>
+                    <th
+                      className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                      onClick={() => handleAngelSort('return')}
+                    >
+                      Return{angelSortIndicator('return')}
                     </th>
                     <th
                       className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
                       onClick={() => handleAngelSort('moic')}
                     >
                       MOIC{angelSortIndicator('moic')}
-                    </th>
-                    <th
-                      className="text-center py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
-                      onClick={() => handleAngelSort('taxRelief')}
-                    >
-                      Tax Relief{angelSortIndicator('taxRelief')}
                     </th>
                     <th
                       className="text-center py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
@@ -1331,7 +1442,7 @@ export default function DashboardPage() {
                               <div>
                                 <span>{asset.name}</span>
                                 {asset.platform && (
-                                  <span className="ml-1.5 text-xs text-slate-400">
+                                  <span className="block text-[10px] text-slate-400">
                                     via {asset.platform}
                                   </span>
                                 )}
@@ -1343,20 +1454,11 @@ export default function DashboardPage() {
                               </div>
                             </div>
                           </td>
-                          <td className="py-2 px-3">
-                            {asset.instrument ? (
-                              <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
-                                {instrumentLabels[asset.instrument] ?? asset.instrument}
-                              </span>
-                            ) : (
-                              '—'
-                            )}
-                          </td>
-                          <td className="py-2 px-3 text-center text-xs text-slate-500">
+                          <td className="py-2 px-3 text-center text-xs text-slate-500 whitespace-nowrap">
                             {asset.investmentDate
                               ? new Date(asset.investmentDate).toLocaleDateString('en-GB', {
                                   month: 'short',
-                                  year: 'numeric',
+                                  year: '2-digit',
                                 })
                               : '—'}
                             {asset.exitDate && (
@@ -1364,81 +1466,69 @@ export default function DashboardPage() {
                                 Exit:{' '}
                                 {new Date(asset.exitDate).toLocaleDateString('en-GB', {
                                   month: 'short',
-                                  year: 'numeric',
+                                  year: '2-digit',
                                 })}
                               </span>
                             )}
                           </td>
-                          <td className="py-2 px-3 text-xs text-slate-500 max-w-[100px] truncate">
-                            {asset.geography ?? '—'}
-                          </td>
-                          <td className="py-2 px-3 text-xs text-slate-500 max-w-[120px] truncate">
+                          <td className="py-2 px-3">{geographyBubble(asset.geography)}</td>
+                          <td className="py-2 px-3 text-xs text-slate-500 max-w-[140px] truncate">
                             {asset.industry ?? '—'}
                           </td>
                           <td className="py-2 px-3 text-right text-slate-600">
-                            {formatCostBasis(asset.costBasis, asset.costCurrency)}
+                            {(asset.costBasisGBP ?? asset.costBasis ?? 0) > 0
+                              ? formatCurrency(asset.costBasisGBP ?? asset.costBasis ?? 0)
+                              : '—'}
                           </td>
                           <td className="py-2 px-3 text-right text-slate-900">
-                            {asset.costBasisGBP != null && asset.costBasisGBP > 0
-                              ? formatCurrency(asset.costBasisGBP)
-                              : asset.costBasis != null && asset.costBasis > 0
-                                ? formatCurrency(asset.costBasis)
-                                : '—'}
-                            {asset.fxRate != null && (
-                              <span className="block text-[10px] text-slate-400">
-                                @{asset.fxRate.toFixed(4)}
-                              </span>
-                            )}
+                            {formatCurrency(asset.currentValue)}
                           </td>
-                          <td className="py-2 px-3 text-right">
-                            <span
-                              className={
-                                asset.costBasisGBP &&
-                                asset.costBasisGBP > 0 &&
-                                asset.currentValue / asset.costBasisGBP >= 1
-                                  ? 'text-emerald-600 font-medium'
-                                  : 'text-red-500 font-medium'
-                              }
-                            >
-                              {formatMoic(
-                                asset.currentValue,
-                                asset.costBasisGBP ?? asset.costBasis,
-                              )}
-                            </span>
+                          <td className="py-2 px-3 text-right font-medium">
+                            {(() => {
+                              const costGBP = asset.costBasisGBP ?? asset.costBasis ?? 0;
+                              const totalReturn = asset.currentValue - costGBP;
+                              return (
+                                <span
+                                  className={totalReturn >= 0 ? 'text-emerald-600' : 'text-red-500'}
+                                >
+                                  {formatCurrency(totalReturn)}
+                                </span>
+                              );
+                            })()}
                           </td>
-                          <td className="py-2 px-3 text-center">
-                            {asset.taxScheme ? (
-                              <span
-                                className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${asset.taxScheme === 'SEIS' ? 'bg-emerald-50 text-emerald-700' : 'bg-violet-50 text-violet-700'}`}
-                              >
-                                {asset.taxScheme} Eligible
-                              </span>
-                            ) : (
-                              <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-500">
-                                Not Eligible
-                              </span>
-                            )}
+                          <td className="py-2 px-3 text-right font-medium">
+                            {(() => {
+                              const costGBP = asset.costBasisGBP ?? asset.costBasis ?? 0;
+                              const moic = costGBP > 0 ? asset.currentValue / costGBP : 0;
+                              return (
+                                <span className={moic >= 1 ? 'text-emerald-600' : 'text-red-600'}>
+                                  {moic.toFixed(2)}x
+                                </span>
+                              );
+                            })()}
                           </td>
                           <td className="py-2 px-3 text-center">
-                            {asset.status ? (
-                              <span
-                                className="inline-block px-2 py-0.5 rounded-full text-xs font-medium capitalize"
-                                style={{
-                                  backgroundColor: statusStyles[asset.status]?.bg ?? '#f1f5f9',
-                                  color: statusStyles[asset.status]?.text ?? '#475569',
-                                }}
-                              >
-                                {asset.status === 'written_off' ? 'Written Off' : asset.status}
-                              </span>
-                            ) : (
-                              '—'
-                            )}
+                            {(() => {
+                              const statusMeta =
+                                STATUS_LABELS[asset.status || 'active'] ?? STATUS_LABELS.active;
+                              return (
+                                <span
+                                  className="inline-block px-2 py-0.5 rounded-full text-xs font-medium"
+                                  style={{
+                                    backgroundColor: statusMeta.bg,
+                                    color: statusMeta.color,
+                                  }}
+                                >
+                                  {statusMeta.label}
+                                </span>
+                              );
+                            })()}
                           </td>
                         </tr>
                         {isAngelExpanded && hasEmails && (
                           <tr>
                             <td
-                              colSpan={10}
+                              colSpan={9}
                               className="bg-slate-50 px-6 py-3 border-b border-slate-100"
                             >
                               <div className="max-h-64 overflow-y-auto space-y-2">
@@ -1480,6 +1570,8 @@ export default function DashboardPage() {
                       (sum, a) => sum + a.currentValue,
                       0,
                     );
+                    const filteredReturn = filteredTotal - filteredCostGBP;
+                    const filteredMOIC = filteredCostGBP > 0 ? filteredTotal / filteredCostGBP : 0;
                     return (
                       <tr className="bg-slate-50 font-semibold">
                         <td className="py-2 px-3 text-slate-900">
@@ -1490,26 +1582,26 @@ export default function DashboardPage() {
                             </span>
                           )}
                         </td>
-                        <td className="py-2 px-3"></td>
-                        <td className="py-2 px-3"></td>
-                        <td className="py-2 px-3 text-right text-slate-600">—</td>
+                        <td className="py-2 px-3" colSpan={3}></td>
                         <td className="py-2 px-3 text-right text-slate-900">
                           {formatCurrency(filteredCostGBP)}
                         </td>
+                        <td className="py-2 px-3 text-right text-slate-900">
+                          {formatCurrency(filteredTotal)}
+                        </td>
                         <td className="py-2 px-3 text-right font-medium">
                           <span
-                            className={
-                              filteredCostGBP > 0 && filteredTotal / filteredCostGBP >= 1
-                                ? 'text-emerald-600'
-                                : 'text-red-500'
-                            }
+                            className={filteredReturn >= 0 ? 'text-emerald-600' : 'text-red-500'}
                           >
-                            {filteredCostGBP > 0
-                              ? `${(filteredTotal / filteredCostGBP).toFixed(2)}x`
-                              : '—'}
+                            {formatCurrency(filteredReturn)}
                           </span>
                         </td>
-                        <td colSpan={3} className="py-2 px-3"></td>
+                        <td className="py-2 px-3 text-right">
+                          <span className={filteredMOIC >= 1 ? 'text-emerald-600' : 'text-red-600'}>
+                            {filteredMOIC > 0 ? `${filteredMOIC.toFixed(2)}x` : '—'}
+                          </span>
+                        </td>
+                        <td className="py-2 px-3"></td>
                       </tr>
                     );
                   })()}

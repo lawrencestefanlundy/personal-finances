@@ -109,6 +109,51 @@ export interface Asset {
   geography?: string;
   industry?: string;
   emailUpdates?: string; // JSON string of EmailUpdate[]
+  // Vehicle-specific fields (vehicle category)
+  registration?: string; // e.g. GY17STZ
+  mileage?: number; // current odometer reading
+  vehicleData?: string; // JSON string of VehicleData
+  // Property-specific fields (property category)
+  purchasePrice?: number; // original purchase price
+  purchaseDate?: string; // YYYY-MM
+  propertyAddress?: string; // full address
+  propertyRegion?: string; // Land Registry UKHPI region slug e.g. "lewes"
+  propertyData?: string; // JSON string of PropertyData
+}
+
+// === VEHICLE DATA (from DVLA + market valuation) ===
+export interface VehicleData {
+  // DVLA fields
+  make?: string;
+  colour?: string;
+  yearOfManufacture?: number;
+  engineCapacity?: number;
+  fuelType?: string;
+  co2Emissions?: number;
+  taxStatus?: string;
+  taxDueDate?: string;
+  motStatus?: string;
+  motExpiryDate?: string;
+  dateOfLastV5CIssued?: string;
+  // Valuation fields
+  valuationLow?: number;
+  valuationMid?: number;
+  valuationHigh?: number;
+  valuationSource?: string;
+  valuationDate?: string;
+  mileageEstimate?: number;
+}
+
+// === PROPERTY DATA (from Land Registry UKHPI) ===
+export interface PropertyData {
+  purchaseHPI?: number; // HPI at purchase date
+  currentHPI?: number; // latest available HPI
+  hpiDate?: string; // date of latest HPI data point
+  hpiRegion?: string; // region used for lookup
+  estimatedValue?: number; // purchasePrice * (currentHPI / purchaseHPI)
+  averagePrice?: number; // area average price from UKHPI
+  annualChange?: number; // YoY % change
+  valuationDate?: string; // when this was computed
 }
 
 // === LIABILITIES ===

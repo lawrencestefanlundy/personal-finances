@@ -34,6 +34,14 @@ export default function AssetForm({ existing, onClose }: AssetFormProps) {
   const [status, setStatus] = useState(existing?.status ?? 'active');
   const [taxScheme, setTaxScheme] = useState(existing?.taxScheme ?? '');
   const [platform, setPlatform] = useState(existing?.platform ?? '');
+  // Vehicle-specific fields
+  const [registration, setRegistration] = useState(existing?.registration ?? '');
+  const [mileage, setMileage] = useState(existing?.mileage?.toString() ?? '');
+  // Property-specific fields
+  const [purchasePrice, setPurchasePrice] = useState(existing?.purchasePrice?.toString() ?? '');
+  const [purchaseDate, setPurchaseDate] = useState(existing?.purchaseDate ?? '');
+  const [propertyAddress, setPropertyAddress] = useState(existing?.propertyAddress ?? '');
+  const [propertyRegion, setPropertyRegion] = useState(existing?.propertyRegion ?? '');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const inputClass =
@@ -81,6 +89,26 @@ export default function AssetForm({ existing, onClose }: AssetFormProps) {
             ...(taxScheme ? { taxScheme: taxScheme as 'SEIS' | 'EIS' } : {}),
             ...(platform.trim() ? { platform: platform.trim() } : {}),
             ...(existing?.emailUpdates ? { emailUpdates: existing.emailUpdates } : {}),
+          }
+        : {}),
+      ...(category === 'vehicle'
+        ? {
+            ...(registration.trim()
+              ? { registration: registration.trim().toUpperCase().replace(/\s/g, '') }
+              : {}),
+            ...(mileage ? { mileage: Number(mileage) } : {}),
+            ...(existing?.vehicleData ? { vehicleData: existing.vehicleData } : {}),
+          }
+        : {}),
+      ...(category === 'property'
+        ? {
+            ...(purchasePrice ? { purchasePrice: Number(purchasePrice) } : {}),
+            ...(purchaseDate.trim() ? { purchaseDate: purchaseDate.trim() } : {}),
+            ...(propertyAddress.trim() ? { propertyAddress: propertyAddress.trim() } : {}),
+            ...(propertyRegion.trim()
+              ? { propertyRegion: propertyRegion.trim().toLowerCase() }
+              : {}),
+            ...(existing?.propertyData ? { propertyData: existing.propertyData } : {}),
           }
         : {}),
     };
@@ -179,6 +207,79 @@ export default function AssetForm({ existing, onClose }: AssetFormProps) {
           Liquid asset
         </label>
       </div>
+
+      {/* Vehicle-specific fields — shown only for vehicle category */}
+      {category === 'vehicle' && (
+        <div className="grid grid-cols-2 gap-3">
+          <FormField label="Registration">
+            <input
+              type="text"
+              value={registration}
+              onChange={(e) => setRegistration(e.target.value)}
+              placeholder="e.g. GY17STZ"
+              className={`${inputClass} font-mono uppercase`}
+            />
+          </FormField>
+          <FormField label="Mileage">
+            <input
+              type="number"
+              value={mileage}
+              onChange={(e) => setMileage(e.target.value)}
+              placeholder="e.g. 73000"
+              className={inputClass}
+            />
+          </FormField>
+        </div>
+      )}
+
+      {/* Property-specific fields — shown only for property category */}
+      {category === 'property' && (
+        <>
+          <div className="grid grid-cols-2 gap-3">
+            <FormField label="Purchase Price">
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-500">
+                  £
+                </span>
+                <input
+                  type="number"
+                  step="1"
+                  value={purchasePrice}
+                  onChange={(e) => setPurchasePrice(e.target.value)}
+                  placeholder="e.g. 1305000"
+                  className={`${inputClass} pl-7`}
+                />
+              </div>
+            </FormField>
+            <FormField label="Purchase Date">
+              <input
+                type="month"
+                value={purchaseDate}
+                onChange={(e) => setPurchaseDate(e.target.value)}
+                className={inputClass}
+              />
+            </FormField>
+          </div>
+          <FormField label="Property Address">
+            <input
+              type="text"
+              value={propertyAddress}
+              onChange={(e) => setPropertyAddress(e.target.value)}
+              placeholder="e.g. 4 King Henrys Road, Lewes"
+              className={inputClass}
+            />
+          </FormField>
+          <FormField label="HPI Region (Land Registry slug)">
+            <input
+              type="text"
+              value={propertyRegion}
+              onChange={(e) => setPropertyRegion(e.target.value)}
+              placeholder="e.g. lewes, greater-london"
+              className={inputClass}
+            />
+          </FormField>
+        </>
+      )}
 
       {/* Investment-specific fields — shown only for angel category */}
       {category === 'angel' && (

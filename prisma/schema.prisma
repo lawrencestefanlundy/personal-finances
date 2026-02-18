@@ -80,6 +80,14 @@ model Asset {
   geography        String?  // UK, US, Switzerland, etc.
   industry         String?  // sector/industry description
   emailUpdates     String?  // JSON array of {subject, from, date, snippet}
+  registration     String?  // vehicle registration number (e.g. GY17STZ)
+  mileage          Int?     // current odometer reading
+  vehicleData      String?  // JSON: DVLA + valuation data
+  purchasePrice    Float?   // original purchase price (property)
+  purchaseDate     String?  // purchase date YYYY-MM (property)
+  propertyAddress  String?  // full address (property)
+  propertyRegion   String?  // Land Registry UKHPI region slug (property)
+  propertyData     String?  // JSON: UKHPI valuation data
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 

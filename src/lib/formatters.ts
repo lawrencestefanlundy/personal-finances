@@ -52,6 +52,18 @@ export function formatNumber(value: number): string {
   return new Intl.NumberFormat('en-GB').format(value);
 }
 
+export function formatCompact(value: number): string {
+  const abs = Math.abs(value);
+  const sign = value < 0 ? '-' : '';
+  if (abs >= 1_000_000) {
+    return `${sign}£${(abs / 1_000_000).toFixed(1)}m`;
+  }
+  if (abs >= 1_000) {
+    return `${sign}£${(abs / 1_000).toFixed(0)}k`;
+  }
+  return `${sign}£${Math.round(abs)}`;
+}
+
 export function parseMonth(month: string): { year: number; month: number } {
   const [y, m] = month.split('-');
   return { year: parseInt(y), month: parseInt(m) };

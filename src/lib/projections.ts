@@ -1,21 +1,18 @@
 import { FinanceState, YearlyProjection, Asset, Liability } from '@/types/finance';
 
-function projectAssetValue(asset: Asset, baseYear: number, targetYear: number): number {
+export function projectAssetValue(asset: Asset, baseYear: number, targetYear: number): number {
   if (asset.currentValue === 0) return 0;
   if (asset.endYear && targetYear > asset.endYear) return 0;
 
-  const effectiveStartYear = asset.unlockYear ? Math.max(baseYear, asset.unlockYear) : baseYear;
+  // Assets always show their current value; unlockYear controls when growth begins
+  const growthStartYear = asset.unlockYear ? Math.max(baseYear, asset.unlockYear) : baseYear;
 
-  // Before unlock year, value stays flat
-  if (targetYear < effectiveStartYear) {
-    // For assets that appear later (like Cloudberry I), return 0 before unlock
-    if (asset.unlockYear && asset.unlockYear > baseYear && targetYear < asset.unlockYear) {
-      return 0;
-    }
+  if (targetYear < growthStartYear) {
+    // Before growth starts, value stays flat at current value
     return asset.currentValue;
   }
 
-  const yearsGrowing = targetYear - effectiveStartYear;
+  const yearsGrowing = targetYear - growthStartYear;
   return asset.currentValue * Math.pow(1 + asset.annualGrowthRate, yearsGrowing);
 }
 

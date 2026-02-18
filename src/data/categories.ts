@@ -28,7 +28,7 @@ export const assetCategories: Record<AssetCategory, CategoryMeta> = {
   isa: { label: 'ISA', color: '#3b82f6', bgColor: '#eff6ff' },
   crypto: { label: 'Crypto', color: '#f59e0b', bgColor: '#fffbeb' },
   fund: { label: 'Fund', color: '#8b5cf6', bgColor: '#f5f3ff' },
-  angel: { label: 'Angel', color: '#ec4899', bgColor: '#fdf2f8' },
+  angel: { label: 'Angel Investments', color: '#ec4899', bgColor: '#fdf2f8' },
   pension: { label: 'Pension', color: '#14b8a6', bgColor: '#f0fdfa' },
   property: { label: 'Property', color: '#6366f1', bgColor: '#eef2ff' },
   vehicle: { label: 'Vehicle', color: '#6b7280', bgColor: '#f9fafb' },

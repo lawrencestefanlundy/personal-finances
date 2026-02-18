@@ -417,12 +417,14 @@ export const seedData: FinanceState = {
     },
     {
       id: 'asset-car',
-      name: 'Polo',
-      currentValue: 7000,
+      name: 'Polo Match Edition TSI 90',
+      currentValue: 7550,
       annualGrowthRate: -0.03,
       category: 'vehicle',
       isLiquid: false,
       provider: 'Volkswagen',
+      registration: 'GY17STZ',
+      mileage: 73000,
     },
     {
       id: 'asset-house',
@@ -431,6 +433,10 @@ export const seedData: FinanceState = {
       annualGrowthRate: 0.02,
       category: 'property',
       isLiquid: false,
+      purchasePrice: 1305000,
+      purchaseDate: '2022-06',
+      propertyAddress: '4 King Henrys Road, Lewes',
+      propertyRegion: 'lewes',
     },
     {
       id: 'asset-angel-bluejay',

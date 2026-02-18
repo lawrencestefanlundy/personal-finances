@@ -15,9 +15,9 @@ export function computeCarryScenarios(
   multiples: number[] = [2.5, 3.0, 4.0, 5.0],
 ): CarryScenario[] {
   return multiples.map((multiple) => {
-    const totalFundValue = multiple * position.committedCapital;
-    const totalProfit = totalFundValue - position.committedCapital;
-    const hurdleAmount = position.committedCapital * position.hurdleRate;
+    const totalFundValue = multiple * position.fundSize;
+    const totalProfit = totalFundValue - position.fundSize;
+    const hurdleAmount = position.fundSize * position.hurdleRate;
     const profitAboveHurdle = Math.max(0, totalProfit - hurdleAmount);
     const totalCarryPool = profitAboveHurdle * position.carryPercent;
     const personalCarry = totalCarryPool * position.personalSharePercent;

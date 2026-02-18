@@ -178,6 +178,14 @@ export async function POST(request: Request) {
             geography: a.geography ?? null,
             industry: a.industry ?? null,
             emailUpdates: a.emailUpdates ?? null,
+            registration: a.registration ?? null,
+            mileage: a.mileage ?? null,
+            vehicleData: a.vehicleData ?? null,
+            purchasePrice: a.purchasePrice ?? null,
+            purchaseDate: a.purchaseDate ?? null,
+            propertyAddress: a.propertyAddress ?? null,
+            propertyRegion: a.propertyRegion ?? null,
+            propertyData: a.propertyData ?? null,
           })),
         });
       }
