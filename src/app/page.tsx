@@ -128,11 +128,13 @@ export default function DashboardPage() {
   // ─── FX Rate ───────────────────────────────────────────────────────────────
   const eurGbp = useEurGbpRate();
 
-  // ─── Carry positions valued in GBP ────────────────────────────────────────
+  // Personal carry valued in GBP via live EUR→GBP rate.
+  // Each carry position computes personal carry at 3x fund return, then converts EUR→GBP.
+  const CARRY_BALANCE_SHEET_MULTIPLE = 3.0;
   const carryValuationGBP = useMemo(() => {
     return state.carryPositions.reduce((sum, cp) => {
-      const fundEUR = cp.portfolioCompanies.reduce((s, c) => s + c.currentValuation, 0);
-      return sum + fundEUR * eurGbp.rate;
+      const scenarios = computeCarryScenarios(cp, [CARRY_BALANCE_SHEET_MULTIPLE]);
+      return sum + (scenarios[0]?.personalCarry ?? 0) * eurGbp.rate;
     }, 0);
   }, [state.carryPositions, eurGbp.rate]);
 
@@ -198,7 +200,6 @@ export default function DashboardPage() {
   }, [state.assets]);
 
   const angelAssets = state.assets.filter((a) => a.category === 'angel');
-  const fundAssets = state.assets.filter((a) => a.category === 'fund');
   const childrenIsaAssets = state.assets.filter((a) => a.category === 'children_isa');
   const angelTotal = angelAssets.reduce((sum, a) => sum + a.currentValue, 0);
   const angelCostTotalGBP = angelAssets.reduce(
@@ -529,16 +530,18 @@ export default function DashboardPage() {
                   </div>
                 )}
                 {state.carryPositions.map((cp) => {
-                  const fundEUR = cp.portfolioCompanies.reduce((s, c) => s + c.currentValuation, 0);
+                  const carryEUR =
+                    computeCarryScenarios(cp, [CARRY_BALANCE_SHEET_MULTIPLE])[0]?.personalCarry ??
+                    0;
                   return (
                     <div key={cp.id} className="flex items-center justify-between py-0.5">
                       <div className="flex items-center gap-1.5">
                         <ProviderLogo provider={cp.provider} size={14} />
                         <span className="text-xs text-slate-600">{cp.fundName}</span>
-                        <span className="text-[10px] text-indigo-500">Carry</span>
+                        <span className="text-[10px] text-indigo-500">Carry @3x</span>
                       </div>
                       <span className="text-xs font-medium text-slate-700 tabular-nums">
-                        {formatCurrency(fundEUR * eurGbp.rate)}
+                        {formatCurrency(carryEUR * eurGbp.rate)}
                       </span>
                     </div>
                   );
@@ -612,7 +615,7 @@ export default function DashboardPage() {
                   </span>
                 </div>
                 <div className="flex items-center justify-between py-0.5">
-                  <span className="text-xs text-slate-600">Carry Positions (EUR→GBP)</span>
+                  <span className="text-xs text-slate-600">Carry Positions @3x (EUR→GBP)</span>
                   <span className="text-xs font-medium text-indigo-600 tabular-nums">
                     {formatCurrency(carryValuationGBP)}
                   </span>
@@ -1074,8 +1077,9 @@ export default function DashboardPage() {
               </div>
             )}
             {state.carryPositions.map((cp) => {
-              const fundEUR = cp.portfolioCompanies.reduce((s, c) => s + c.currentValuation, 0);
-              const fundGBP = fundEUR * eurGbp.rate;
+              const carryEUR =
+                computeCarryScenarios(cp, [CARRY_BALANCE_SHEET_MULTIPLE])[0]?.personalCarry ?? 0;
+              const carryGBP = carryEUR * eurGbp.rate;
               return (
                 <div
                   key={cp.id}
@@ -1085,14 +1089,14 @@ export default function DashboardPage() {
                     <ProviderLogo provider={cp.provider} size={16} />
                     <span className="text-sm text-slate-700">{cp.fundName}</span>
                     <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700">
-                      Carry
+                      Carry @3x
                     </span>
                     <span className="text-[10px] text-slate-400">
-                      {formatEUR(fundEUR)} @{eurGbp.rate.toFixed(4)}
+                      {formatEUR(carryEUR)} @{eurGbp.rate.toFixed(4)}
                     </span>
                   </div>
                   <span className="text-sm font-medium text-slate-900">
-                    {formatCurrency(fundGBP)}
+                    {formatCurrency(carryGBP)}
                   </span>
                 </div>
               );
