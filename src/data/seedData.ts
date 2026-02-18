@@ -454,6 +454,7 @@ export const seedData: FinanceState = {
       instrument: 'safe',
       investmentDate: '2022-04-19',
       ownershipPercent: 0.00067, // $20K / $30M post-money cap (implied, pre-conversion)
+      irr: 0, // valued at cost
       platform: 'direct',
       geography: 'Singapore',
       industry: 'FinTech / Payments',
@@ -477,6 +478,7 @@ export const seedData: FinanceState = {
       investmentDate: '2021-11-01',
       exitDate: '2023-10-20',
       exitMethod: 'acquisition',
+      irr: -1.0, // total loss — acquired/liquidated Oct 2023, proceeds £0.18
       taxScheme: 'SEIS',
       platform: 'odin',
       geography: 'United Kingdom',
@@ -500,6 +502,7 @@ export const seedData: FinanceState = {
       instrument: 'equity',
       investmentDate: '2026-01-15',
       ownershipPercent: 0.00057, // 7,364 / ~12.85M (Companies House SH01 Sep 2025, pre-Jan round — actual diluted % will be lower)
+      irr: 0, // just invested Jan 2026, valued at cost
       taxScheme: 'EIS',
       platform: 'direct',
       geography: 'United Kingdom',
@@ -524,6 +527,7 @@ export const seedData: FinanceState = {
       instrument: 'safe',
       investmentDate: '2022-05-17',
       ownershipPercent: 0.0005, // $15K / $30M post-money cap (implied, pre-conversion)
+      irr: 0, // valued at cost
       platform: 'direct',
       geography: 'United States',
       industry: 'Crypto / DeFi',
@@ -546,6 +550,7 @@ export const seedData: FinanceState = {
       fxRate: 0.8023,
       instrument: 'equity',
       investmentDate: '2022-04-28',
+      irr: 0, // valued at cost (indirect via SPV)
       platform: 'vauban',
       geography: 'United Kingdom',
       industry: 'BioTech / Drug Discovery',
@@ -589,6 +594,7 @@ export const seedData: FinanceState = {
       fxRate: 0.7986,
       investmentDate: '2022-02-14',
       ownershipPercent: 0.0015, // 211 shares of 137,361 total (post-option pool, from SHA cap table)
+      irr: 0.1498, // (34,984/19,964)^(1/4.01) - 1 = 14.98% annualised
       geography: 'Switzerland',
       industry: 'AI / Agentic Commerce',
       notes:
@@ -609,6 +615,7 @@ export const seedData: FinanceState = {
       costBasisGBP: 15237,
       instrument: 'equity',
       investmentDate: '2022-03-11',
+      irr: 0, // valued at cost
       platform: 'odin',
       geography: 'United States',
       industry: 'Neuromorphic Computing',
@@ -632,6 +639,7 @@ export const seedData: FinanceState = {
       investmentDate: '2021-10-11',
       exitDate: '2024-04-15',
       exitMethod: 'write_off',
+      irr: -1.0, // total loss — liquidated Apr 2024, proceeds £0.00
       taxScheme: 'EIS',
       platform: 'odin',
       geography: 'United Kingdom',
@@ -655,6 +663,7 @@ export const seedData: FinanceState = {
       instrument: 'advance_subscription',
       investmentDate: '2022-02-01',
       exitMethod: 'write_off',
+      irr: -1.0, // total loss — ASA never converted
       geography: 'United Kingdom',
       industry: 'Telecoms / Satellite',
       notes: 'ASA. £7,972 GBP. Invested Feb 2022. Written off.',
@@ -673,6 +682,7 @@ export const seedData: FinanceState = {
       instrument: 'safe',
       investmentDate: '2021-11-04',
       ownershipPercent: 0.0007, // 895 shares of ~1,297,312 total (0.07% equity from SHA Schedule 3)
+      irr: 0, // valued at cost
       platform: 'seedlegals',
       geography: 'United Kingdom',
       industry: 'SaaS / Sales Training',
@@ -695,6 +705,7 @@ export const seedData: FinanceState = {
       instrument: 'equity',
       investmentDate: '2021-10-31',
       exitMethod: 'write_off',
+      irr: -1.0, // total loss
       taxScheme: 'EIS',
       geography: 'United Kingdom',
       industry: 'FinTech / Savings',
