@@ -429,24 +429,26 @@ export default function DashboardPage() {
             </div>
             {expanded['summary-cash'] && (
               <div className="px-6 pb-4 pt-0 border-t border-slate-100 space-y-1">
-                {state.cashPositions.map((cp) => (
-                  <div
-                    key={cp.id}
-                    className="flex items-center justify-between cursor-pointer hover:bg-slate-50 rounded px-1 -mx-1 py-0.5"
-                    onClick={() => {
-                      setEditingCash(cp);
-                      setPanelType('cashPosition');
-                    }}
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <ProviderLogo provider={cp.provider} size={14} />
-                      <span className="text-xs text-slate-600">{cp.name}</span>
+                {[...state.cashPositions]
+                  .sort((a, b) => b.balance - a.balance)
+                  .map((cp) => (
+                    <div
+                      key={cp.id}
+                      className="flex items-center justify-between cursor-pointer hover:bg-slate-50 rounded px-1 -mx-1 py-0.5"
+                      onClick={() => {
+                        setEditingCash(cp);
+                        setPanelType('cashPosition');
+                      }}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <ProviderLogo provider={cp.provider} size={14} />
+                        <span className="text-xs text-slate-600">{cp.name}</span>
+                      </div>
+                      <span className="text-xs font-medium text-slate-700 tabular-nums">
+                        {formatCurrency(cp.balance)}
+                      </span>
                     </div>
-                    <span className="text-xs font-medium text-slate-700 tabular-nums">
-                      {formatCurrency(cp.balance)}
-                    </span>
-                  </div>
-                ))}
+                  ))}
               </div>
             )}
           </div>
@@ -471,52 +473,67 @@ export default function DashboardPage() {
             </div>
             {expanded['summary-assets'] && (
               <div className="px-6 pb-4 pt-0 border-t border-slate-100 space-y-1">
-                {state.assets
-                  .filter((a) => a.category !== 'angel')
-                  .map((asset) => (
-                    <div key={asset.id} className="flex items-center justify-between py-0.5">
-                      <div className="flex items-center gap-1.5">
-                        <ProviderLogo provider={asset.provider} size={14} />
-                        <span className="text-xs text-slate-600">{asset.name}</span>
+                {(() => {
+                  const items: { key: string; label: React.ReactNode; value: number }[] = [];
+                  // Non-angel assets
+                  for (const asset of state.assets.filter((a) => a.category !== 'angel')) {
+                    items.push({
+                      key: asset.id,
+                      label: (
+                        <div className="flex items-center gap-1.5">
+                          <ProviderLogo provider={asset.provider} size={14} />
+                          <span className="text-xs text-slate-600">{asset.name}</span>
+                        </div>
+                      ),
+                      value: asset.currentValue,
+                    });
+                  }
+                  // Angel aggregate
+                  if (angelAssets.length > 0) {
+                    items.push({
+                      key: 'angel-aggregate',
+                      label: (
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className="inline-block w-2 h-2 rounded-full"
+                            style={{ backgroundColor: assetCategories.angel?.color }}
+                          />
+                          <span className="text-xs text-slate-600">
+                            Angel Investments ({angelAssets.length})
+                          </span>
+                        </div>
+                      ),
+                      value: angelTotal,
+                    });
+                  }
+                  // Carry positions
+                  for (const cp of state.carryPositions) {
+                    const carryEUR =
+                      computeCarryScenarios(cp, [CARRY_BALANCE_SHEET_MULTIPLE])[0]?.personalCarry ??
+                      0;
+                    items.push({
+                      key: cp.id,
+                      label: (
+                        <div className="flex items-center gap-1.5">
+                          <ProviderLogo provider={cp.provider} size={14} />
+                          <span className="text-xs text-slate-600">{cp.fundName}</span>
+                          <span className="text-[10px] text-indigo-500">Carry @3x</span>
+                        </div>
+                      ),
+                      value: carryEUR * eurGbp.rate,
+                    });
+                  }
+                  return items
+                    .sort((a, b) => b.value - a.value)
+                    .map((item) => (
+                      <div key={item.key} className="flex items-center justify-between py-0.5">
+                        {item.label}
+                        <span className="text-xs font-medium text-slate-700 tabular-nums">
+                          {formatCurrency(item.value)}
+                        </span>
                       </div>
-                      <span className="text-xs font-medium text-slate-700 tabular-nums">
-                        {formatCurrency(asset.currentValue)}
-                      </span>
-                    </div>
-                  ))}
-                {angelAssets.length > 0 && (
-                  <div className="flex items-center justify-between py-0.5">
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        className="inline-block w-2 h-2 rounded-full"
-                        style={{ backgroundColor: assetCategories.angel?.color }}
-                      />
-                      <span className="text-xs text-slate-600">
-                        Angel Investments ({angelAssets.length})
-                      </span>
-                    </div>
-                    <span className="text-xs font-medium text-slate-700 tabular-nums">
-                      {formatCurrency(angelTotal)}
-                    </span>
-                  </div>
-                )}
-                {state.carryPositions.map((cp) => {
-                  const carryEUR =
-                    computeCarryScenarios(cp, [CARRY_BALANCE_SHEET_MULTIPLE])[0]?.personalCarry ??
-                    0;
-                  return (
-                    <div key={cp.id} className="flex items-center justify-between py-0.5">
-                      <div className="flex items-center gap-1.5">
-                        <ProviderLogo provider={cp.provider} size={14} />
-                        <span className="text-xs text-slate-600">{cp.fundName}</span>
-                        <span className="text-[10px] text-indigo-500">Carry @3x</span>
-                      </div>
-                      <span className="text-xs font-medium text-slate-700 tabular-nums">
-                        {formatCurrency(carryEUR * eurGbp.rate)}
-                      </span>
-                    </div>
-                  );
-                })}
+                    ));
+                })()}
               </div>
             )}
           </div>
@@ -540,24 +557,26 @@ export default function DashboardPage() {
             </div>
             {expanded['summary-liabilities'] && (
               <div className="px-6 pb-4 pt-0 border-t border-slate-100 space-y-1">
-                {state.liabilities.map((liability) => (
-                  <div
-                    key={liability.id}
-                    className="flex items-center justify-between cursor-pointer hover:bg-slate-50 rounded px-1 -mx-1 py-0.5"
-                    onClick={() => {
-                      setEditingLiability(liability);
-                      setPanelType('liability');
-                    }}
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <ProviderLogo provider={liability.provider} size={14} />
-                      <span className="text-xs text-slate-600">{liability.name}</span>
+                {[...state.liabilities]
+                  .sort((a, b) => b.currentBalance - a.currentBalance)
+                  .map((liability) => (
+                    <div
+                      key={liability.id}
+                      className="flex items-center justify-between cursor-pointer hover:bg-slate-50 rounded px-1 -mx-1 py-0.5"
+                      onClick={() => {
+                        setEditingLiability(liability);
+                        setPanelType('liability');
+                      }}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <ProviderLogo provider={liability.provider} size={14} />
+                        <span className="text-xs text-slate-600">{liability.name}</span>
+                      </div>
+                      <span className="text-xs font-medium text-red-600 tabular-nums">
+                        {formatCurrency(liability.currentBalance)}
+                      </span>
                     </div>
-                    <span className="text-xs font-medium text-red-600 tabular-nums">
-                      {formatCurrency(liability.currentBalance)}
-                    </span>
-                  </div>
-                ))}
+                  ))}
               </div>
             )}
           </div>
