@@ -208,9 +208,6 @@ export default function DashboardPage() {
     (sum, a) => sum + (a.costBasisGBP ?? a.costBasis ?? 0),
     0,
   );
-  const activeCount = angelAssets.filter((a) => a.status === 'active' || !a.status).length;
-  const exitedCount = angelAssets.filter((a) => a.status === 'exited').length;
-  const writtenOffCount = angelAssets.filter((a) => a.status === 'written_off').length;
 
   const liabilitiesByType = useMemo(() => {
     const groups: Record<string, Liability[]> = {};
@@ -244,10 +241,6 @@ export default function DashboardPage() {
   }, [state.assets]);
 
   // Angel filter + sort state
-  const [angelStatusFilter, setAngelStatusFilter] = useState<
-    'all' | 'active' | 'written_off' | 'exited'
-  >('all');
-
   type AngelSortKey =
     | 'name'
     | 'date'
@@ -279,17 +272,9 @@ export default function DashboardPage() {
   const angelSortIndicator = (key: AngelSortKey) =>
     angelSortKey === key ? (angelSortDir === 'asc' ? ' ▲' : ' ▼') : '';
 
-  const filteredAngelAssets = (() => {
-    const filtered =
-      angelStatusFilter === 'all'
-        ? angelAssets
-        : angelAssets.filter((a) => {
-            if (angelStatusFilter === 'active') return a.status === 'active' || !a.status;
-            return a.status === angelStatusFilter;
-          });
-
+  const sortedAngelAssets = (() => {
     const dir = angelSortDir === 'asc' ? 1 : -1;
-    return [...filtered].sort((a, b) => {
+    return [...angelAssets].sort((a, b) => {
       switch (angelSortKey) {
         case 'name':
           return dir * a.name.localeCompare(b.name);
@@ -1336,34 +1321,6 @@ export default function DashboardPage() {
                 </p>
               </div>
             </div>
-            {/* Status filter pills */}
-            <div className="flex items-center gap-2 mb-4">
-              {(
-                [
-                  { key: 'all', label: 'All', count: angelAssets.length },
-                  { key: 'active', label: 'Active', count: activeCount },
-                  { key: 'exited', label: 'Exited', count: exitedCount },
-                  { key: 'written_off', label: 'Written Off', count: writtenOffCount },
-                ] as const
-              ).map((f) => (
-                <button
-                  key={f.key}
-                  onClick={() => setAngelStatusFilter(f.key)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors ${
-                    angelStatusFilter === f.key
-                      ? 'bg-slate-900 text-white border-slate-900'
-                      : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'
-                  }`}
-                >
-                  {f.label}{' '}
-                  <span
-                    className={angelStatusFilter === f.key ? 'text-slate-300' : 'text-slate-400'}
-                  >
-                    {f.count}
-                  </span>
-                </button>
-              ))}
-            </div>
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
                 <thead>
@@ -1437,7 +1394,7 @@ export default function DashboardPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredAngelAssets.map((asset) => {
+                  {sortedAngelAssets.map((asset) => {
                     const emails = parsedEmailUpdates[asset.id];
                     const hasEmails = emails && emails.length > 0;
                     const isAngelExpanded = expandedAngel === asset.id;
@@ -1596,11 +1553,11 @@ export default function DashboardPage() {
                     );
                   })}
                   {(() => {
-                    const filteredCostGBP = filteredAngelAssets.reduce(
+                    const filteredCostGBP = sortedAngelAssets.reduce(
                       (sum, a) => sum + (a.costBasisGBP ?? a.costBasis ?? 0),
                       0,
                     );
-                    const filteredTotal = filteredAngelAssets.reduce(
+                    const filteredTotal = sortedAngelAssets.reduce(
                       (sum, a) => sum + a.currentValue,
                       0,
                     );
@@ -1608,14 +1565,7 @@ export default function DashboardPage() {
                     const filteredMOIC = filteredCostGBP > 0 ? filteredTotal / filteredCostGBP : 0;
                     return (
                       <tr className="bg-slate-50 font-semibold">
-                        <td className="py-2 px-3 text-slate-900">
-                          Total
-                          {angelStatusFilter !== 'all' && (
-                            <span className="ml-1 text-xs font-normal text-slate-400">
-                              ({filteredAngelAssets.length} of {angelAssets.length})
-                            </span>
-                          )}
-                        </td>
+                        <td className="py-2 px-3 text-slate-900">Total</td>
                         <td className="py-2 px-3" colSpan={4}></td>
                         <td className="py-2 px-3 text-right text-slate-900">
                           {formatCurrency(filteredCostGBP)}
