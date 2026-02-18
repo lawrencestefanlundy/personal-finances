@@ -408,10 +408,11 @@ export const seedData: FinanceState = {
       costBasisGBP: 0,
       instrument: 'options',
       investmentDate: '2025-09-30',
+      ownershipPercent: 0.0119, // 1.5M options / 126.46M fully diluted (124.96M issued + 1.5M). AIM: INSG.
       geography: 'United Kingdom',
       industry: 'AI / NLP',
       notes:
-        '1.5M options. Strike price: 50p. Current share price: ~22.5p (Feb 2026) — out of the money. Vesting: 1M Apr 2026, 500K Apr 2027. Exercise deadline Oct 2028.',
+        '1.5M options. Strike price: 50p. Current share price: ~22.5p (Feb 2026) — out of the money. Vesting: 1M Apr 2026, 500K Apr 2027. Exercise deadline Oct 2028. 124,962,212 shares in issue (Oct 2025 RNS).',
       emailUpdates:
         '[{"subject":"FW: Project Capital","from":"Richard Bernstein <rb@crystalamber.com>","date":"2025-08-06","snippet":"Inside information - appreciate thoughts on this section."},{"subject":"AIM Submission","from":"Richard Bernstein <rb@crystalamber.com>","date":"2025-08-20","snippet":"Detailed submission. Pressing for a response. Lawyers working on it."},{"subject":"AIM Submission","from":"Lawrence Lundy","date":"2025-08-27","snippet":"See email from company email. Formal submission update."}]',
     },
@@ -498,12 +499,13 @@ export const seedData: FinanceState = {
       costBasisGBP: 10000,
       instrument: 'equity',
       investmentDate: '2026-01-15',
+      ownershipPercent: 0.00057, // 7,364 / ~12.85M (Companies House SH01 Sep 2025, pre-Jan round — actual diluted % will be lower)
       taxScheme: 'EIS',
       platform: 'direct',
       geography: 'United Kingdom',
       industry: 'Neuroscience / BCI',
       notes:
-        '7,364 Ordinary Shares at £1.3579/share = £9,999.58. Subscription Adherence Agreement signed 15 Jan 2026. EIS eligible.',
+        '7,364 Ordinary Shares at £1.3579/share = £9,999.58. Subscription Adherence Agreement signed 15 Jan 2026. EIS eligible. Co no. 16646869. 12,846,857 shares as of SH01 Sep 2025.',
       emailUpdates:
         '[{"subject":"Complete with Docusign: Callosum - Subscription Adherence Agreement & SHA Adherence Agreement","from":"Danyal Akarca via Docusign","date":"2025-12-02","snippet":"Sent you a document to review and sign."},{"subject":"Completed: Callosum - SHA Adherence Agreement (Ordinary Shares)","from":"Danyal Akarca via Docusign","date":"2026-01-15","snippet":"All parties have signed the document."},{"subject":"Callosum - Investor Update, January 2026","from":"Danyal Akarca <danyal@callosum.com>","date":"2026-01-01","snippet":"Happy new year! We believe this will be a defining year for Callosum."}]',
     },
