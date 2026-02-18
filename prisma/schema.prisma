@@ -79,6 +79,8 @@ model Asset {
   platform         String?  // odin, direct, feedforward, vauban, seedlegals
   geography        String?  // UK, US, Switzerland, etc.
   industry         String?  // sector/industry description
+  ownershipPercent Float?   // ownership % as decimal (e.g. 0.005 = 0.5%)
+  irr              Float?   // gross IRR as decimal (e.g. 0.2863 = 28.63%)
   emailUpdates     String?  // JSON array of {subject, from, date, snippet}
   registration     String?  // vehicle registration number (e.g. GY17STZ)
   mileage          Int?     // current odometer reading

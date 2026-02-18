@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Asset" ADD COLUMN "ownershipPercent" DOUBLE PRECISION;
+ALTER TABLE "Asset" ADD COLUMN "irr" DOUBLE PRECISION;

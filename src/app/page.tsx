@@ -253,10 +253,12 @@ export default function DashboardPage() {
     | 'date'
     | 'geography'
     | 'industry'
+    | 'ownership'
     | 'cost'
     | 'fairValue'
     | 'return'
     | 'moic'
+    | 'irr'
     | 'status';
   const [angelSortKey, setAngelSortKey] = useState<AngelSortKey>('status');
   const [angelSortDir, setAngelSortDir] = useState<'asc' | 'desc'>('asc');
@@ -297,6 +299,8 @@ export default function DashboardPage() {
           return dir * (a.geography ?? '').localeCompare(b.geography ?? '');
         case 'industry':
           return dir * (a.industry ?? '').localeCompare(b.industry ?? '');
+        case 'ownership':
+          return dir * ((a.ownershipPercent ?? 0) - (b.ownershipPercent ?? 0));
         case 'cost':
           return (
             dir * ((a.costBasisGBP ?? a.costBasis ?? 0) - (b.costBasisGBP ?? b.costBasis ?? 0))
@@ -313,6 +317,8 @@ export default function DashboardPage() {
           const bMoic = b.costBasisGBP && b.costBasisGBP > 0 ? b.currentValue / b.costBasisGBP : 0;
           return dir * (aMoic - bMoic);
         }
+        case 'irr':
+          return dir * ((a.irr ?? 0) - (b.irr ?? 0));
         case 'status': {
           const statusOrder: Record<string, number> = { active: 0, exited: 1, written_off: 2 };
           const orderDiff =
@@ -1388,6 +1394,12 @@ export default function DashboardPage() {
                     </th>
                     <th
                       className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                      onClick={() => handleAngelSort('ownership')}
+                    >
+                      Ownership{angelSortIndicator('ownership')}
+                    </th>
+                    <th
+                      className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
                       onClick={() => handleAngelSort('cost')}
                     >
                       Cost{angelSortIndicator('cost')}
@@ -1409,6 +1421,12 @@ export default function DashboardPage() {
                       onClick={() => handleAngelSort('moic')}
                     >
                       MOIC{angelSortIndicator('moic')}
+                    </th>
+                    <th
+                      className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                      onClick={() => handleAngelSort('irr')}
+                    >
+                      IRR{angelSortIndicator('irr')}
                     </th>
                     <th
                       className="text-center py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
@@ -1476,6 +1494,11 @@ export default function DashboardPage() {
                             {asset.industry ?? '—'}
                           </td>
                           <td className="py-2 px-3 text-right text-slate-600">
+                            {asset.ownershipPercent != null
+                              ? formatPercent(asset.ownershipPercent)
+                              : '—'}
+                          </td>
+                          <td className="py-2 px-3 text-right text-slate-600">
                             {(asset.costBasisGBP ?? asset.costBasis ?? 0) > 0
                               ? formatCurrency(asset.costBasisGBP ?? asset.costBasis ?? 0)
                               : '—'}
@@ -1507,6 +1530,17 @@ export default function DashboardPage() {
                               );
                             })()}
                           </td>
+                          <td className="py-2 px-3 text-right text-xs">
+                            {asset.irr != null ? (
+                              <span
+                                className={asset.irr >= 0 ? 'text-emerald-600' : 'text-red-500'}
+                              >
+                                {(asset.irr * 100).toFixed(1)}%
+                              </span>
+                            ) : (
+                              '—'
+                            )}
+                          </td>
                           <td className="py-2 px-3 text-center">
                             {(() => {
                               const statusMeta =
@@ -1528,7 +1562,7 @@ export default function DashboardPage() {
                         {isAngelExpanded && hasEmails && (
                           <tr>
                             <td
-                              colSpan={9}
+                              colSpan={11}
                               className="bg-slate-50 px-6 py-3 border-b border-slate-100"
                             >
                               <div className="max-h-64 overflow-y-auto space-y-2">
@@ -1582,7 +1616,7 @@ export default function DashboardPage() {
                             </span>
                           )}
                         </td>
-                        <td className="py-2 px-3" colSpan={3}></td>
+                        <td className="py-2 px-3" colSpan={4}></td>
                         <td className="py-2 px-3 text-right text-slate-900">
                           {formatCurrency(filteredCostGBP)}
                         </td>
@@ -1601,7 +1635,7 @@ export default function DashboardPage() {
                             {filteredMOIC > 0 ? `${filteredMOIC.toFixed(2)}x` : '—'}
                           </span>
                         </td>
-                        <td className="py-2 px-3"></td>
+                        <td className="py-2 px-3" colSpan={2}></td>
                       </tr>
                     );
                   })()}

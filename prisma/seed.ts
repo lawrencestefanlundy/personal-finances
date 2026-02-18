@@ -130,6 +130,8 @@ async function main() {
         platform: (a.platform as string) ?? null,
         geography: (a.geography as string) ?? null,
         industry: (a.industry as string) ?? null,
+        ownershipPercent: (a.ownershipPercent as number) ?? null,
+        irr: (a.irr as number) ?? null,
       })),
     });
     console.log(`  ${data.assets.length} assets`);

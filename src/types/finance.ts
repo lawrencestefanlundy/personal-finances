@@ -108,6 +108,8 @@ export interface Asset {
   platform?: string; // odin, direct, feedforward, vauban, seedlegals
   geography?: string;
   industry?: string;
+  ownershipPercent?: number; // ownership % as decimal (e.g. 0.005 = 0.5%)
+  irr?: number; // gross IRR as decimal (e.g. 0.2863 = 28.63%)
   emailUpdates?: string; // JSON string of EmailUpdate[]
   // Vehicle-specific fields (vehicle category)
   registration?: string; // e.g. GY17STZ

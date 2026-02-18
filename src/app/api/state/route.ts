@@ -177,6 +177,8 @@ export async function POST(request: Request) {
             platform: a.platform ?? null,
             geography: a.geography ?? null,
             industry: a.industry ?? null,
+            ownershipPercent: a.ownershipPercent ?? null,
+            irr: a.irr ?? null,
             emailUpdates: a.emailUpdates ?? null,
             registration: a.registration ?? null,
             mileage: a.mileage ?? null,

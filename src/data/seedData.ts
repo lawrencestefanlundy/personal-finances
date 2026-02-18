@@ -452,6 +452,7 @@ export const seedData: FinanceState = {
       fxRate: 0.7687,
       instrument: 'safe',
       investmentDate: '2022-04-19',
+      ownershipPercent: 0.00067, // $20K / $30M post-money cap (implied, pre-conversion)
       platform: 'direct',
       geography: 'Singapore',
       industry: 'FinTech / Payments',
@@ -520,6 +521,7 @@ export const seedData: FinanceState = {
       fxRate: 0.81,
       instrument: 'safe',
       investmentDate: '2022-05-17',
+      ownershipPercent: 0.0005, // $15K / $30M post-money cap (implied, pre-conversion)
       platform: 'direct',
       geography: 'United States',
       industry: 'Crypto / DeFi',
@@ -584,6 +586,7 @@ export const seedData: FinanceState = {
       costBasisGBP: 19964,
       fxRate: 0.7986,
       investmentDate: '2022-02-14',
+      ownershipPercent: 0.0015, // 211 shares of 137,361 total (post-option pool, from SHA cap table)
       geography: 'Switzerland',
       industry: 'AI / Agentic Commerce',
       notes:
@@ -667,10 +670,12 @@ export const seedData: FinanceState = {
       costBasisGBP: 3000,
       instrument: 'safe',
       investmentDate: '2021-11-04',
+      ownershipPercent: 0.0007, // 895 shares of ~1,297,312 total (0.07% equity from SHA Schedule 3)
       platform: 'seedlegals',
       geography: 'United Kingdom',
       industry: 'SaaS / Sales Training',
-      notes: 'SeedFAST via SeedLegals. Signed and funded Nov 4, 2021. £3,000 GBP.',
+      notes:
+        'SeedFAST via SeedLegals. Signed and funded Nov 4, 2021. £3,000 GBP. SeedFAST converted to 895 Ordinary EIS shares at £3.3538/share (0.07% equity, 0.08% voting per SHA).',
       emailUpdates:
         '[{"subject":"Uhubs July investor Update","from":"Matt Milligan <matt@uhubs.co.uk>","date":"2025-08-05","snippet":"Pushing on pipeline growth for strong H2. First ever $400k+ sale."},{"subject":"Uhubs April Investor Update","from":"Matt Milligan <matt@uhubs.co.uk>","date":"2025-04-22","snippet":"Solid Q1, returned from a month in the US meeting prospects."},{"subject":"Uhubs Investor update - December 2024","from":"Matt Milligan <matt@uhubs.co.uk>","date":"2024-11-24","snippet":"Busy 8 weeks at Uhubs, doubling up on update."},{"subject":"Uhubs August Investor Update","from":"Matt Milligan <matt@uhubs.co.uk>","date":"2024-09-25","snippet":"2024 push towards profitability. ~550k ARR."},{"subject":"Uhubs July investor update","from":"Matt Milligan <matt@uhubs.co.uk>","date":"2024-08-28","snippet":"July sales update on 2024 push towards profitability."}]',
     },
