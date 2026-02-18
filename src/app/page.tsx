@@ -1324,71 +1324,71 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
+              <table className="min-w-full text-xs">
                 <thead>
                   <tr className="border-b border-slate-200">
                     <th
-                      className="text-left py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                      className="text-left py-1.5 px-2 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
                       onClick={() => handleAngelSort('name')}
                     >
                       Name{angelSortIndicator('name')}
                     </th>
                     <th
-                      className="text-center py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                      className="text-center py-1.5 px-2 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
                       onClick={() => handleAngelSort('date')}
                     >
                       Date{angelSortIndicator('date')}
                     </th>
                     <th
-                      className="text-left py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                      className="text-left py-1.5 px-2 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
                       onClick={() => handleAngelSort('geography')}
                     >
                       Geography{angelSortIndicator('geography')}
                     </th>
                     <th
-                      className="text-left py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                      className="text-left py-1.5 px-2 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
                       onClick={() => handleAngelSort('industry')}
                     >
                       Industry{angelSortIndicator('industry')}
                     </th>
                     <th
-                      className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                      className="text-right py-1.5 px-2 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
                       onClick={() => handleAngelSort('ownership')}
                     >
                       Ownership{angelSortIndicator('ownership')}
                     </th>
                     <th
-                      className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                      className="text-right py-1.5 px-2 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
                       onClick={() => handleAngelSort('cost')}
                     >
                       Cost{angelSortIndicator('cost')}
                     </th>
                     <th
-                      className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                      className="text-right py-1.5 px-2 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
                       onClick={() => handleAngelSort('fairValue')}
                     >
                       Fair Value{angelSortIndicator('fairValue')}
                     </th>
                     <th
-                      className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                      className="text-right py-1.5 px-2 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
                       onClick={() => handleAngelSort('return')}
                     >
                       Return{angelSortIndicator('return')}
                     </th>
                     <th
-                      className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                      className="text-right py-1.5 px-2 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
                       onClick={() => handleAngelSort('moic')}
                     >
                       MOIC{angelSortIndicator('moic')}
                     </th>
                     <th
-                      className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                      className="text-right py-1.5 px-2 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
                       onClick={() => handleAngelSort('irr')}
                     >
                       IRR{angelSortIndicator('irr')}
                     </th>
                     <th
-                      className="text-center py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                      className="text-center py-1.5 px-2 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
                       onClick={() => handleAngelSort('status')}
                     >
                       Status{angelSortIndicator('status')}
@@ -1398,9 +1398,9 @@ export default function DashboardPage() {
                 <tbody>
                   {sortedAngelAssets.map((asset) => (
                     <tr key={asset.id} className="border-b border-slate-50 hover:bg-slate-50 group">
-                      <td className="py-2 px-3 font-medium text-slate-900">
-                        <div className="flex items-center gap-2">
-                          <ProviderLogo provider={asset.provider} size={18} />
+                      <td className="py-1.5 px-2 font-medium text-slate-900">
+                        <div className="flex items-center gap-1.5">
+                          <ProviderLogo provider={asset.provider} size={14} />
                           <div>
                             <span>{asset.name}</span>
                             {asset.platform && (
@@ -1411,7 +1411,7 @@ export default function DashboardPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="py-2 px-3 text-center text-xs text-slate-500 whitespace-nowrap">
+                      <td className="py-1.5 px-2 text-center text-slate-500 whitespace-nowrap">
                         {asset.investmentDate
                           ? new Date(asset.investmentDate).toLocaleDateString('en-GB', {
                               month: 'short',
@@ -1428,24 +1428,24 @@ export default function DashboardPage() {
                           </span>
                         )}
                       </td>
-                      <td className="py-2 px-3">{geographyBubble(asset.geography)}</td>
-                      <td className="py-2 px-3 text-xs text-slate-500 max-w-[140px] truncate">
+                      <td className="py-1.5 px-2">{geographyBubble(asset.geography)}</td>
+                      <td className="py-1.5 px-2 text-slate-500 max-w-[140px] truncate">
                         {asset.industry ?? '—'}
                       </td>
-                      <td className="py-2 px-3 text-right text-slate-600">
+                      <td className="py-1.5 px-2 text-right text-slate-600">
                         {asset.ownershipPercent != null
                           ? formatPercent(asset.ownershipPercent)
                           : '—'}
                       </td>
-                      <td className="py-2 px-3 text-right text-slate-600">
+                      <td className="py-1.5 px-2 text-right text-slate-600">
                         {(asset.costBasisGBP ?? asset.costBasis ?? 0) > 0
                           ? formatCurrency(asset.costBasisGBP ?? asset.costBasis ?? 0)
                           : '—'}
                       </td>
-                      <td className="py-2 px-3 text-right text-slate-900">
+                      <td className="py-1.5 px-2 text-right text-slate-900 font-medium">
                         {formatCurrency(asset.currentValue)}
                       </td>
-                      <td className="py-2 px-3 text-right font-medium">
+                      <td className="py-1.5 px-2 text-right font-medium">
                         {(() => {
                           const costGBP = asset.costBasisGBP ?? asset.costBasis ?? 0;
                           const totalReturn = asset.currentValue - costGBP;
@@ -1458,7 +1458,7 @@ export default function DashboardPage() {
                           );
                         })()}
                       </td>
-                      <td className="py-2 px-3 text-right font-medium">
+                      <td className="py-1.5 px-2 text-right font-medium">
                         {(() => {
                           const costGBP = asset.costBasisGBP ?? asset.costBasis ?? 0;
                           const moic = costGBP > 0 ? asset.currentValue / costGBP : 0;
@@ -1469,7 +1469,7 @@ export default function DashboardPage() {
                           );
                         })()}
                       </td>
-                      <td className="py-2 px-3 text-right text-xs">
+                      <td className="py-1.5 px-2 text-right">
                         {asset.irr != null ? (
                           <span className={asset.irr >= 0 ? 'text-emerald-600' : 'text-red-500'}>
                             {(asset.irr * 100).toFixed(1)}%
@@ -1478,13 +1478,13 @@ export default function DashboardPage() {
                           '—'
                         )}
                       </td>
-                      <td className="py-2 px-3 text-center">
+                      <td className="py-1.5 px-2 text-center">
                         {(() => {
                           const statusMeta =
                             STATUS_LABELS[asset.status || 'active'] ?? STATUS_LABELS.active;
                           return (
                             <span
-                              className="inline-block px-2 py-0.5 rounded-full text-xs font-medium"
+                              className="inline-block px-1.5 py-0.5 rounded-full font-medium"
                               style={{
                                 backgroundColor: statusMeta.bg,
                                 color: statusMeta.color,
@@ -1510,27 +1510,27 @@ export default function DashboardPage() {
                     const filteredMOIC = filteredCostGBP > 0 ? filteredTotal / filteredCostGBP : 0;
                     return (
                       <tr className="bg-slate-50 font-semibold">
-                        <td className="py-2 px-3 text-slate-900">Total</td>
-                        <td className="py-2 px-3" colSpan={4}></td>
-                        <td className="py-2 px-3 text-right text-slate-900">
+                        <td className="py-1.5 px-2 text-slate-900">Total</td>
+                        <td className="py-1.5 px-2" colSpan={4}></td>
+                        <td className="py-1.5 px-2 text-right text-slate-900">
                           {formatCurrency(filteredCostGBP)}
                         </td>
-                        <td className="py-2 px-3 text-right text-slate-900">
+                        <td className="py-1.5 px-2 text-right text-slate-900">
                           {formatCurrency(filteredTotal)}
                         </td>
-                        <td className="py-2 px-3 text-right font-medium">
+                        <td className="py-1.5 px-2 text-right font-medium">
                           <span
                             className={filteredReturn >= 0 ? 'text-emerald-600' : 'text-red-500'}
                           >
                             {formatCurrency(filteredReturn)}
                           </span>
                         </td>
-                        <td className="py-2 px-3 text-right">
+                        <td className="py-1.5 px-2 text-right">
                           <span className={filteredMOIC >= 1 ? 'text-emerald-600' : 'text-red-600'}>
                             {filteredMOIC > 0 ? `${filteredMOIC.toFixed(2)}x` : '—'}
                           </span>
                         </td>
-                        <td className="py-2 px-3" colSpan={2}></td>
+                        <td className="py-1.5 px-2" colSpan={2}></td>
                       </tr>
                     );
                   })()}
@@ -1757,53 +1757,53 @@ function FundSection({ carryPosition, eurGbpRate, onEditFund, onDeleteFund }: Fu
         </div>
       </div>
 
-      <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-10 gap-4 p-6 bg-slate-50 border-b border-slate-100">
+      <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-10 gap-3 px-6 py-4 bg-slate-50 border-b border-slate-100">
         <div>
-          <p className="text-xs text-slate-500">Fund Size</p>
-          <p className="text-sm font-semibold text-slate-900">
+          <p className="text-[10px] text-slate-500">Fund Size</p>
+          <p className="text-xs font-semibold text-slate-900">
             {formatCurrency(carryPosition.fundSize * eurGbpRate)}
           </p>
           <p className="text-[10px] text-slate-400">{formatEUR(carryPosition.fundSize)}</p>
         </div>
         <div>
-          <p className="text-xs text-slate-500">Committed</p>
-          <p className="text-sm font-semibold text-slate-900">
+          <p className="text-[10px] text-slate-500">Committed</p>
+          <p className="text-xs font-semibold text-slate-900">
             {formatCurrency(carryPosition.committedCapital * eurGbpRate)}
           </p>
           <p className="text-[10px] text-slate-400">{formatEUR(carryPosition.committedCapital)}</p>
         </div>
         <div>
-          <p className="text-xs text-slate-500">Carry %</p>
-          <p className="text-sm font-semibold text-slate-900">
+          <p className="text-[10px] text-slate-500">Carry %</p>
+          <p className="text-xs font-semibold text-slate-900">
             {formatPercent(carryPosition.carryPercent)}
           </p>
         </div>
         <div>
-          <p className="text-xs text-slate-500">Hurdle</p>
-          <p className="text-sm font-semibold text-slate-900">
+          <p className="text-[10px] text-slate-500">Hurdle</p>
+          <p className="text-xs font-semibold text-slate-900">
             {formatPercent(carryPosition.hurdleRate)}
           </p>
         </div>
         <div>
-          <p className="text-xs text-slate-500">Personal Share</p>
-          <p className="text-sm font-semibold text-slate-900">
+          <p className="text-[10px] text-slate-500">Personal Share</p>
+          <p className="text-xs font-semibold text-slate-900">
             {formatPercent(carryPosition.personalSharePercent)}
           </p>
         </div>
         <div>
-          <p className="text-xs text-slate-500">Location</p>
-          <p className="text-sm font-semibold text-slate-900">{carryPosition.location ?? '—'}</p>
+          <p className="text-[10px] text-slate-500">Location</p>
+          <p className="text-xs font-semibold text-slate-900">{carryPosition.location ?? '—'}</p>
         </div>
         <div>
-          <p className="text-xs text-slate-500">Fund Close</p>
-          <p className="text-sm font-semibold text-slate-900">
+          <p className="text-[10px] text-slate-500">Fund Close</p>
+          <p className="text-xs font-semibold text-slate-900">
             {carryPosition.fundCloseYear ?? '—'}
           </p>
         </div>
         {scenarios.map((sc) => (
           <div key={sc.multiple}>
-            <p className="text-xs text-slate-500">Carry @{sc.multiple.toFixed(0)}x</p>
-            <p className="text-sm font-bold text-emerald-700">
+            <p className="text-[10px] text-slate-500">Carry @{sc.multiple.toFixed(0)}x</p>
+            <p className="text-xs font-bold text-emerald-700">
               {formatCurrency(sc.personalCarry * eurGbpRate)}
             </p>
             <p className="text-[10px] text-slate-400">{formatEUR(sc.personalCarry)}</p>
@@ -1819,71 +1819,71 @@ function FundSection({ carryPosition, eurGbpRate, onEditFund, onDeleteFund }: Fu
         </div>
         {carryPosition.portfolioCompanies.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
+            <table className="min-w-full text-xs">
               <thead>
                 <tr className="border-b border-slate-200">
                   <th
-                    className="text-left py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                    className="text-left py-1.5 px-2 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
                     onClick={() => handleFundSort('name')}
                   >
                     Name{fundSortIndicator('name')}
                   </th>
                   <th
-                    className="text-center py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                    className="text-center py-1.5 px-2 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
                     onClick={() => handleFundSort('date')}
                   >
                     Date{fundSortIndicator('date')}
                   </th>
                   <th
-                    className="text-left py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                    className="text-left py-1.5 px-2 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
                     onClick={() => handleFundSort('geography')}
                   >
                     Geography{fundSortIndicator('geography')}
                   </th>
                   <th
-                    className="text-left py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                    className="text-left py-1.5 px-2 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
                     onClick={() => handleFundSort('industry')}
                   >
                     Industry{fundSortIndicator('industry')}
                   </th>
                   <th
-                    className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                    className="text-right py-1.5 px-2 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
                     onClick={() => handleFundSort('ownership')}
                   >
                     Ownership{fundSortIndicator('ownership')}
                   </th>
                   <th
-                    className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                    className="text-right py-1.5 px-2 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
                     onClick={() => handleFundSort('cost')}
                   >
                     Cost{fundSortIndicator('cost')}
                   </th>
                   <th
-                    className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                    className="text-right py-1.5 px-2 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
                     onClick={() => handleFundSort('fairValue')}
                   >
                     Fair Value{fundSortIndicator('fairValue')}
                   </th>
                   <th
-                    className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                    className="text-right py-1.5 px-2 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
                     onClick={() => handleFundSort('return')}
                   >
                     Return{fundSortIndicator('return')}
                   </th>
                   <th
-                    className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                    className="text-right py-1.5 px-2 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
                     onClick={() => handleFundSort('moic')}
                   >
                     MOIC{fundSortIndicator('moic')}
                   </th>
                   <th
-                    className="text-right py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                    className="text-right py-1.5 px-2 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
                     onClick={() => handleFundSort('irr')}
                   >
                     IRR{fundSortIndicator('irr')}
                   </th>
                   <th
-                    className="text-center py-2 px-3 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
+                    className="text-center py-1.5 px-2 font-semibold text-slate-600 cursor-pointer select-none hover:text-slate-900"
                     onClick={() => handleFundSort('status')}
                   >
                     Status{fundSortIndicator('status')}
@@ -1905,7 +1905,7 @@ function FundSection({ carryPosition, eurGbpRate, onEditFund, onDeleteFund }: Fu
                       key={company.id}
                       className="border-b border-slate-50 hover:bg-slate-50 group"
                     >
-                      <td className="py-2 px-3 font-medium text-slate-900">
+                      <td className="py-1.5 px-2 font-medium text-slate-900">
                         <div>
                           <span>{company.name}</span>
                           {company.legalEntity && company.legalEntity !== company.name && (
@@ -1915,7 +1915,7 @@ function FundSection({ carryPosition, eurGbpRate, onEditFund, onDeleteFund }: Fu
                           )}
                         </div>
                       </td>
-                      <td className="py-2 px-3 text-center text-xs text-slate-500 whitespace-nowrap">
+                      <td className="py-1.5 px-2 text-center text-slate-500 whitespace-nowrap">
                         {company.investmentDate ?? '—'}
                         {company.exitDate && (
                           <span className="block text-[10px] text-slate-400">
@@ -1923,30 +1923,30 @@ function FundSection({ carryPosition, eurGbpRate, onEditFund, onDeleteFund }: Fu
                           </span>
                         )}
                       </td>
-                      <td className="py-2 px-3">{geographyBubble(company.geography)}</td>
-                      <td className="py-2 px-3 text-xs text-slate-500 max-w-[140px] truncate">
+                      <td className="py-1.5 px-2">{geographyBubble(company.geography)}</td>
+                      <td className="py-1.5 px-2 text-slate-500 max-w-[140px] truncate">
                         {company.industry ?? '—'}
                       </td>
-                      <td className="py-2 px-3 text-right text-slate-600">
+                      <td className="py-1.5 px-2 text-right text-slate-600">
                         {formatPercent(company.ownershipPercent)}
                       </td>
-                      <td className="py-2 px-3 text-right text-slate-600">
+                      <td className="py-1.5 px-2 text-right text-slate-600">
                         {formatEUR(company.investedAmount)}
                       </td>
-                      <td className="py-2 px-3 text-right text-slate-900">
+                      <td className="py-1.5 px-2 text-right text-slate-900 font-medium">
                         {formatEUR(company.currentValuation)}
                       </td>
-                      <td className="py-2 px-3 text-right font-medium">
+                      <td className="py-1.5 px-2 text-right font-medium">
                         <span className={totalReturn >= 0 ? 'text-emerald-600' : 'text-red-500'}>
                           {formatEUR(totalReturn)}
                         </span>
                       </td>
-                      <td className="py-2 px-3 text-right font-medium">
+                      <td className="py-1.5 px-2 text-right font-medium">
                         <span className={moic >= 1 ? 'text-emerald-600' : 'text-red-600'}>
                           {moic.toFixed(2)}x
                         </span>
                       </td>
-                      <td className="py-2 px-3 text-right text-xs">
+                      <td className="py-1.5 px-2 text-right">
                         {company.irr != null ? (
                           <span className={company.irr >= 0 ? 'text-emerald-600' : 'text-red-500'}>
                             {(company.irr * 100).toFixed(1)}%
@@ -1955,9 +1955,9 @@ function FundSection({ carryPosition, eurGbpRate, onEditFund, onDeleteFund }: Fu
                           '—'
                         )}
                       </td>
-                      <td className="py-2 px-3 text-center">
+                      <td className="py-1.5 px-2 text-center">
                         <span
-                          className="inline-block px-2 py-0.5 rounded-full text-xs font-medium"
+                          className="inline-block px-1.5 py-0.5 rounded-full font-medium"
                           style={{ backgroundColor: statusMeta.bg, color: statusMeta.color }}
                         >
                           {statusMeta.label}
@@ -1967,15 +1967,15 @@ function FundSection({ carryPosition, eurGbpRate, onEditFund, onDeleteFund }: Fu
                   );
                 })}
                 <tr className="bg-slate-50 font-semibold">
-                  <td className="py-2 px-3 text-slate-900">Total</td>
-                  <td className="py-2 px-3" colSpan={4}></td>
-                  <td className="py-2 px-3 text-right text-slate-900">
+                  <td className="py-1.5 px-2 text-slate-900">Total</td>
+                  <td className="py-1.5 px-2" colSpan={4}></td>
+                  <td className="py-1.5 px-2 text-right text-slate-900">
                     {formatEUR(metrics.totalInvested)}
                   </td>
-                  <td className="py-2 px-3 text-right text-slate-900">
+                  <td className="py-1.5 px-2 text-right text-slate-900">
                     {formatEUR(metrics.totalCurrentValuation)}
                   </td>
-                  <td className="py-2 px-3 text-right font-medium">
+                  <td className="py-1.5 px-2 text-right font-medium">
                     <span
                       className={
                         metrics.totalCurrentValuation - metrics.totalInvested >= 0
@@ -1986,14 +1986,14 @@ function FundSection({ carryPosition, eurGbpRate, onEditFund, onDeleteFund }: Fu
                       {formatEUR(metrics.totalCurrentValuation - metrics.totalInvested)}
                     </span>
                   </td>
-                  <td className="py-2 px-3 text-right">
+                  <td className="py-1.5 px-2 text-right">
                     <span
                       className={metrics.portfolioMOIC >= 1 ? 'text-emerald-600' : 'text-red-600'}
                     >
                       {metrics.portfolioMOIC.toFixed(2)}x
                     </span>
                   </td>
-                  <td className="py-2 px-3" colSpan={2}></td>
+                  <td className="py-1.5 px-2" colSpan={2}></td>
                 </tr>
               </tbody>
             </table>
