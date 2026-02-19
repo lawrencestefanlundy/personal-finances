@@ -30,6 +30,7 @@ export default function CarryPositionForm({ existing, onClose }: CarryPositionFo
     existing ? (existing.personalSharePercent * 100).toString() : '',
   );
   const [fundCloseYear, setFundCloseYear] = useState(existing?.fundCloseYear?.toString() ?? '');
+  const [targetFundSize, setTargetFundSize] = useState(existing?.targetFundSize?.toString() ?? '');
   const [linkedAssetId, setLinkedAssetId] = useState(existing?.linkedAssetId ?? '');
   const [notes, setNotes] = useState(existing?.notes ?? '');
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -70,6 +71,9 @@ export default function CarryPositionForm({ existing, onClose }: CarryPositionFo
       portfolioCompanies: existing?.portfolioCompanies ?? [],
       ...(linkedAssetId ? { linkedAssetId } : {}),
       ...(fundCloseYear ? { fundCloseYear: Number(fundCloseYear) } : {}),
+      ...(targetFundSize && !isNaN(Number(targetFundSize))
+        ? { targetFundSize: Number(targetFundSize) }
+        : {}),
       ...(notes.trim() ? { notes: notes.trim() } : {}),
     };
 
@@ -198,16 +202,34 @@ export default function CarryPositionForm({ existing, onClose }: CarryPositionFo
         </FormField>
       </div>
 
-      <FormField label="Fund Close Year">
-        <input
-          type="number"
-          step="1"
-          value={fundCloseYear}
-          onChange={(e) => setFundCloseYear(e.target.value)}
-          placeholder="e.g. 2035"
-          className={inputClass}
-        />
-      </FormField>
+      <div className="grid grid-cols-2 gap-3">
+        <FormField label="Fund Close Year">
+          <input
+            type="number"
+            step="1"
+            value={fundCloseYear}
+            onChange={(e) => setFundCloseYear(e.target.value)}
+            placeholder="e.g. 2035"
+            className={inputClass}
+          />
+        </FormField>
+
+        <FormField label="Target Fund Size">
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-500">
+              €
+            </span>
+            <input
+              type="number"
+              step="1"
+              value={targetFundSize}
+              onChange={(e) => setTargetFundSize(e.target.value)}
+              placeholder="Expected final close"
+              className={`${inputClass} pl-7`}
+            />
+          </div>
+        </FormField>
+      </div>
 
       <FormField label="Linked Asset">
         <select

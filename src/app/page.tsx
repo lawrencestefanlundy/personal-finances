@@ -131,12 +131,16 @@ export default function DashboardPage() {
   const eurGbp = useEurGbpRate();
 
   // Personal carry valued in GBP via live EUR→GBP rate.
-  // Each carry position computes personal carry at 3x fund return, then converts EUR→GBP.
+  // Uses target fund size where available, discounted at 20% p.a. for illiquidity.
   const CARRY_BALANCE_SHEET_MULTIPLE = 3.0;
   const carryValuationGBP = useMemo(() => {
     return state.carryPositions.reduce((sum, cp) => {
-      const scenarios = computeCarryScenarios(cp, [CARRY_BALANCE_SHEET_MULTIPLE]);
-      return sum + (scenarios[0]?.personalCarry ?? 0) * eurGbp.rate;
+      const scenarios = computeCarryScenarios(
+        cp,
+        [CARRY_BALANCE_SHEET_MULTIPLE],
+        cp.targetFundSize,
+      );
+      return sum + (scenarios[0]?.discountedPersonalCarry ?? 0) * eurGbp.rate;
     }, 0);
   }, [state.carryPositions, eurGbp.rate]);
 
@@ -507,21 +511,24 @@ export default function DashboardPage() {
                       value: angelTotal,
                     });
                   }
-                  // Carry positions
+                  // Carry positions (discounted present value)
                   for (const cp of state.carryPositions) {
-                    const carryEUR =
-                      computeCarryScenarios(cp, [CARRY_BALANCE_SHEET_MULTIPLE])[0]?.personalCarry ??
-                      0;
+                    const scenario = computeCarryScenarios(
+                      cp,
+                      [CARRY_BALANCE_SHEET_MULTIPLE],
+                      cp.targetFundSize,
+                    )[0];
+                    const pvEUR = scenario?.discountedPersonalCarry ?? 0;
                     items.push({
                       key: cp.id,
                       label: (
                         <div className="flex items-center gap-1.5">
                           <ProviderLogo provider={cp.provider} size={14} />
                           <span className="text-xs text-slate-600">{cp.fundName}</span>
-                          <span className="text-[10px] text-indigo-500">Carry @3x</span>
+                          <span className="text-[10px] text-indigo-500">Carry @3x PV</span>
                         </div>
                       ),
-                      value: carryEUR * eurGbp.rate,
+                      value: pvEUR * eurGbp.rate,
                     });
                   }
                   return items
@@ -606,7 +613,7 @@ export default function DashboardPage() {
                   </span>
                 </div>
                 <div className="flex items-center justify-between py-0.5">
-                  <span className="text-xs text-slate-600">Carry Positions @3x (EUR→GBP)</span>
+                  <span className="text-xs text-slate-600">Carry @3x PV (20% illiq. disc.)</span>
                   <span className="text-xs font-medium text-indigo-600 tabular-nums">
                     {formatCurrency(carryValuationGBP)}
                   </span>
@@ -1224,10 +1231,17 @@ export default function DashboardPage() {
                         </tr>
                       )}
                       {state.carryPositions.map((cp) => {
-                        const carryEUR =
-                          computeCarryScenarios(cp, [CARRY_BALANCE_SHEET_MULTIPLE])[0]
-                            ?.personalCarry ?? 0;
-                        const carryGBP = carryEUR * eurGbp.rate;
+                        const scenario = computeCarryScenarios(
+                          cp,
+                          [CARRY_BALANCE_SHEET_MULTIPLE],
+                          cp.targetFundSize,
+                        )[0];
+                        const pvEUR = scenario?.discountedPersonalCarry ?? 0;
+                        const pvGBP = pvEUR * eurGbp.rate;
+                        const yrs = scenario?.yearsToClose ?? 0;
+                        const fundLabel = cp.targetFundSize
+                          ? `@ €${(cp.targetFundSize / 1_000_000).toFixed(1)}m target`
+                          : '';
                         return (
                           <tr key={cp.id} className="hover:bg-slate-50">
                             <td className="py-2 px-3 sticky left-0 bg-white z-10">
@@ -1235,16 +1249,16 @@ export default function DashboardPage() {
                                 <ProviderLogo provider={cp.provider} size={16} />
                                 <span className="text-sm text-slate-700">{cp.fundName}</span>
                                 <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700">
-                                  Carry @3x
+                                  Carry @3x PV
                                 </span>
                                 <span className="text-[10px] text-slate-400">
-                                  {formatEUR(carryEUR)} @{eurGbp.rate.toFixed(4)}
+                                  {formatEUR(pvEUR)} {fundLabel} {yrs > 0 ? `${yrs}yr @20%` : ''}
                                 </span>
                               </div>
                             </td>
                             <td className="text-right py-2 px-2 text-[11px] text-slate-500">—</td>
                             <td className="text-right py-2 px-2 text-sm font-medium text-slate-900 tabular-nums">
-                              {formatCurrency(carryGBP)}
+                              {formatCurrency(pvGBP)}
                             </td>
                             {projectionYears.map((yr) => (
                               <td
@@ -1739,6 +1753,13 @@ function FundSection({ carryPosition, eurGbpRate, onEditFund, onDeleteFund }: Fu
     () => computeCarryScenarios(carryPosition, CARRY_MULTIPLES),
     [carryPosition],
   );
+  const targetScenarios = useMemo(
+    () =>
+      carryPosition.targetFundSize
+        ? computeCarryScenarios(carryPosition, CARRY_MULTIPLES, carryPosition.targetFundSize)
+        : null,
+    [carryPosition],
+  );
   const metrics = useMemo(() => computePortfolioMetrics(carryPosition), [carryPosition]);
 
   const [fundSortKey, setFundSortKey] = useState<FundSortKey>('name');
@@ -1884,9 +1905,33 @@ function FundSection({ carryPosition, eurGbpRate, onEditFund, onDeleteFund }: Fu
               {formatCurrency(sc.personalCarry * eurGbpRate)}
             </p>
             <p className="text-[10px] text-slate-400">{formatEUR(sc.personalCarry)}</p>
+            <p className="text-[10px] text-indigo-500">
+              PV: {formatCurrency(sc.discountedPersonalCarry * eurGbpRate)}
+            </p>
           </div>
         ))}
       </div>
+      {targetScenarios && (
+        <div className="grid grid-cols-3 gap-3 px-6 py-2 bg-indigo-50/50 border-b border-slate-100">
+          <div className="col-span-3 sm:col-span-3 lg:col-span-1">
+            <p className="text-[10px] text-indigo-600 font-medium">
+              @ target {formatEUR(carryPosition.targetFundSize!)}
+            </p>
+          </div>
+          {targetScenarios.map((sc) => (
+            <div key={sc.multiple}>
+              <p className="text-[10px] text-indigo-500">Carry @{sc.multiple.toFixed(0)}x</p>
+              <p className="text-xs font-bold text-indigo-700">
+                {formatCurrency(sc.personalCarry * eurGbpRate)}
+              </p>
+              <p className="text-[10px] text-slate-400">{formatEUR(sc.personalCarry)}</p>
+              <p className="text-[10px] text-indigo-500">
+                PV: {formatCurrency(sc.discountedPersonalCarry * eurGbpRate)}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="p-6">
         <div className="flex items-center justify-between mb-3">

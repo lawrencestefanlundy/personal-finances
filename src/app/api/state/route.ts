@@ -256,6 +256,7 @@ export async function POST(request: Request) {
               linkedAssetId: cp.linkedAssetId ?? null,
               location: cp.location ?? null,
               fundCloseYear: cp.fundCloseYear ?? null,
+              targetFundSize: cp.targetFundSize ?? null,
               notes: cp.notes ?? null,
               portfolioCompanies: {
                 create: (cp.portfolioCompanies ?? []).map((pc, idx) => ({

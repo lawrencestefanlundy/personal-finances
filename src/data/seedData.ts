@@ -1439,6 +1439,7 @@ export const seedData: FinanceState = {
       hurdleRate: 0.08,
       personalSharePercent: 0.15,
       fundCloseYear: 2035,
+      targetFundSize: 32_500_000,
       portfolioCompanies: [
         {
           id: 'pco-proteins1',

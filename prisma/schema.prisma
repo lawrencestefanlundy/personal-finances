@@ -140,6 +140,7 @@ model CarryPosition {
   linkedAssetId        String?
   location             String?
   fundCloseYear        Int?
+  targetFundSize       Float?
   notes                String?
   portfolioCompanies   PortfolioCompany[]
   createdAt            DateTime           @default(now())
