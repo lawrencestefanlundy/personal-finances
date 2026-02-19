@@ -837,12 +837,13 @@ export default function DashboardPage() {
                       return (
                         <td key={s.month} className="py-1 px-2 text-right tabular-nums">
                           <EditableCell
-                            value={stream.amount}
-                            displayValue={amount}
+                            value={amount}
                             onSave={(newAmount) => {
+                              const overrides = { ...(stream.monthlyOverrides ?? {}) };
+                              overrides[s.month] = newAmount;
                               dispatch({
                                 type: 'UPDATE_INCOME_STREAM',
-                                payload: { ...stream, amount: newAmount },
+                                payload: { ...stream, monthlyOverrides: overrides },
                               });
                             }}
                             className={amount > 0 ? 'text-emerald-600' : 'text-slate-300'}
@@ -958,12 +959,13 @@ export default function DashboardPage() {
                           <td key={s.month} className="py-1 px-2 text-right tabular-nums">
                             <div className="flex items-center justify-end gap-0.5">
                               <EditableCell
-                                value={expense.amount}
-                                displayValue={amount}
+                                value={amount}
                                 onSave={(newAmount) => {
+                                  const overrides = { ...(expense.monthlyOverrides ?? {}) };
+                                  overrides[s.month] = newAmount;
                                   dispatch({
                                     type: 'UPDATE_EXPENSE',
-                                    payload: { ...expense, amount: newAmount },
+                                    payload: { ...expense, monthlyOverrides: overrides },
                                   });
                                 }}
                                 className={

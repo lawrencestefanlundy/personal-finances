@@ -21,6 +21,7 @@ export interface IncomeStream {
   owner: 'lawrence' | 'stephanie' | 'joint';
   taxable: boolean;
   provider?: string;
+  monthlyOverrides?: Record<string, number>; // keyed by YYYY-MM
 }
 
 // === EXPENSES ===
@@ -60,6 +61,7 @@ export interface Expense {
   startDate?: string; // YYYY-MM
   endDate?: string; // YYYY-MM
   notes?: string;
+  monthlyOverrides?: Record<string, number>; // keyed by YYYY-MM
 }
 
 // === EMAIL UPDATES (for angel investments) ===

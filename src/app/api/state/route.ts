@@ -43,10 +43,26 @@ export async function GET() {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       items.map(({ createdAt, updatedAt, ...rest }) => rest);
 
+    // Parse monthlyOverrides JSON strings to objects
+    const parseOverrides = (val: string | null | undefined): Record<string, number> | undefined => {
+      if (!val) return undefined;
+      try {
+        return JSON.parse(val);
+      } catch {
+        return undefined;
+      }
+    };
+
     const state: FinanceState = {
       cashPositions: strip(cashPositions) as FinanceState['cashPositions'],
-      incomeStreams: strip(incomeStreams) as FinanceState['incomeStreams'],
-      expenses: strip(expenses) as FinanceState['expenses'],
+      incomeStreams: strip(incomeStreams).map((is) => ({
+        ...is,
+        monthlyOverrides: parseOverrides(is.monthlyOverrides as string | null),
+      })) as FinanceState['incomeStreams'],
+      expenses: strip(expenses).map((e) => ({
+        ...e,
+        monthlyOverrides: parseOverrides(e.monthlyOverrides as string | null),
+      })) as FinanceState['expenses'],
       assets: strip(assets) as FinanceState['assets'],
       liabilities: strip(liabilities) as FinanceState['liabilities'],
       transactions: strip(transactions) as FinanceState['transactions'],
@@ -129,6 +145,7 @@ export async function POST(request: Request) {
             owner: is.owner,
             taxable: is.taxable,
             provider: is.provider ?? null,
+            monthlyOverrides: is.monthlyOverrides ? JSON.stringify(is.monthlyOverrides) : null,
           })),
         });
       }
@@ -147,6 +164,7 @@ export async function POST(request: Request) {
             startDate: e.startDate ?? null,
             endDate: e.endDate ?? null,
             notes: e.notes ?? null,
+            monthlyOverrides: e.monthlyOverrides ? JSON.stringify(e.monthlyOverrides) : null,
           })),
         });
       }

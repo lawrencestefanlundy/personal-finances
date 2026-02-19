@@ -23,34 +23,36 @@ model CashPosition {
 }
 
 model IncomeStream {
-  id            String   @id
-  name          String
-  amount        Float
-  frequency     String   // monthly, quarterly, annual
-  paymentMonths Int[]    // which months (1-12)
-  owner         String   // lawrence, stephanie, joint
-  taxable       Boolean
-  provider      String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id               String   @id
+  name             String
+  amount           Float
+  frequency        String   // monthly, quarterly, annual
+  paymentMonths    Int[]    // which months (1-12)
+  owner            String   // lawrence, stephanie, joint
+  taxable          Boolean
+  provider         String?
+  monthlyOverrides String?  // JSON: Record<string, number> keyed by YYYY-MM
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   @@index([createdAt])
 }
 
 model Expense {
-  id            String   @id
-  name          String
-  provider      String?
-  amount        Float
-  frequency     String   // monthly, quarterly, termly, annual, bimonthly, one-off
-  category      String   // debt, school, holiday, groceries, etc.
-  activeMonths  Int[]    // 1-12, if only active certain months
-  paymentMonths Int[]    // specific months for quarterly/annual/bimonthly
-  startDate     String?  // YYYY-MM
-  endDate       String?  // YYYY-MM
-  notes         String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id               String   @id
+  name             String
+  provider         String?
+  amount           Float
+  frequency        String   // monthly, quarterly, termly, annual, bimonthly, one-off
+  category         String   // debt, school, holiday, groceries, etc.
+  activeMonths     Int[]    // 1-12, if only active certain months
+  paymentMonths    Int[]    // specific months for quarterly/annual/bimonthly
+  startDate        String?  // YYYY-MM
+  endDate          String?  // YYYY-MM
+  notes            String?
+  monthlyOverrides String?  // JSON: Record<string, number> keyed by YYYY-MM
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   @@index([createdAt])
 }

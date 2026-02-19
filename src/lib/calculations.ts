@@ -1,7 +1,12 @@
 import { FinanceState, MonthlySnapshot, Expense, IncomeStream } from '@/types/finance';
 import { addMonths, parseMonth } from './formatters';
 
-function getIncomeForMonth(stream: IncomeStream, monthNum: number): number {
+function getIncomeForMonth(stream: IncomeStream, month: string, monthNum: number): number {
+  // Check per-month override first
+  if (stream.monthlyOverrides?.[month] !== undefined) {
+    return stream.monthlyOverrides[month];
+  }
+
   switch (stream.frequency) {
     case 'monthly':
       return stream.amount;
@@ -28,6 +33,11 @@ function getExpenseForMonth(expense: Expense, month: string, monthNum: number): 
   // Check start/end dates
   if (expense.startDate && month < expense.startDate) return 0;
   if (expense.endDate && month > expense.endDate) return 0;
+
+  // Check per-month override first (after date checks so endDate still works)
+  if (expense.monthlyOverrides?.[month] !== undefined) {
+    return expense.monthlyOverrides[month];
+  }
 
   // Check active months (only filter if array has entries; empty array = all months)
   if (hasItems(expense.activeMonths) && !expense.activeMonths.includes(monthNum)) return 0;
@@ -77,7 +87,7 @@ export function computeMonthlySnapshots(
     const incomeBreakdown: Record<string, number> = {};
     let totalIncome = 0;
     for (const stream of state.incomeStreams) {
-      const amount = getIncomeForMonth(stream, monthNum);
+      const amount = getIncomeForMonth(stream, month, monthNum);
       if (amount > 0) {
         incomeBreakdown[stream.id] = amount;
         totalIncome += amount;

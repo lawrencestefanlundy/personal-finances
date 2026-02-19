@@ -14,6 +14,9 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const data = await request.json();
+    if (data.monthlyOverrides && typeof data.monthlyOverrides === 'object') {
+      data.monthlyOverrides = JSON.stringify(data.monthlyOverrides);
+    }
     const item = await prisma.incomeStream.create({ data });
     return NextResponse.json(item, { status: 201 });
   } catch (error) {

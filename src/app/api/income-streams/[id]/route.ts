@@ -7,6 +7,10 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const { id } = await params;
     const data = await request.json();
     const { id: _id, createdAt: _ca, updatedAt: _ua, ...updateData } = data;
+    // Serialize monthlyOverrides object to JSON string for Prisma
+    if (updateData.monthlyOverrides && typeof updateData.monthlyOverrides === 'object') {
+      updateData.monthlyOverrides = JSON.stringify(updateData.monthlyOverrides);
+    }
     const item = await prisma.incomeStream.update({ where: { id }, data: updateData });
     return NextResponse.json(item);
   } catch (error) {
