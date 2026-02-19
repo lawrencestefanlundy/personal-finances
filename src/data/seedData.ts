@@ -78,7 +78,7 @@ export const seedData: FinanceState = {
       frequency: 'monthly',
       owner: 'stephanie',
       taxable: true,
-      provider: 'Insig AI',
+      provider: 'The Montessori Place',
     },
   ],
 

@@ -23,7 +23,8 @@ import {
   formatPercent,
 } from '@/lib/formatters';
 import { assetCategories, expenseCategories } from '@/data/categories';
-import { PencilIcon, TrashIcon, PlusIcon } from '@/components/ui/Icons';
+import { PencilIcon, TrashIcon, PlusIcon, XIcon } from '@/components/ui/Icons';
+import EditableCell from '@/components/EditableCell';
 import SlidePanel from '@/components/ui/SlidePanel';
 import DeleteConfirmation from '@/components/ui/DeleteConfirmation';
 import CashPositionForm from '@/components/forms/CashPositionForm';
@@ -700,18 +701,61 @@ export default function DashboardPage() {
                     className="py-1.5 px-3 font-bold text-slate-800 sticky left-0 z-10 bg-blue-50"
                     colSpan={3 + snapshots.length}
                   >
-                    Cash
+                    <div className="flex items-center gap-2">
+                      <span>Cash</span>
+                      <button
+                        onClick={() => {
+                          setEditingCash(undefined);
+                          setPanelType('cashPosition');
+                        }}
+                        className="p-0.5 rounded hover:bg-blue-100 text-slate-400"
+                        title="Add Cash Position"
+                      >
+                        <PlusIcon className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
                 {state.cashPositions.map((cp) => (
-                  <tr key={cp.id} className="border-b border-slate-50">
+                  <tr key={cp.id} className="border-b border-slate-50 hover:bg-slate-50 group">
                     <td className="py-1 px-3 text-slate-700 sticky left-0 z-10 bg-white">
-                      {cp.name}
+                      <div className="flex items-center gap-1">
+                        <span>{cp.name}</span>
+                        <div className="flex gap-0.5 ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => {
+                              setEditingCash(cp);
+                              setPanelType('cashPosition');
+                            }}
+                            className="p-0.5 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
+                            title="Edit"
+                          >
+                            <PencilIcon />
+                          </button>
+                          <button
+                            onClick={() =>
+                              setDeleteTarget({ id: cp.id, name: cp.name, type: 'cashPosition' })
+                            }
+                            className="p-0.5 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
+                            title="Delete"
+                          >
+                            <TrashIcon />
+                          </button>
+                        </div>
+                      </div>
                     </td>
                     <td className="py-1 px-2 text-slate-500">{cp.provider}</td>
                     <td className="py-1 px-2 text-slate-500 capitalize">{cp.category}</td>
                     <td className="py-1 px-2 text-right tabular-nums text-slate-700">
-                      {formatCurrency(cp.balance)}
+                      <EditableCell
+                        value={cp.balance}
+                        onSave={(newBalance) => {
+                          dispatch({
+                            type: 'UPDATE_CASH_POSITION',
+                            payload: { ...cp, balance: newBalance },
+                          });
+                        }}
+                      />
                     </td>
                     <td colSpan={snapshots.length - 1} />
                   </tr>
@@ -793,7 +837,16 @@ export default function DashboardPage() {
                       return (
                         <td key={s.month} className="py-1 px-2 text-right tabular-nums">
                           {amount > 0 ? (
-                            <span className="text-emerald-600">{formatCurrency(amount)}</span>
+                            <EditableCell
+                              value={stream.amount}
+                              onSave={(newAmount) => {
+                                dispatch({
+                                  type: 'UPDATE_INCOME_STREAM',
+                                  payload: { ...stream, amount: newAmount },
+                                });
+                              }}
+                              className="text-emerald-600"
+                            />
                           ) : (
                             <span className="text-slate-300">0</span>
                           )}
@@ -907,7 +960,31 @@ export default function DashboardPage() {
                         return (
                           <td key={s.month} className="py-1 px-2 text-right tabular-nums">
                             {amount > 0 ? (
-                              <span className="text-slate-700">{formatCurrency(amount)}</span>
+                              <div className="flex items-center justify-end gap-0.5">
+                                <EditableCell
+                                  value={expense.amount}
+                                  onSave={(newAmount) => {
+                                    dispatch({
+                                      type: 'UPDATE_EXPENSE',
+                                      payload: { ...expense, amount: newAmount },
+                                    });
+                                  }}
+                                  className="text-slate-700 flex-1"
+                                />
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    dispatch({
+                                      type: 'UPDATE_EXPENSE',
+                                      payload: { ...expense, endDate: s.month },
+                                    });
+                                  }}
+                                  className="p-0.5 rounded hover:bg-red-100 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                                  title={`End after ${formatMonth(s.month)}`}
+                                >
+                                  <XIcon className="w-3 h-3" />
+                                </button>
+                              </div>
                             ) : (
                               <span className="text-slate-300">0</span>
                             )}
