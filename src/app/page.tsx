@@ -836,20 +836,17 @@ export default function DashboardPage() {
                       const amount = s.incomeBreakdown[stream.id] || 0;
                       return (
                         <td key={s.month} className="py-1 px-2 text-right tabular-nums">
-                          {amount > 0 ? (
-                            <EditableCell
-                              value={stream.amount}
-                              onSave={(newAmount) => {
-                                dispatch({
-                                  type: 'UPDATE_INCOME_STREAM',
-                                  payload: { ...stream, amount: newAmount },
-                                });
-                              }}
-                              className="text-emerald-600"
-                            />
-                          ) : (
-                            <span className="text-slate-300">0</span>
-                          )}
+                          <EditableCell
+                            value={stream.amount}
+                            displayValue={amount}
+                            onSave={(newAmount) => {
+                              dispatch({
+                                type: 'UPDATE_INCOME_STREAM',
+                                payload: { ...stream, amount: newAmount },
+                              });
+                            }}
+                            className={amount > 0 ? 'text-emerald-600' : 'text-slate-300'}
+                          />
                         </td>
                       );
                     })}
@@ -959,18 +956,21 @@ export default function DashboardPage() {
                         const amount = s.expenseBreakdown[expense.id] || 0;
                         return (
                           <td key={s.month} className="py-1 px-2 text-right tabular-nums">
-                            {amount > 0 ? (
-                              <div className="flex items-center justify-end gap-0.5">
-                                <EditableCell
-                                  value={expense.amount}
-                                  onSave={(newAmount) => {
-                                    dispatch({
-                                      type: 'UPDATE_EXPENSE',
-                                      payload: { ...expense, amount: newAmount },
-                                    });
-                                  }}
-                                  className="text-slate-700 flex-1"
-                                />
+                            <div className="flex items-center justify-end gap-0.5">
+                              <EditableCell
+                                value={expense.amount}
+                                displayValue={amount}
+                                onSave={(newAmount) => {
+                                  dispatch({
+                                    type: 'UPDATE_EXPENSE',
+                                    payload: { ...expense, amount: newAmount },
+                                  });
+                                }}
+                                className={
+                                  amount > 0 ? 'text-slate-700 flex-1' : 'text-slate-300 flex-1'
+                                }
+                              />
+                              {amount > 0 && (
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -984,10 +984,8 @@ export default function DashboardPage() {
                                 >
                                   <XIcon className="w-3 h-3" />
                                 </button>
-                              </div>
-                            ) : (
-                              <span className="text-slate-300">0</span>
-                            )}
+                              )}
+                            </div>
                           </td>
                         );
                       })}

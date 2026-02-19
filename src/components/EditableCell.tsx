@@ -5,11 +5,17 @@ import { formatCurrency } from '@/lib/formatters';
 
 interface EditableCellProps {
   value: number;
+  displayValue?: number; // what to show in the cell (defaults to value)
   onSave: (value: number) => void;
   className?: string;
 }
 
-export default function EditableCell({ value, onSave, className = '' }: EditableCellProps) {
+export default function EditableCell({
+  value,
+  displayValue,
+  onSave,
+  className = '',
+}: EditableCellProps) {
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -59,7 +65,7 @@ export default function EditableCell({ value, onSave, className = '' }: Editable
       className={`cursor-pointer hover:bg-blue-50 rounded text-xs text-right block ${className}`}
       title="Click to edit"
     >
-      {formatCurrency(value)}
+      {formatCurrency(displayValue ?? value)}
     </span>
   );
 }
