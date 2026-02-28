@@ -96,6 +96,7 @@ export default function CashFlowChart({ snapshots }: CashFlowChartProps) {
                   : name === 'balance'
                     ? 'Balance'
                     : 'Net',
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ]) as any
           }
         />

@@ -68,11 +68,11 @@ export async function GET() {
       transactions: strip(transactions) as FinanceState['transactions'],
 
       carryPositions: carryPositions.map(
-        ({ createdAt, updatedAt, portfolioCompanies, ...rest }) => ({
+        ({ createdAt: _ca1, updatedAt: _ua1, portfolioCompanies, ...rest }) => ({
           ...rest,
 
           portfolioCompanies: portfolioCompanies.map(
-            ({ createdAt, updatedAt, carryPositionId, ...pc }) => pc,
+            ({ createdAt: _ca2, updatedAt: _ua2, carryPositionId: _cpId, ...pc }) => pc,
           ),
         }),
       ) as FinanceState['carryPositions'],

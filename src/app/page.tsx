@@ -13,7 +13,11 @@ import {
   PortfolioCompany,
 } from '@/types/finance';
 import { computeMonthlySnapshots } from '@/lib/calculations';
-import { computeYearlyProjections, projectAssetValue } from '@/lib/projections';
+import {
+  computeYearlyProjections,
+  projectAssetValue,
+  projectLiabilityBalance,
+} from '@/lib/projections';
 import { computeCarryScenarios, computePortfolioMetrics } from '@/lib/carryCalculations';
 import {
   formatCurrency,
@@ -183,44 +187,12 @@ export default function DashboardPage() {
     return groups;
   }, [state.expenses]);
 
-  // ─── SOFT commitment (ISA + savings not counted in day-to-day) ────────────
-  const softCommitment = useMemo(() => {
-    return state.cashPositions
-      .filter((cp) => cp.category === 'isa' || cp.category === 'savings')
-      .reduce((sum, cp) => sum + cp.balance, 0);
-  }, [state.cashPositions]);
-
-  const assetsByCategory = useMemo(() => {
-    const groups: Record<string, Asset[]> = {};
-    for (const asset of state.assets) {
-      if (
-        asset.category === 'angel' ||
-        asset.category === 'fund' ||
-        asset.category === 'children_isa'
-      )
-        continue;
-      if (!groups[asset.category]) groups[asset.category] = [];
-      groups[asset.category].push(asset);
-    }
-    return groups;
-  }, [state.assets]);
-
   const angelAssets = state.assets.filter((a) => a.category === 'angel');
-  const childrenIsaAssets = state.assets.filter((a) => a.category === 'children_isa');
   const angelTotal = angelAssets.reduce((sum, a) => sum + a.currentValue, 0);
   const angelCostTotalGBP = angelAssets.reduce(
     (sum, a) => sum + (a.costBasisGBP ?? a.costBasis ?? 0),
     0,
   );
-
-  const liabilitiesByType = useMemo(() => {
-    const groups: Record<string, Liability[]> = {};
-    for (const liability of state.liabilities) {
-      if (!groups[liability.type]) groups[liability.type] = [];
-      groups[liability.type].push(liability);
-    }
-    return groups;
-  }, [state.liabilities]);
 
   // ─── Collapsible state ──────────────────────────────────────────────────────
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -1304,94 +1276,141 @@ export default function DashboardPage() {
             })()}
 
             {/* Liabilities */}
-            <div className="flex items-center justify-between py-2 px-3 bg-red-50 mt-4 rounded-t-lg">
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-red-800">Liabilities</span>
-                <button
-                  onClick={() => {
-                    setEditingLiability(undefined);
-                    setPanelType('liability');
-                  }}
-                  className="p-0.5 rounded hover:bg-red-100 text-red-500"
-                  title="Add Liability"
-                >
-                  <PlusIcon />
-                </button>
-              </div>
-              <span className="font-bold text-red-800">{formatCurrency(totalLiabilities)}</span>
-            </div>
-            {Object.entries(liabilitiesByType).map(([type, liabilities]) => {
-              const subtotal = liabilities.reduce((sum, l) => sum + l.currentBalance, 0);
-              const sectionKey = `liability-${type}`;
-              const isExpanded = expanded[sectionKey];
+            {(() => {
+              const startYear = parseInt(state.settings.startMonth.split('-')[0]);
+              const liabProjectionYears = Array.from({ length: 10 }, (_, i) => startYear + i);
+
               return (
-                <div key={type}>
-                  <div
-                    className="flex items-center justify-between py-2 px-3 cursor-pointer hover:bg-slate-50"
-                    onClick={() => toggleSection(sectionKey)}
-                  >
-                    <div className="flex items-center gap-2">
-                      {chevron(!!isExpanded)}
-                      <span className="text-sm font-medium text-slate-700">
-                        {LIABILITY_TYPE_LABELS[type] ?? type}
-                      </span>
-                      <span className="text-sm text-slate-500">({liabilities.length})</span>
-                    </div>
-                    <span className="text-sm font-semibold text-red-600">
-                      {formatCurrency(subtotal)}
-                    </span>
-                  </div>
-                  {isExpanded &&
-                    liabilities.map((liability) => (
-                      <div
-                        key={liability.id}
-                        className="flex items-center justify-between py-1.5 px-3 pl-10 hover:bg-slate-50 group"
-                      >
-                        <div className="flex items-center gap-2">
-                          <ProviderLogo provider={liability.provider} size={16} />
-                          <span className="text-sm text-slate-700">{liability.name}</span>
-                          <span className="text-xs text-slate-400">
-                            {formatPercent(liability.interestRate)}
-                          </span>
-                          <span className="text-xs text-slate-400">
-                            {formatCurrency(liability.monthlyPayment)}/mo
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-red-600">
-                            {formatCurrency(liability.currentBalance)}
-                          </span>
-                          <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="overflow-x-auto mt-4">
+                  <table className="w-full min-w-[900px]">
+                    <thead>
+                      <tr className="bg-red-50 rounded-t-lg">
+                        <th className="text-left py-2 px-3 font-bold text-red-800 text-sm sticky left-0 bg-red-50 z-10 min-w-[200px]">
+                          <div className="flex items-center gap-2">
+                            Liabilities
                             <button
                               onClick={() => {
-                                setEditingLiability(liability);
+                                setEditingLiability(undefined);
                                 setPanelType('liability');
                               }}
-                              className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
-                              title="Edit"
+                              className="p-0.5 rounded hover:bg-red-100 text-red-500"
+                              title="Add Liability"
                             >
-                              <PencilIcon />
-                            </button>
-                            <button
-                              onClick={() =>
-                                setDeleteTarget({
-                                  id: liability.id,
-                                  name: liability.name,
-                                  type: 'liability',
-                                })
-                              }
-                              className="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
-                              title="Delete"
-                            >
-                              <TrashIcon />
+                              <PlusIcon />
                             </button>
                           </div>
-                        </div>
-                      </div>
-                    ))}
+                        </th>
+                        <th className="text-right py-2 px-2 font-semibold text-red-700 text-[11px] w-14">
+                          Rate
+                        </th>
+                        <th className="text-right py-2 px-2 font-bold text-red-800 text-sm min-w-[80px]">
+                          Current
+                        </th>
+                        {liabProjectionYears.map((yr) => (
+                          <th
+                            key={yr}
+                            className="text-right py-2 px-2 font-semibold text-red-700 text-[11px] min-w-[70px]"
+                          >
+                            {yr}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {state.liabilities.map((liability) => (
+                        <tr key={liability.id} className="hover:bg-slate-50 group">
+                          <td className="py-2 px-3 sticky left-0 bg-white z-10">
+                            <div className="flex items-center gap-2">
+                              <ProviderLogo provider={liability.provider} size={16} />
+                              <span className="text-sm text-slate-700">{liability.name}</span>
+                              <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700">
+                                {LIABILITY_TYPE_LABELS[liability.type] ?? liability.type}
+                              </span>
+                              {liability.monthlyPayment > 0 && (
+                                <span className="text-[10px] text-slate-400">
+                                  {formatCurrency(liability.monthlyPayment)}/mo
+                                </span>
+                              )}
+                              <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                  onClick={() => {
+                                    setEditingLiability(liability);
+                                    setPanelType('liability');
+                                  }}
+                                  className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
+                                  title="Edit"
+                                >
+                                  <PencilIcon />
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    setDeleteTarget({
+                                      id: liability.id,
+                                      name: liability.name,
+                                      type: 'liability',
+                                    })
+                                  }
+                                  className="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-600"
+                                  title="Delete"
+                                >
+                                  <TrashIcon />
+                                </button>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="text-right py-2 px-2 text-[11px] tabular-nums text-slate-500">
+                            {formatPercent(liability.interestRate)}
+                          </td>
+                          <td className="text-right py-2 px-2 text-sm font-medium text-red-600 tabular-nums">
+                            {formatCurrency(liability.currentBalance)}
+                          </td>
+                          {liabProjectionYears.map((yr) => {
+                            const projected = Math.round(
+                              projectLiabilityBalance(liability, startYear, yr),
+                            );
+                            return (
+                              <td
+                                key={yr}
+                                className="text-right py-2 px-2 text-[11px] tabular-nums text-slate-600"
+                              >
+                                {projected === 0 ? '—' : formatCompact(projected)}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                      {/* Total Liabilities row */}
+                      <tr className="border-t border-red-200 bg-red-50/50">
+                        <td className="py-2 px-3 sticky left-0 bg-red-50/50 z-10">
+                          <span className="font-bold text-red-800 text-sm">Total</span>
+                        </td>
+                        <td />
+                        <td className="text-right py-2 px-2 font-bold text-red-800 text-sm tabular-nums">
+                          {formatCurrency(totalLiabilities)}
+                        </td>
+                        {liabProjectionYears.map((yr) => {
+                          const liabProjectionTotal = state.liabilities
+                            .filter((l) => l.type !== 'student_loan')
+                            .reduce(
+                              (sum, l) =>
+                                sum + Math.round(projectLiabilityBalance(l, startYear, yr)),
+                              0,
+                            );
+                          return (
+                            <td
+                              key={yr}
+                              className="text-right py-2 px-2 font-bold text-red-800 text-[11px] tabular-nums"
+                            >
+                              {liabProjectionTotal === 0 ? '—' : formatCompact(liabProjectionTotal)}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               );
-            })}
+            })()}
 
             {/* Net Worth total */}
             <div className="flex items-center justify-between py-3 px-3 bg-purple-50 rounded-b-lg mt-2 border-t-2 border-purple-200">

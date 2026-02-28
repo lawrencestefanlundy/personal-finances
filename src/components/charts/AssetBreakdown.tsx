@@ -12,7 +12,6 @@ import {
 } from 'recharts';
 import { YearlyProjection, Asset } from '@/types/finance';
 import { formatCurrency } from '@/lib/formatters';
-import { assetCategories } from '@/data/categories';
 
 interface AssetBreakdownProps {
   projections: YearlyProjection[];
@@ -69,6 +68,7 @@ export default function AssetBreakdown({ projections, assets }: AssetBreakdownPr
             ((value: number, name: string) => {
               const asset = assets.find((a) => a.id === name);
               return [formatCurrency(value), asset?.name || name];
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
             }) as any
           }
           labelFormatter={(label) => String(label)}

@@ -41,6 +41,7 @@ export default function LiabilityChart({ projections, liabilities }: LiabilityCh
             ((value: number, name: string) => {
               const liability = liabilities.find((l) => l.id === name);
               return [formatCurrency(value), liability?.name || name];
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
             }) as any
           }
         />
