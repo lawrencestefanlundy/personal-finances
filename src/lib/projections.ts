@@ -16,7 +16,7 @@ export function projectAssetValue(asset: Asset, baseYear: number, targetYear: nu
   return asset.currentValue * Math.pow(1 + asset.annualGrowthRate, yearsGrowing);
 }
 
-function projectLiabilityBalance(
+export function projectLiabilityBalance(
   liability: Liability,
   baseYear: number,
   targetYear: number,

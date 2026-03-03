@@ -757,10 +757,10 @@ export const seedData: FinanceState = {
   liabilities: [
     {
       id: 'liab-mortgage',
-      name: 'Mortgage',
-      currentBalance: 156870,
-      interestRate: 0.0559,
-      monthlyPayment: 911,
+      name: "Mortgage – 4 King Henry's Rd",
+      currentBalance: 158969,
+      interestRate: 0.056,
+      monthlyPayment: 921,
       type: 'mortgage',
       provider: 'Aldermore',
     },

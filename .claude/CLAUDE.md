@@ -103,6 +103,39 @@ GH_TOKEN=$(gh auth token) && git push https://x-access-token:${GH_TOKEN}@github.
 - Settings stored as key-value pairs
 - Cash Flow table is a flat list — no collapsible sections, no category grouping
 
+## Monzo Integration
+
+- OAuth2 flow: `/api/auth/monzo` → Monzo consent → callback stores token in DB (MonzoToken, singleton id=1)
+- Refresh tokens are **single-use** — `lib/monzo.ts` updates DB immediately after refresh
+- Token refresh buffer: 5 min before expiry (TOKEN_BUFFER_SECONDS = 300)
+- Sync: `POST /api/monzo/sync` fetches last 90 days (Monzo API limit)
+- Cron: Vercel daily at 00:00 UTC (`vercel.json`)
+- Transaction dedup by `emailId` (unique constraint)
+
+## Other API Integrations
+
+- **DVLA**: `/api/vehicles/lookup?registration=ABC123` — vehicle data
+- **UKHPI**: `/api/property/valuation` — Land Registry price index by region
+- **FX rates**: `/api/fx` — EUR-GBP for angel investment conversions
+- **Gmail scripts**: `scripts/fetch-monzo-transactions.py` (offline, parses Monzo email notifications)
+
+## Data Patterns
+
+- **Monthly overrides**: Income/Expense store JSON strings parsed on API response
+- **vehicleData/propertyData**: JSON strings on Asset model
+- **Multi-currency**: angel investments need `costCurrency`, `costBasisGBP`, `fxRate`
+- **Carry cascading delete**: deleting CarryPosition auto-deletes all PortfolioCompany
+- **Neon cold starts**: API retries 2x with exponential backoff (1s, 2s, 4s)
+- **Path alias**: `@/*` → `./src/*` (tsconfig.json)
+
+## Naming Conventions
+
+- camelCase functions/variables, UPPER_CASE constants
+- Model names singular (CashPosition not CashPositions)
+- Boolean prefixes: `is*`, `has*`
+- Frequencies: 'monthly', 'quarterly', 'annual', 'bimonthly', 'termly', 'one-off'
+- Categories: 'cash', 'savings', 'isa', 'crypto', 'fund', 'angel', 'pension', 'property', 'vehicle', 'children_isa'
+
 ## Conventions
 
 - Pre-commit hooks run ESLint + Prettier via husky/lint-staged
